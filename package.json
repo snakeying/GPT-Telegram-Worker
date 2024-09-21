@@ -14,7 +14,12 @@
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-typescript": "^11.1.6",
-    "rollup": "^3.29.5",
+    "rollup": "^4.22.4",
     "typescript": "^5.6.2"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.19.0",
+    "@upstash/redis": "^1.34.0",
+    "openai": "^4.63.0"
   }
 }
