@@ -1,0 +1,15 @@
+{  
+  "compilerOptions": {  
+    "target": "esnext",            // 目标 JavaScript 版本  
+    "module": "esnext",            // 使用 ES Module  
+    "strict": true,                // 启用严格模式  
+    "esModuleInterop": true,       // 启用 ES 模块互操作  
+    "moduleResolution": "node",    // 模块解析策略  
+    "skipLibCheck": true,          // 跳过库检查  
+    "forceConsistentCasingInFileNames": true,  
+    "outDir": "dist",              // 编译后文件的输出目录  
+    "resolveJsonModule": true      // 支持导入 JSON 文件  
+  },  
+  "include": ["src/**/*.ts"],      // 包含 src 文件夹内的所有 .ts 文件  
+  "exclude": ["node_modules"]      // 排除 node_modules 文件夹  
+}  
