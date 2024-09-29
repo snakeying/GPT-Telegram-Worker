@@ -1,0 +1,15 @@
+{
+  "name": "gpt-telegram-worker",
+  "version": "1.0.0",
+  "description": "Your own GPT Telegram bot on Cloudflare Workers",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "npx wrangler deploy --dry-run --outdir=dist",
+    "dev": "wrangler dev"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240925.0",
+    "typescript": "^5.4.2",
+    "wrangler": "^3.78.12"
+  }
+}
