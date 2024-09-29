@@ -6,12 +6,12 @@
     "types": ["@cloudflare/workers-types"],
     "moduleResolution": "node",
     "strict": true,
-    "esModuleInterop": true,
-    "isolatedModules": true,
-    "skipLibCheck": true,
     "noEmit": true,
-    "rootDir": "./src",
-    "baseUrl": "./src"
+    "esModuleInterop": true,
+    "baseUrl": "./src",
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }

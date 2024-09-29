@@ -1,6 +1,9 @@
 import { Env, getConfig } from '../env';
 import { TelegramTypes } from '../../types/telegram';
 import OpenAIAPI from './openai_api';
+import { formatCodeBlock, escapeMarkdown, sendChatAction } from '../utils/helpers';
+import { translate, SupportedLanguages } from '../utils/i18n';
+import { commands, Command } from '../config/commands';
 
 export class TelegramBot {
   private token: string;
@@ -8,6 +11,8 @@ export class TelegramBot {
   private whitelistedUsers: number[];
   private openai: OpenAIAPI;
   private systemMessage: string;
+  private env: Env;
+  private commands: Command[];
 
   constructor(env: Env) {
     const config = getConfig(env);
@@ -16,9 +21,20 @@ export class TelegramBot {
     this.whitelistedUsers = config.whitelistedUsers.map(Number);
     this.openai = new OpenAIAPI(env);
     this.systemMessage = config.systemInitMessage;
+    this.env = env;
+    this.commands = commands;
   }
 
-  async sendMessage(chatId: number, text: string): Promise<TelegramTypes.SendMessageResult> {
+  public async executeCommand(commandName: string, chatId: number): Promise<void> {
+    const command = this.commands.find(cmd => cmd.name === commandName);
+    if (command) {
+      await command.action(chatId, this);
+    } else {
+      console.log(`Unknown command: ${commandName}`);
+    }
+  }
+
+  async sendMessage(chatId: number, text: string, parseMode: 'Markdown' | 'HTML' = 'Markdown'): Promise<TelegramTypes.SendMessageResult> {
     const url = `${this.apiUrl}/sendMessage`;
     const response = await fetch(url, {
       method: 'POST',
@@ -28,7 +44,7 @@ export class TelegramBot {
       body: JSON.stringify({
         chat_id: chatId,
         text: text,
-        parse_mode: 'Markdown',
+        parse_mode: parseMode,
       }),
     });
 
@@ -44,22 +60,61 @@ export class TelegramBot {
       const chatId = update.message.chat.id;
       const userId = update.message.from?.id;
       const text = update.message.text;
+      const language = (update.message.from?.language_code as SupportedLanguages) || 'en';
 
       if (userId && this.isUserWhitelisted(userId)) {
-        try {
-          const response = await this.openai.generateResponse([
-            { role: 'system', content: this.systemMessage },
-            { role: 'user', content: text }
-          ]);
-          await this.sendMessage(chatId, response);
-        } catch (error) {
-          console.error('Error generating response:', error);
-          await this.sendMessage(chatId, "Sorry, I couldn't generate a response. Please try again later.");
+        if (text.startsWith('/')) {
+          const commandName = text.split(' ')[0].substring(1);
+          await this.executeCommand(commandName, chatId);
+        } else {
+          try {
+            await sendChatAction(chatId, 'typing', this.env);
+            const response = await this.openai.generateResponse([
+              { role: 'system', content: this.systemMessage },
+              { role: 'user', content: text }
+            ]);
+            const formattedResponse = this.formatResponse(response);
+            await this.sendMessage(chatId, formattedResponse);
+          } catch (error) {
+            console.error('Error generating response:', error);
+            await this.sendMessage(chatId, translate('error', language));
+          }
         }
       } else {
-        await this.sendMessage(chatId, "Sorry, you're not authorized to use this bot.");
+        await this.sendMessage(chatId, translate('unauthorized', language));
       }
     }
+  }
+
+  private async getChatMember(chatId: number): Promise<TelegramTypes.ChatMember> {
+    const url = `${this.apiUrl}/getChatMember`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        chat_id: chatId,
+        user_id: chatId,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result: TelegramTypes.GetChatMemberResult = await response.json();
+    if (!result.ok) {
+      throw new Error('Failed to get chat member');
+    }
+    return result.result;
+  }
+
+  formatResponse(response: string): string {
+    const codeBlockRegex = /```(\w+)?\n([\s\S]+?)```/g;
+    return response.replace(codeBlockRegex, (match, language, code) => {
+      return formatCodeBlock(code.trim(), language || '');
+    });
   }
 
   isUserWhitelisted(userId: number): boolean {

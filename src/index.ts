@@ -32,7 +32,8 @@ export default {
       });
     } catch (error) {
       console.error('Error processing request:', error);
-      return new Response('Internal Server Error', { 
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      return new Response(`Internal Server Error: ${errorMessage}`, { 
         status: 500,
         headers: { 'Content-Type': 'text/plain' }
       });
