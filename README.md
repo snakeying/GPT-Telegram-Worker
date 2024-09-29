@@ -1,1 +1,1 @@
-# GPT-Telegram-CF
+GPT-Telegram-Worker
