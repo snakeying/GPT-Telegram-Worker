@@ -221,6 +221,25 @@ export class TelegramBot {
     }
   }
 
+  async sendPhoto(chatId: number, photo: string, options: { caption?: string } = {}): Promise<void> {
+    const url = `${this.apiUrl}/sendPhoto`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        chat_id: chatId,
+        photo: photo,
+        caption: options.caption,
+      }),
+    });
+  
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+  }
+
   async setWebhook(url: string): Promise<void> {
     const setWebhookUrl = `${this.apiUrl}/setWebhook`;
     const response = await fetch(setWebhookUrl, {

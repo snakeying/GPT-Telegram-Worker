@@ -24,6 +24,9 @@ export interface Translations {
   language_en: string;
   language_zh: string;
   language_es: string;
+  image_prompt_required: string;
+  image_generation_error: string;
+  img_description: string;
 }
 
 export type TranslationKey = keyof Translations;
@@ -55,6 +58,9 @@ const translations: TranslationsMap = {
     language_en: "English",
     language_zh: "Chinese",
     language_es: "Spanish",
+    image_prompt_required: 'Please provide a description for the image you want to generate.',
+    image_generation_error: 'Sorry, there was an error generating the image. Please try again later.',
+    img_description: 'Generate an image using DALL·E. Format: /img <description> [size]',
   },
   zh: {
     welcome: "欢迎使用 GPT Telegram 机器人！",
@@ -80,6 +86,9 @@ const translations: TranslationsMap = {
     language_en: "英语",
     language_zh: "中文",
     language_es: "西班牙语",
+    image_prompt_required: '请提供您想要生成的图像描述。',
+    image_generation_error: '抱歉，生成图像时出错。请稍后再试。',
+    img_description: '使用 DALL·E 生成图像。格式：/img <描述> [尺寸]',
   },
   es: {
     welcome: "¡Bienvenido al bot de GPT en Telegram!",
@@ -105,6 +114,9 @@ const translations: TranslationsMap = {
     language_en: "Inglés",
     language_zh: "Chino",
     language_es: "Español",
+    image_prompt_required: 'Por favor, proporcione una descripción para la imagen que desea generar.',
+    image_generation_error: 'Lo siento, hubo un error al generar la imagen. Por favor, inténtelo de nuevo más tarde.',
+    img_description: 'Generar una imagen usando DALL·E. Formato: /img <descripción> [tamaño]',
   }
 };
 

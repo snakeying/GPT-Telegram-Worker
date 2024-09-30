@@ -1,5 +1,7 @@
 import { TelegramBot } from '../api/telegram';
-import { translate, SupportedLanguages, TranslationKey } from '../utils/i18n';
+import { translate, TranslationKey } from '../utils/i18n';
+import { ImageGenerationAPI } from '../api/image_generation';
+import { sendChatAction } from '../utils/helpers';
 
 export interface Command {
   name: string;
@@ -83,6 +85,34 @@ export const commands: Command[] = [
       }
       
       await bot.sendMessage(chatId, helpMessage);
+    },
+  },
+  {
+    name: 'img',
+    description: 'Generate an image using DALL·E',
+    action: async (chatId: number, bot: TelegramBot, args: string[]) => {
+      const userId = chatId.toString();
+      const language = await bot.getUserLanguage(userId);
+  
+      if (!args.length) {
+        await bot.sendMessage(chatId, translate('image_prompt_required', language));
+        return;
+      }
+  
+      const sizeArg = args[args.length - 1].toLowerCase();
+      const validSizes = ['1024x1024', '1024x1792', '1792x1024'];
+      const size = validSizes.includes(sizeArg) ? sizeArg : '1024x1024';
+      const prompt = sizeArg === size ? args.slice(0, -1).join(' ') : args.join(' ');
+  
+      try {
+        await sendChatAction(chatId, 'upload_photo', bot['env']);
+        const imageApi = new ImageGenerationAPI(bot['env']);
+        const imageUrl = await imageApi.generateImage(prompt, size);
+        await bot.sendPhoto(chatId, imageUrl, { caption: prompt });
+      } catch (error) {
+        console.error('Error generating image:', error);
+        await bot.sendMessage(chatId, translate('image_generation_error', language));
+      }
     },
   },
 ];

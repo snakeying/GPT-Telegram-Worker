@@ -9,6 +9,7 @@ export interface Env {
   DEFAULT_MODEL?: string; // Optional default model
   UPSTASH_REDIS_REST_URL: string;
   UPSTASH_REDIS_REST_TOKEN: string;
+  DALL_E_MODEL?: string;
 }
 
 const getEnvOrDefault = (env: Env, key: keyof Env, defaultValue: string): string => {
@@ -26,6 +27,7 @@ export const getConfig = (env: Env) => ({
   defaultModel: env.DEFAULT_MODEL,
   upstashRedisRestUrl: env.UPSTASH_REDIS_REST_URL,
   upstashRedisRestToken: env.UPSTASH_REDIS_REST_TOKEN,
+  dallEModel: getEnvOrDefault(env, 'DALL_E_MODEL', 'dall-e-3'),
   // TTL 配置（以秒为单位）
   languageTTL: 60 * 60 * 24 * 365, // 1 year
   contextTTL: 60 * 60 * 24 * 30, // 30 days
