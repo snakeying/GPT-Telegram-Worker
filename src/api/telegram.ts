@@ -1,7 +1,7 @@
 import { Env, getConfig } from '../env';
 import { TelegramTypes } from '../../types/telegram';
 import OpenAIAPI, { Message } from './openai_api';
-import { formatCodeBlock, escapeMarkdown, sendChatAction } from '../utils/helpers';
+import { formatCodeBlock, escapeMarkdown, sendChatAction, splitMessage } from '../utils/helpers';
 import { translate, SupportedLanguages, TranslationKey } from '../utils/i18n';
 import { commands, Command } from '../config/commands';
 import { RedisClient } from '../utils/redis';
@@ -38,25 +38,33 @@ export class TelegramBot {
     }
   }
 
-  async sendMessage(chatId: number, text: string, parseMode: 'Markdown' | 'HTML' = 'Markdown'): Promise<TelegramTypes.SendMessageResult> {
-    const url = `${this.apiUrl}/sendMessage`;
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: text,
-        parse_mode: parseMode,
-      }),
-    });
+  async sendMessage(chatId: number, text: string, parseMode: 'Markdown' | 'HTML' = 'Markdown'): Promise<TelegramTypes.SendMessageResult[]> {
+    const messages = splitMessage(text);
+    const results: TelegramTypes.SendMessageResult[] = [];
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    for (const message of messages) {
+      const url = `${this.apiUrl}/sendMessage`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: message,
+          parse_mode: parseMode,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json() as TelegramTypes.SendMessageResult;
+      results.push(result);
     }
 
-    return await response.json();
+    return results;
   }
 
   async handleUpdate(update: TelegramTypes.Update): Promise<void> {
@@ -127,8 +135,13 @@ export class TelegramBot {
     if (!context) {
       return translate('no_history' as TranslationKey, language);
     }
+    const languageNames = {
+      'en': 'English',
+      'zh': 'Chinese',
+      'es': 'Spanish'
+    };
     const messages: Message[] = [
-      { role: 'system' as const, content: 'Summarize the following conversation:' },
+      { role: 'system' as const, content: `Summarize the following conversation in ${languageNames[language]}:` },
       { role: 'user' as const, content: context }
     ];
     const summary = await this.modelAPI.generateResponse(messages);

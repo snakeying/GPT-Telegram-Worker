@@ -70,6 +70,22 @@ function formatCodeBlock(code, language) {
 ${code}
 \`\`\``;
 }
+function splitMessage(text, maxLength = 4096) {
+  const messages = [];
+  let currentMessage = "";
+  const lines = text.split("\n");
+  for (const line of lines) {
+    if (currentMessage.length + line.length + 1 > maxLength) {
+      messages.push(currentMessage.trim());
+      currentMessage = "";
+    }
+    currentMessage += line + "\n";
+  }
+  if (currentMessage.trim()) {
+    messages.push(currentMessage.trim());
+  }
+  return messages;
+}
 async function sendChatAction(chatId, action, env) {
   const token = env.TELEGRAM_BOT_TOKEN;
   const url = `https://api.telegram.org/bot${token}/sendChatAction`;
@@ -270,22 +286,28 @@ var TelegramBot = class {
     }
   }
   async sendMessage(chatId, text, parseMode = "Markdown") {
-    const url = `${this.apiUrl}/sendMessage`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text,
-        parse_mode: parseMode
-      })
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    const messages = splitMessage(text);
+    const results = [];
+    for (const message of messages) {
+      const url = `${this.apiUrl}/sendMessage`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: message,
+          parse_mode: parseMode
+        })
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const result = await response.json();
+      results.push(result);
     }
-    return await response.json();
+    return results;
   }
   async handleUpdate(update) {
     if (update.message && update.message.text) {
@@ -349,8 +371,13 @@ Assistant: ${response}`);
     if (!context) {
       return translate("no_history", language);
     }
+    const languageNames = {
+      "en": "English",
+      "zh": "Chinese",
+      "es": "Spanish"
+    };
     const messages = [
-      { role: "system", content: "Summarize the following conversation:" },
+      { role: "system", content: `Summarize the following conversation in ${languageNames[language]}:` },
       { role: "user", content: context }
     ];
     const summary = await this.modelAPI.generateResponse(messages);
