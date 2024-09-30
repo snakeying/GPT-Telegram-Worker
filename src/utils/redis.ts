@@ -50,6 +50,19 @@ export class RedisClient {
     }
   }
 
+  async del(key: string): Promise<void> {
+    const response = await fetch(`${this.url}/del/${key}`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+  }
+
   async setLanguage(userId: string, language: string): Promise<void> {
     await this.set(`language:${userId}`, language, this.config.languageTTL);
   }

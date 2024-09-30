@@ -1,4 +1,5 @@
 import { Env, getConfig } from '../env';
+import { ModelAPIInterface } from './model_api_interface';
 
 export interface Message {
   role: 'system' | 'user' | 'assistant';
@@ -22,7 +23,7 @@ interface ChatCompletionResponse {
   };
 }
 
-export class OpenAIAPI {
+export class OpenAIAPI implements ModelAPIInterface {
   private apiKey: string;
   private baseUrl: string;
   private models: string[];

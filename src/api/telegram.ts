@@ -2,30 +2,31 @@ import { Env, getConfig } from '../env';
 import { TelegramTypes } from '../../types/telegram';
 import OpenAIAPI, { Message } from './openai_api';
 import { formatCodeBlock, escapeMarkdown, sendChatAction } from '../utils/helpers';
-import { translate, SupportedLanguages } from '../utils/i18n';
+import { translate, SupportedLanguages, TranslationKey } from '../utils/i18n';
 import { commands, Command } from '../config/commands';
 import { RedisClient } from '../utils/redis';
+import { ModelAPIInterface } from './model_api_interface';
 
 export class TelegramBot {
   private token: string;
   private apiUrl: string;
   private whitelistedUsers: string[];
-  private openai: OpenAIAPI;
   private systemMessage: string;
   private env: Env;
   private commands: Command[];
   private redis: RedisClient;
+  private modelAPI: ModelAPIInterface;
 
   constructor(env: Env) {
     const config = getConfig(env);
     this.token = config.telegramBotToken;
     this.apiUrl = `https://api.telegram.org/bot${this.token}`;
     this.whitelistedUsers = config.whitelistedUsers;
-    this.openai = new OpenAIAPI(env);
     this.systemMessage = config.systemInitMessage;
     this.env = env;
     this.commands = commands;
     this.redis = new RedisClient(env);
+    this.modelAPI = new OpenAIAPI(env);
   }
 
   public async executeCommand(commandName: string, chatId: number, args: string[]): Promise<void> {
@@ -68,7 +69,7 @@ export class TelegramBot {
       }
       const text = update.message.text;
       const language = await this.getUserLanguage(userId);
-
+  
       if (this.isUserWhitelisted(userId)) {
         if (text.startsWith('/')) {
           const [commandName, ...args] = text.slice(1).split(' ');
@@ -82,17 +83,17 @@ export class TelegramBot {
               ...(context ? [{ role: 'user' as const, content: context }] : []),
               { role: 'user' as const, content: text }
             ];
-            const response = await this.openai.generateResponse(messages);
+            const response = await this.modelAPI.generateResponse(messages);
             const formattedResponse = this.formatResponse(response);
             await this.sendMessage(chatId, formattedResponse);
             await this.storeContext(userId, `User: ${text}\nAssistant: ${response}`);
           } catch (error) {
             console.error('Error generating response:', error);
-            await this.sendMessage(chatId, translate('error', language));
+            await this.sendMessage(chatId, translate('error' as TranslationKey, language));
           }
         }
       } else {
-        await this.sendMessage(chatId, translate('unauthorized', language));
+        await this.sendMessage(chatId, translate('unauthorized' as TranslationKey, language));
       }
     }
   }
@@ -112,6 +113,26 @@ export class TelegramBot {
 
   async getContext(userId: string): Promise<string | null> {
     return await this.redis.get(`context:${userId}`);
+  }
+
+  async clearContext(userId: string): Promise<void> {
+    await this.redis.del(`context:${userId}`);
+    const language = await this.getUserLanguage(userId);
+    await this.sendMessage(parseInt(userId), translate('new_conversation' as TranslationKey, language));
+  }
+
+  async summarizeHistory(userId: string): Promise<string> {
+    const context = await this.getContext(userId);
+    const language = await this.getUserLanguage(userId);
+    if (!context) {
+      return translate('no_history' as TranslationKey, language);
+    }
+    const messages: Message[] = [
+      { role: 'system' as const, content: 'Summarize the following conversation:' },
+      { role: 'user' as const, content: context }
+    ];
+    const summary = await this.modelAPI.generateResponse(messages);
+    return `${translate('history_summary' as TranslationKey, language)}\n\n${summary}`;
   }
 
   formatResponse(response: string): string {

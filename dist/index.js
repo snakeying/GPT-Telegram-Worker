@@ -94,7 +94,10 @@ var translations = {
     current_language: "Your current language is: English",
     language_instruction: "To change the language, use /language followed by en, zh, or es.",
     language_changed: "Language has been changed to: ",
-    invalid_language: "Invalid language. Please use en, zh, or es."
+    invalid_language: "Invalid language. Please use en, zh, or es.",
+    new_conversation: "Starting a new conversation. Previous context has been cleared.",
+    no_history: "No conversation history found.",
+    history_summary: "Here's a summary of your conversation history:"
   },
   zh: {
     welcome: "\u6B22\u8FCE\u4F7F\u7528 GPT Telegram \u673A\u5668\u4EBA\uFF01",
@@ -103,7 +106,10 @@ var translations = {
     current_language: "\u60A8\u5F53\u524D\u7684\u8BED\u8A00\u662F\uFF1A \u7B80\u4F53\u4E2D\u6587",
     language_instruction: "\u8981\u66F4\u6539\u8BED\u8A00\uFF0C\u8BF7\u4F7F\u7528 /language \u540E\u8DDF en\u3001zh \u6216 es\u3002",
     language_changed: "\u8BED\u8A00\u5DF2\u66F4\u6539\u4E3A\uFF1A",
-    invalid_language: "\u65E0\u6548\u7684\u8BED\u8A00\uFF0C\u8BF7\u4F7F\u7528 en\u3001zh \u6216 es\u3002"
+    invalid_language: "\u65E0\u6548\u7684\u8BED\u8A00\uFF0C\u8BF7\u4F7F\u7528 en\u3001zh \u6216 es\u3002",
+    new_conversation: "\u5F00\u59CB\u65B0\u7684\u5BF9\u8BDD\u3002\u4E4B\u524D\u7684\u4E0A\u4E0B\u6587\u5DF2\u88AB\u6E05\u9664\u3002",
+    no_history: "\u672A\u627E\u5230\u5BF9\u8BDD\u5386\u53F2\u3002",
+    history_summary: "\u4EE5\u4E0B\u662F\u60A8\u7684\u5BF9\u8BDD\u5386\u53F2\u6458\u8981\uFF1A"
   },
   es: {
     welcome: "\xA1Bienvenido al bot de GPT en Telegram!",
@@ -112,7 +118,10 @@ var translations = {
     current_language: "Tu idioma actual es: Espa\xF1ol",
     language_instruction: "Para cambiar el idioma, usa /language seguido de en, zh o es.",
     language_changed: "El idioma ha sido cambiado a: ",
-    invalid_language: "Idioma no v\xE1lido. Usa en, zh o es."
+    invalid_language: "Idioma no v\xE1lido. Usa en, zh o es.",
+    new_conversation: "Iniciando una nueva conversaci\xF3n. El contexto anterior ha sido borrado.",
+    no_history: "No se encontr\xF3 historial de conversaci\xF3n.",
+    history_summary: "Aqu\xED tienes un resumen de tu historial de conversaci\xF3n:"
   }
 };
 function translate(key, language = "en") {
@@ -148,6 +157,24 @@ var commands = [
       } else {
         await bot.sendMessage(chatId, translate("invalid_language", currentLanguage));
       }
+    }
+  },
+  {
+    name: "new",
+    description: "Start a new conversation",
+    action: async (chatId, bot) => {
+      const userId = chatId.toString();
+      await bot.clearContext(userId);
+    }
+  },
+  {
+    name: "history",
+    description: "Summarize conversation history",
+    action: async (chatId, bot) => {
+      const userId = chatId.toString();
+      const language = await bot.getUserLanguage(userId);
+      const summary = await bot.summarizeHistory(userId);
+      await bot.sendMessage(chatId, summary || translate("no_history", language));
     }
   }
   // 可以添加更多命令
@@ -190,6 +217,17 @@ var RedisClient = class {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
   }
+  async del(key) {
+    const response = await fetch(`${this.url}/del/${key}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.token}`
+      }
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+  }
   async setLanguage(userId, language) {
     await this.set(`language:${userId}`, language, this.config.languageTTL);
   }
@@ -207,21 +245,21 @@ var TelegramBot = class {
   token;
   apiUrl;
   whitelistedUsers;
-  openai;
   systemMessage;
   env;
   commands;
   redis;
+  modelAPI;
   constructor(env) {
     const config = getConfig(env);
     this.token = config.telegramBotToken;
     this.apiUrl = `https://api.telegram.org/bot${this.token}`;
     this.whitelistedUsers = config.whitelistedUsers;
-    this.openai = new openai_api_default(env);
     this.systemMessage = config.systemInitMessage;
     this.env = env;
     this.commands = commands;
     this.redis = new RedisClient(env);
+    this.modelAPI = new openai_api_default(env);
   }
   async executeCommand(commandName, chatId, args) {
     const command = this.commands.find((cmd) => cmd.name === commandName);
@@ -272,7 +310,7 @@ var TelegramBot = class {
               ...context ? [{ role: "user", content: context }] : [],
               { role: "user", content: text }
             ];
-            const response = await this.openai.generateResponse(messages);
+            const response = await this.modelAPI.generateResponse(messages);
             const formattedResponse = this.formatResponse(response);
             await this.sendMessage(chatId, formattedResponse);
             await this.storeContext(userId, `User: ${text}
@@ -299,6 +337,26 @@ Assistant: ${response}`);
   }
   async getContext(userId) {
     return await this.redis.get(`context:${userId}`);
+  }
+  async clearContext(userId) {
+    await this.redis.del(`context:${userId}`);
+    const language = await this.getUserLanguage(userId);
+    await this.sendMessage(parseInt(userId), translate("new_conversation", language));
+  }
+  async summarizeHistory(userId) {
+    const context = await this.getContext(userId);
+    const language = await this.getUserLanguage(userId);
+    if (!context) {
+      return translate("no_history", language);
+    }
+    const messages = [
+      { role: "system", content: "Summarize the following conversation:" },
+      { role: "user", content: context }
+    ];
+    const summary = await this.modelAPI.generateResponse(messages);
+    return `${translate("history_summary", language)}
+
+${summary}`;
   }
   formatResponse(response) {
     const codeBlockRegex = /```(\w+)?\n([\s\S]+?)```/g;

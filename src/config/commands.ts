@@ -38,5 +38,23 @@ export const commands: Command[] = [
       }
     },
   },
+  {
+    name: 'new',
+    description: 'Start a new conversation',
+    action: async (chatId: number, bot: TelegramBot) => {
+      const userId = chatId.toString();
+      await bot.clearContext(userId);
+    },
+  },
+  {
+    name: 'history',
+    description: 'Summarize conversation history',
+    action: async (chatId: number, bot: TelegramBot) => {
+      const userId = chatId.toString();
+      const language = await bot.getUserLanguage(userId);
+      const summary = await bot.summarizeHistory(userId);
+      await bot.sendMessage(chatId, summary || translate('no_history' as TranslationKey, language));
+    },
+  },
   // 可以添加更多命令
 ];

@@ -8,6 +8,9 @@ export interface Translations {
   language_instruction: string;
   language_changed: string;
   invalid_language: string;
+  new_conversation: string;
+  no_history: string;
+  history_summary: string;
 }
 
 export type TranslationKey = keyof Translations;
@@ -23,6 +26,9 @@ const translations: TranslationsMap = {
     language_instruction: "To change the language, use /language followed by en, zh, or es.",
     language_changed: "Language has been changed to: ",
     invalid_language: "Invalid language. Please use en, zh, or es.",
+    new_conversation: "Starting a new conversation. Previous context has been cleared.",
+    no_history: "No conversation history found.",
+    history_summary: "Here's a summary of your conversation history:",
   },
   zh: {
     welcome: "欢迎使用 GPT Telegram 机器人！",
@@ -32,6 +38,9 @@ const translations: TranslationsMap = {
     language_instruction: "要更改语言，请使用 /language 后跟 en、zh 或 es。",
     language_changed: "语言已更改为：",
     invalid_language: "无效的语言，请使用 en、zh 或 es。",
+    new_conversation: "开始新的对话。之前的上下文已被清除。",
+    no_history: "未找到对话历史。",
+    history_summary: "以下是您的对话历史摘要：",
   },
   es: {
     welcome: "¡Bienvenido al bot de GPT en Telegram!",
@@ -41,6 +50,9 @@ const translations: TranslationsMap = {
     language_instruction: "Para cambiar el idioma, usa /language seguido de en, zh o es.",
     language_changed: "El idioma ha sido cambiado a: ",
     invalid_language: "Idioma no válido. Usa en, zh o es.",
+    new_conversation: "Iniciando una nueva conversación. El contexto anterior ha sido borrado.",
+    no_history: "No se encontró historial de conversación.",
+    history_summary: "Aquí tienes un resumen de tu historial de conversación:",
   }
 };
 
