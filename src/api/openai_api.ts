@@ -1,6 +1,6 @@
 import { Env, getConfig } from '../env';
 
-interface Message {
+export interface Message {
   role: 'system' | 'user' | 'assistant';
   content: string;
 }

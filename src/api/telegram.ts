@@ -1,34 +1,37 @@
 import { Env, getConfig } from '../env';
 import { TelegramTypes } from '../../types/telegram';
-import OpenAIAPI from './openai_api';
+import OpenAIAPI, { Message } from './openai_api';
 import { formatCodeBlock, escapeMarkdown, sendChatAction } from '../utils/helpers';
 import { translate, SupportedLanguages } from '../utils/i18n';
 import { commands, Command } from '../config/commands';
+import { RedisClient } from '../utils/redis';
 
 export class TelegramBot {
   private token: string;
   private apiUrl: string;
-  private whitelistedUsers: number[];
+  private whitelistedUsers: string[];
   private openai: OpenAIAPI;
   private systemMessage: string;
   private env: Env;
   private commands: Command[];
+  private redis: RedisClient;
 
   constructor(env: Env) {
     const config = getConfig(env);
     this.token = config.telegramBotToken;
     this.apiUrl = `https://api.telegram.org/bot${this.token}`;
-    this.whitelistedUsers = config.whitelistedUsers.map(Number);
+    this.whitelistedUsers = config.whitelistedUsers;
     this.openai = new OpenAIAPI(env);
     this.systemMessage = config.systemInitMessage;
     this.env = env;
     this.commands = commands;
+    this.redis = new RedisClient(env);
   }
 
-  public async executeCommand(commandName: string, chatId: number): Promise<void> {
+  public async executeCommand(commandName: string, chatId: number, args: string[]): Promise<void> {
     const command = this.commands.find(cmd => cmd.name === commandName);
     if (command) {
-      await command.action(chatId, this);
+      await command.action(chatId, this, args);
     } else {
       console.log(`Unknown command: ${commandName}`);
     }
@@ -58,23 +61,31 @@ export class TelegramBot {
   async handleUpdate(update: TelegramTypes.Update): Promise<void> {
     if (update.message && update.message.text) {
       const chatId = update.message.chat.id;
-      const userId = update.message.from?.id;
+      const userId = update.message.from?.id?.toString();
+      if (!userId) {
+        console.error('User ID is undefined');
+        return;
+      }
       const text = update.message.text;
-      const language = (update.message.from?.language_code as SupportedLanguages) || 'en';
+      const language = await this.getUserLanguage(userId);
 
-      if (userId && this.isUserWhitelisted(userId)) {
+      if (this.isUserWhitelisted(userId)) {
         if (text.startsWith('/')) {
-          const commandName = text.split(' ')[0].substring(1);
-          await this.executeCommand(commandName, chatId);
+          const [commandName, ...args] = text.slice(1).split(' ');
+          await this.executeCommand(commandName, chatId, args);
         } else {
           try {
             await sendChatAction(chatId, 'typing', this.env);
-            const response = await this.openai.generateResponse([
-              { role: 'system', content: this.systemMessage },
-              { role: 'user', content: text }
-            ]);
+            const context = await this.getContext(userId);
+            const messages: Message[] = [
+              { role: 'system' as const, content: this.systemMessage },
+              ...(context ? [{ role: 'user' as const, content: context }] : []),
+              { role: 'user' as const, content: text }
+            ];
+            const response = await this.openai.generateResponse(messages);
             const formattedResponse = this.formatResponse(response);
             await this.sendMessage(chatId, formattedResponse);
+            await this.storeContext(userId, `User: ${text}\nAssistant: ${response}`);
           } catch (error) {
             console.error('Error generating response:', error);
             await this.sendMessage(chatId, translate('error', language));
@@ -86,28 +97,21 @@ export class TelegramBot {
     }
   }
 
-  private async getChatMember(chatId: number): Promise<TelegramTypes.ChatMember> {
-    const url = `${this.apiUrl}/getChatMember`;
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        chat_id: chatId,
-        user_id: chatId,
-      }),
-    });
+  async getUserLanguage(userId: string): Promise<SupportedLanguages> {
+    const language = await this.redis.get(`language:${userId}`);
+    return (language as SupportedLanguages) || 'en';
+  }
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+  async setUserLanguage(userId: string, language: SupportedLanguages): Promise<void> {
+    await this.redis.setLanguage(userId, language);
+  }
 
-    const result: TelegramTypes.GetChatMemberResult = await response.json();
-    if (!result.ok) {
-      throw new Error('Failed to get chat member');
-    }
-    return result.result;
+  async storeContext(userId: string, context: string): Promise<void> {
+    await this.redis.appendContext(userId, context);
+  }
+
+  async getContext(userId: string): Promise<string | null> {
+    return await this.redis.get(`context:${userId}`);
   }
 
   formatResponse(response: string): string {
@@ -117,7 +121,7 @@ export class TelegramBot {
     });
   }
 
-  isUserWhitelisted(userId: number): boolean {
+  isUserWhitelisted(userId: string): boolean {
     return this.whitelistedUsers.includes(userId);
   }
 
