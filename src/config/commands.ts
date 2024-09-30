@@ -56,5 +56,46 @@ export const commands: Command[] = [
       await bot.sendMessage(chatId, summary || translate('no_history' as TranslationKey, language));
     },
   },
+  {
+    name: 'switchmodel',
+    description: 'Switch the current model',
+    action: async (chatId: number, bot: TelegramBot, args: string[]) => {
+      const userId = chatId.toString();
+      const language = await bot.getUserLanguage(userId);
+      
+      if (args.length === 0) {
+        const availableModels = bot.getAvailableModels();
+        const currentModel = await bot.getCurrentModel(userId);
+        await bot.sendMessage(chatId, translate('current_model', language) + currentModel);
+        await bot.sendMessage(chatId, translate('available_models', language) + availableModels.join(', '));
+        return;
+      }
+  
+      const newModel = args[0];
+      if (bot.isValidModel(newModel)) {
+        await bot.setCurrentModel(userId, newModel);
+        await bot.sendMessage(chatId, translate('model_changed', language) + newModel);
+        await bot.clearContext(userId);
+      } else {
+        await bot.sendMessage(chatId, translate('invalid_model', language));
+      }
+    },
+  },
+  {
+    name: 'help',
+    description: 'Show available commands and their descriptions',
+    action: async (chatId: number, bot: TelegramBot) => {
+      const userId = chatId.toString();
+      const language = await bot.getUserLanguage(userId);
+      let helpMessage = translate('help_intro', language) + '\n\n';
+      
+      for (const command of commands) {
+        const descriptionKey = `${command.name}_description` as TranslationKey;
+        helpMessage += `/${command.name} - ${translate(descriptionKey, language)}\n`;
+      }
+      
+      await bot.sendMessage(chatId, helpMessage);
+    },
+  },
   // 可以添加更多命令
 ];

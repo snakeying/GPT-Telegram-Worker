@@ -115,6 +115,23 @@ export class TelegramBot {
     await this.redis.setLanguage(userId, language);
   }
 
+  async getCurrentModel(userId: string): Promise<string> {
+    const model = await this.redis.get(`model:${userId}`);
+    return model || this.modelAPI.getDefaultModel();
+  }
+
+  async setCurrentModel(userId: string, model: string): Promise<void> {
+    await this.redis.set(`model:${userId}`, model);
+  }
+
+  getAvailableModels(): string[] {
+    return this.modelAPI.getAvailableModels();
+  }
+
+  isValidModel(model: string): boolean {
+    return this.modelAPI.isValidModel(model);
+  }
+
   async storeContext(userId: string, context: string): Promise<void> {
     await this.redis.appendContext(userId, context);
   }
