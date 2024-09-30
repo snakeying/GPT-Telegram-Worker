@@ -108,69 +108,75 @@ var translations = {
     unauthorized: "Sorry, you're not authorized to use this bot.",
     error: "An error occurred. Please try again.",
     current_language: "Your current language is: English",
-    language_instruction: "To change the language, use /language followed by en, zh, or es.",
     language_changed: "Language has been changed to: ",
-    invalid_language: "Invalid language. Please use en, zh, or es.",
     new_conversation: "Starting a new conversation. Previous context has been cleared.",
     no_history: "No conversation history found.",
     history_summary: "Here's a summary of your conversation history:",
     current_model: "Your current model is: ",
     available_models: "Available models: ",
     model_changed: "Model has been changed to: ",
-    invalid_model: "Invalid model. Please choose from the available models.",
     help_intro: "Here are the available commands:",
     start_description: "Start the bot",
     language_description: "Set your preferred language",
     new_description: "Start a new conversation",
     history_description: "Summarize conversation history",
     switchmodel_description: "Switch the current model",
-    help_description: "Show available commands and their descriptions"
+    help_description: "Show available commands and their descriptions",
+    choose_language: "Please choose your preferred language:",
+    choose_model: "Please choose a model:",
+    language_en: "English",
+    language_zh: "Chinese",
+    language_es: "Spanish"
   },
   zh: {
     welcome: "\u6B22\u8FCE\u4F7F\u7528 GPT Telegram \u673A\u5668\u4EBA\uFF01",
     unauthorized: "\u62B1\u6B49\uFF0C\u60A8\u65E0\u6743\u4F7F\u7528\u6B64\u673A\u5668\u4EBA\u3002",
     error: "\u53D1\u751F\u9519\u8BEF\uFF0C\u8BF7\u91CD\u8BD5\u3002",
-    current_language: "\u60A8\u5F53\u524D\u7684\u8BED\u8A00\u662F\uFF1A \u7B80\u4F53\u4E2D\u6587",
-    language_instruction: "\u8981\u66F4\u6539\u8BED\u8A00\uFF0C\u8BF7\u4F7F\u7528 /language \u540E\u8DDF en\u3001zh \u6216 es\u3002",
+    current_language: "\u60A8\u5F53\u524D\u7684\u8BED\u8A00\u662F\uFF1A\u4E2D\u6587",
     language_changed: "\u8BED\u8A00\u5DF2\u66F4\u6539\u4E3A\uFF1A",
-    invalid_language: "\u65E0\u6548\u7684\u8BED\u8A00\uFF0C\u8BF7\u4F7F\u7528 en\u3001zh \u6216 es\u3002",
     new_conversation: "\u5F00\u59CB\u65B0\u7684\u5BF9\u8BDD\u3002\u4E4B\u524D\u7684\u4E0A\u4E0B\u6587\u5DF2\u88AB\u6E05\u9664\u3002",
     no_history: "\u672A\u627E\u5230\u5BF9\u8BDD\u5386\u53F2\u3002",
     history_summary: "\u4EE5\u4E0B\u662F\u60A8\u7684\u5BF9\u8BDD\u5386\u53F2\u6458\u8981\uFF1A",
     current_model: "\u60A8\u5F53\u524D\u4F7F\u7528\u7684\u6A21\u578B\u662F\uFF1A",
     available_models: "\u53EF\u7528\u7684\u6A21\u578B\uFF1A",
     model_changed: "\u6A21\u578B\u5DF2\u66F4\u6539\u4E3A\uFF1A",
-    invalid_model: "\u65E0\u6548\u7684\u6A21\u578B\u3002\u8BF7\u4ECE\u53EF\u7528\u6A21\u578B\u4E2D\u9009\u62E9\u3002",
     help_intro: "\u4EE5\u4E0B\u662F\u53EF\u7528\u7684\u547D\u4EE4\uFF1A",
     start_description: "\u542F\u52A8\u673A\u5668\u4EBA",
     language_description: "\u8BBE\u7F6E\u60A8\u7684\u9996\u9009\u8BED\u8A00",
     new_description: "\u5F00\u59CB\u65B0\u7684\u5BF9\u8BDD",
     history_description: "\u603B\u7ED3\u5BF9\u8BDD\u5386\u53F2",
     switchmodel_description: "\u5207\u6362\u5F53\u524D\u6A21\u578B",
-    help_description: "\u663E\u793A\u53EF\u7528\u547D\u4EE4\u53CA\u5176\u63CF\u8FF0"
+    help_description: "\u663E\u793A\u53EF\u7528\u547D\u4EE4\u53CA\u5176\u63CF\u8FF0",
+    choose_language: "\u8BF7\u9009\u62E9\u60A8\u504F\u597D\u7684\u8BED\u8A00\uFF1A",
+    choose_model: "\u8BF7\u9009\u62E9\u4E00\u4E2A\u6A21\u578B\uFF1A",
+    language_en: "\u82F1\u8BED",
+    language_zh: "\u4E2D\u6587",
+    language_es: "\u897F\u73ED\u7259\u8BED"
   },
   es: {
     welcome: "\xA1Bienvenido al bot de GPT en Telegram!",
     unauthorized: "Lo siento, no est\xE1s autorizado para usar este bot.",
     error: "Ocurri\xF3 un error. Por favor, int\xE9ntalo de nuevo.",
     current_language: "Tu idioma actual es: Espa\xF1ol",
-    language_instruction: "Para cambiar el idioma, usa /language seguido de en, zh o es.",
     language_changed: "El idioma ha sido cambiado a: ",
-    invalid_language: "Idioma no v\xE1lido. Usa en, zh o es.",
     new_conversation: "Iniciando una nueva conversaci\xF3n. El contexto anterior ha sido borrado.",
     no_history: "No se encontr\xF3 historial de conversaci\xF3n.",
     history_summary: "Aqu\xED tienes un resumen de tu historial de conversaci\xF3n:",
     current_model: "Tu modelo actual es: ",
     available_models: "Modelos disponibles: ",
     model_changed: "El modelo ha sido cambiado a: ",
-    invalid_model: "Modelo no v\xE1lido. Por favor, elige entre los modelos disponibles.",
     help_intro: "Estos son los comandos disponibles:",
     start_description: "Iniciar el bot",
     language_description: "Establecer tu idioma preferido",
     new_description: "Iniciar una nueva conversaci\xF3n",
     history_description: "Resumir el historial de conversaci\xF3n",
     switchmodel_description: "Cambiar el modelo actual",
-    help_description: "Mostrar comandos disponibles y sus descripciones"
+    help_description: "Mostrar comandos disponibles y sus descripciones",
+    choose_language: "Por favor, elige tu idioma preferido:",
+    choose_model: "Por favor, elige un modelo:",
+    language_en: "Ingl\xE9s",
+    language_zh: "Chino",
+    language_es: "Espa\xF1ol"
   }
 };
 function translate(key, language = "en") {
@@ -182,10 +188,12 @@ var commands = [
   {
     name: "start",
     description: "Start the bot",
-    action: async (chatId, bot) => {
+    action: async (chatId, bot, args) => {
       const userId = chatId.toString();
       const language = await bot.getUserLanguage(userId);
-      await bot.sendMessage(chatId, translate("welcome", language));
+      const currentModel = await bot.getCurrentModel(userId);
+      const welcomeMessage = translate("welcome", language) + "\n" + translate("current_model", language) + currentModel;
+      await bot.sendMessage(chatId, welcomeMessage);
     }
   },
   {
@@ -194,36 +202,16 @@ var commands = [
     action: async (chatId, bot, args) => {
       const userId = chatId.toString();
       const currentLanguage = await bot.getUserLanguage(userId);
-      if (args.length === 0) {
-        await bot.sendMessage(chatId, translate("current_language", currentLanguage) + currentLanguage);
-        await bot.sendMessage(chatId, translate("language_instruction", currentLanguage));
-        return;
-      }
-      const newLanguage = args[0].toLowerCase();
-      if (["en", "zh", "es"].includes(newLanguage)) {
-        await bot.setUserLanguage(userId, newLanguage);
-        await bot.sendMessage(chatId, translate("language_changed", newLanguage));
-      } else {
-        await bot.sendMessage(chatId, translate("invalid_language", currentLanguage));
-      }
-    }
-  },
-  {
-    name: "new",
-    description: "Start a new conversation",
-    action: async (chatId, bot) => {
-      const userId = chatId.toString();
-      await bot.clearContext(userId);
-    }
-  },
-  {
-    name: "history",
-    description: "Summarize conversation history",
-    action: async (chatId, bot) => {
-      const userId = chatId.toString();
-      const language = await bot.getUserLanguage(userId);
-      const summary = await bot.summarizeHistory(userId);
-      await bot.sendMessage(chatId, summary || translate("no_history", language));
+      const keyboard = {
+        inline_keyboard: [
+          [
+            { text: "\u{1F1FA}\u{1F1F8} English", callback_data: "lang_en" },
+            { text: "\u{1F1E8}\u{1F1F3} \u4E2D\u6587", callback_data: "lang_zh" },
+            { text: "\u{1F1EA}\u{1F1F8} Espa\xF1ol", callback_data: "lang_es" }
+          ]
+        ]
+      };
+      await bot.sendMessage(chatId, translate("choose_language", currentLanguage), { reply_markup: JSON.stringify(keyboard) });
     }
   },
   {
@@ -232,27 +220,35 @@ var commands = [
     action: async (chatId, bot, args) => {
       const userId = chatId.toString();
       const language = await bot.getUserLanguage(userId);
-      if (args.length === 0) {
-        const availableModels = bot.getAvailableModels();
-        const currentModel = await bot.getCurrentModel(userId);
-        await bot.sendMessage(chatId, translate("current_model", language) + currentModel);
-        await bot.sendMessage(chatId, translate("available_models", language) + availableModels.join(", "));
-        return;
-      }
-      const newModel = args[0];
-      if (bot.isValidModel(newModel)) {
-        await bot.setCurrentModel(userId, newModel);
-        await bot.sendMessage(chatId, translate("model_changed", language) + newModel);
-        await bot.clearContext(userId);
-      } else {
-        await bot.sendMessage(chatId, translate("invalid_model", language));
-      }
+      const availableModels = bot.getAvailableModels();
+      const keyboard = {
+        inline_keyboard: availableModels.map((model) => [{ text: model, callback_data: `model_${model}` }])
+      };
+      await bot.sendMessage(chatId, translate("choose_model", language), { reply_markup: JSON.stringify(keyboard) });
+    }
+  },
+  {
+    name: "new",
+    description: "Start a new conversation",
+    action: async (chatId, bot, args) => {
+      const userId = chatId.toString();
+      await bot.clearContext(userId);
+    }
+  },
+  {
+    name: "history",
+    description: "Summarize conversation history",
+    action: async (chatId, bot, args) => {
+      const userId = chatId.toString();
+      const language = await bot.getUserLanguage(userId);
+      const summary = await bot.summarizeHistory(userId);
+      await bot.sendMessage(chatId, summary || translate("no_history", language));
     }
   },
   {
     name: "help",
     description: "Show available commands and their descriptions",
-    action: async (chatId, bot) => {
+    action: async (chatId, bot, args) => {
       const userId = chatId.toString();
       const language = await bot.getUserLanguage(userId);
       let helpMessage = translate("help_intro", language) + "\n\n";
@@ -264,7 +260,6 @@ var commands = [
       await bot.sendMessage(chatId, helpMessage);
     }
   }
-  // 可以添加更多命令
 ];
 
 // src/utils/redis.ts
@@ -356,7 +351,7 @@ var TelegramBot = class {
       console.log(`Unknown command: ${commandName}`);
     }
   }
-  async sendMessage(chatId, text, parseMode = "Markdown") {
+  async sendMessage(chatId, text, options = {}) {
     const messages = splitMessage(text);
     const results = [];
     for (const message of messages) {
@@ -369,7 +364,9 @@ var TelegramBot = class {
         body: JSON.stringify({
           chat_id: chatId,
           text: message,
-          parse_mode: parseMode
+          parse_mode: options.parse_mode || "Markdown",
+          // 默认使用 Markdown
+          reply_markup: options.reply_markup
         })
       });
       if (!response.ok) {
@@ -381,7 +378,9 @@ var TelegramBot = class {
     return results;
   }
   async handleUpdate(update) {
-    if (update.message && update.message.text) {
+    if (update.callback_query) {
+      await this.handleCallbackQuery(update.callback_query);
+    } else if (update.message && update.message.text) {
       const chatId = update.message.chat.id;
       const userId = update.message.from?.id?.toString();
       if (!userId) {
@@ -405,18 +404,41 @@ var TelegramBot = class {
             ];
             const response = await this.modelAPI.generateResponse(messages);
             const formattedResponse = this.formatResponse(response);
-            await this.sendMessage(chatId, formattedResponse);
+            await this.sendMessage(chatId, formattedResponse, { parse_mode: "Markdown" });
             await this.storeContext(userId, `User: ${text}
 Assistant: ${response}`);
           } catch (error) {
             console.error("Error generating response:", error);
-            await this.sendMessage(chatId, translate("error", language));
+            await this.sendMessage(chatId, translate("error", language), { parse_mode: "Markdown" });
           }
         }
       } else {
-        await this.sendMessage(chatId, translate("unauthorized", language));
+        await this.sendMessage(chatId, translate("unauthorized", language), { parse_mode: "Markdown" });
       }
     }
+  }
+  async handleCallbackQuery(callbackQuery) {
+    const chatId = callbackQuery.message?.chat.id;
+    const userId = callbackQuery.from.id.toString();
+    const data = callbackQuery.data;
+    if (!chatId || !data)
+      return;
+    if (data.startsWith("lang_")) {
+      const newLanguage = data.split("_")[1];
+      await this.setUserLanguage(userId, newLanguage);
+      await this.sendMessage(chatId, translate("language_changed", newLanguage) + translate(`language_${newLanguage}`, newLanguage), { parse_mode: "Markdown" });
+    } else if (data.startsWith("model_")) {
+      const newModel = data.split("_")[1];
+      await this.setCurrentModel(userId, newModel);
+      const language = await this.getUserLanguage(userId);
+      await this.sendMessage(chatId, translate("model_changed", language) + newModel, { parse_mode: "Markdown" });
+      await this.clearContext(userId);
+    }
+    await fetch(`${this.apiUrl}/answerCallbackQuery`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ callback_query_id: callbackQuery.id })
+    });
   }
   async getUserLanguage(userId) {
     const language = await this.redis.get(`language:${userId}`);
@@ -447,7 +469,7 @@ Assistant: ${response}`);
   async clearContext(userId) {
     await this.redis.del(`context:${userId}`);
     const language = await this.getUserLanguage(userId);
-    await this.sendMessage(parseInt(userId), translate("new_conversation", language));
+    await this.sendMessage(parseInt(userId), translate("new_conversation", language), { parse_mode: "Markdown" });
   }
   async summarizeHistory(userId) {
     const context = await this.getContext(userId);

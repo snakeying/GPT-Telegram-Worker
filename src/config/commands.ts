@@ -11,10 +11,13 @@ export const commands: Command[] = [
   {
     name: 'start',
     description: 'Start the bot',
-    action: async (chatId: number, bot: TelegramBot) => {
+    action: async (chatId: number, bot: TelegramBot, args: string[]) => {
       const userId = chatId.toString();
       const language = await bot.getUserLanguage(userId);
-      await bot.sendMessage(chatId, translate('welcome' as TranslationKey, language));
+      const currentModel = await bot.getCurrentModel(userId);
+      const welcomeMessage = translate('welcome', language) + '\n' + 
+                             translate('current_model', language) + currentModel;
+      await bot.sendMessage(chatId, welcomeMessage);
     },
   },
   {
@@ -23,37 +26,16 @@ export const commands: Command[] = [
     action: async (chatId: number, bot: TelegramBot, args: string[]) => {
       const userId = chatId.toString();
       const currentLanguage = await bot.getUserLanguage(userId);
-      if (args.length === 0) {
-        await bot.sendMessage(chatId, translate('current_language' as TranslationKey, currentLanguage) + currentLanguage);
-        await bot.sendMessage(chatId, translate('language_instruction' as TranslationKey, currentLanguage));
-        return;
-      }
-
-      const newLanguage = args[0].toLowerCase();
-      if (['en', 'zh', 'es'].includes(newLanguage)) {
-        await bot.setUserLanguage(userId, newLanguage as SupportedLanguages);
-        await bot.sendMessage(chatId, translate('language_changed' as TranslationKey, newLanguage as SupportedLanguages));
-      } else {
-        await bot.sendMessage(chatId, translate('invalid_language' as TranslationKey, currentLanguage));
-      }
-    },
-  },
-  {
-    name: 'new',
-    description: 'Start a new conversation',
-    action: async (chatId: number, bot: TelegramBot) => {
-      const userId = chatId.toString();
-      await bot.clearContext(userId);
-    },
-  },
-  {
-    name: 'history',
-    description: 'Summarize conversation history',
-    action: async (chatId: number, bot: TelegramBot) => {
-      const userId = chatId.toString();
-      const language = await bot.getUserLanguage(userId);
-      const summary = await bot.summarizeHistory(userId);
-      await bot.sendMessage(chatId, summary || translate('no_history' as TranslationKey, language));
+      const keyboard = {
+        inline_keyboard: [
+          [
+            { text: '🇺🇸 English', callback_data: 'lang_en' },
+            { text: '🇨🇳 中文', callback_data: 'lang_zh' },
+            { text: '🇪🇸 Español', callback_data: 'lang_es' }
+          ]
+        ]
+      };
+      await bot.sendMessage(chatId, translate('choose_language', currentLanguage), { reply_markup: JSON.stringify(keyboard) });
     },
   },
   {
@@ -62,29 +44,35 @@ export const commands: Command[] = [
     action: async (chatId: number, bot: TelegramBot, args: string[]) => {
       const userId = chatId.toString();
       const language = await bot.getUserLanguage(userId);
-      
-      if (args.length === 0) {
-        const availableModels = bot.getAvailableModels();
-        const currentModel = await bot.getCurrentModel(userId);
-        await bot.sendMessage(chatId, translate('current_model', language) + currentModel);
-        await bot.sendMessage(chatId, translate('available_models', language) + availableModels.join(', '));
-        return;
-      }
-  
-      const newModel = args[0];
-      if (bot.isValidModel(newModel)) {
-        await bot.setCurrentModel(userId, newModel);
-        await bot.sendMessage(chatId, translate('model_changed', language) + newModel);
-        await bot.clearContext(userId);
-      } else {
-        await bot.sendMessage(chatId, translate('invalid_model', language));
-      }
+      const availableModels = bot.getAvailableModels();
+      const keyboard = {
+        inline_keyboard: availableModels.map(model => [{text: model, callback_data: `model_${model}`}])
+      };
+      await bot.sendMessage(chatId, translate('choose_model', language), { reply_markup: JSON.stringify(keyboard) });
+    },
+  },
+  {
+    name: 'new',
+    description: 'Start a new conversation',
+    action: async (chatId: number, bot: TelegramBot, args: string[]) => {
+      const userId = chatId.toString();
+      await bot.clearContext(userId);
+    },
+  },
+  {
+    name: 'history',
+    description: 'Summarize conversation history',
+    action: async (chatId: number, bot: TelegramBot, args: string[]) => {
+      const userId = chatId.toString();
+      const language = await bot.getUserLanguage(userId);
+      const summary = await bot.summarizeHistory(userId);
+      await bot.sendMessage(chatId, summary || translate('no_history', language));
     },
   },
   {
     name: 'help',
     description: 'Show available commands and their descriptions',
-    action: async (chatId: number, bot: TelegramBot) => {
+    action: async (chatId: number, bot: TelegramBot, args: string[]) => {
       const userId = chatId.toString();
       const language = await bot.getUserLanguage(userId);
       let helpMessage = translate('help_intro', language) + '\n\n';
@@ -97,5 +85,4 @@ export const commands: Command[] = [
       await bot.sendMessage(chatId, helpMessage);
     },
   },
-  // 可以添加更多命令
 ];

@@ -5,6 +5,7 @@ export namespace TelegramTypes {
     edited_message?: Message;
     channel_post?: Message;
     edited_channel_post?: Message;
+    callback_query?: CallbackQuery;
   }
 
   interface Message {
@@ -83,5 +84,15 @@ export namespace TelegramTypes {
   interface GetChatMemberResult {
     ok: boolean;
     result: ChatMember;
+  }
+
+  interface CallbackQuery {
+    id: string;
+    from: User;
+    message?: Message;
+    inline_message_id?: string;
+    chat_instance: string;
+    data?: string;
+    game_short_name?: string;
   }
 }

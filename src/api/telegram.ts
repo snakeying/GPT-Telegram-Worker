@@ -2,7 +2,7 @@ import { Env, getConfig } from '../env';
 import { TelegramTypes } from '../../types/telegram';
 import OpenAIAPI, { Message } from './openai_api';
 import { formatCodeBlock, escapeMarkdown, sendChatAction, splitMessage } from '../utils/helpers';
-import { translate, SupportedLanguages, TranslationKey } from '../utils/i18n';
+import { translate, SupportedLanguages } from '../utils/i18n';
 import { commands, Command } from '../config/commands';
 import { RedisClient } from '../utils/redis';
 import { ModelAPIInterface } from './model_api_interface';
@@ -30,7 +30,7 @@ export class TelegramBot {
   }
 
   public async executeCommand(commandName: string, chatId: number, args: string[]): Promise<void> {
-    const command = this.commands.find(cmd => cmd.name === commandName);
+    const command = this.commands.find(cmd => cmd.name === commandName) as Command | undefined;
     if (command) {
       await command.action(chatId, this, args);
     } else {
@@ -38,10 +38,10 @@ export class TelegramBot {
     }
   }
 
-  async sendMessage(chatId: number, text: string, parseMode: 'Markdown' | 'HTML' = 'Markdown'): Promise<TelegramTypes.SendMessageResult[]> {
+  async sendMessage(chatId: number, text: string, options: { parse_mode?: 'Markdown' | 'HTML', reply_markup?: string } = {}): Promise<TelegramTypes.SendMessageResult[]> {
     const messages = splitMessage(text);
     const results: TelegramTypes.SendMessageResult[] = [];
-
+  
     for (const message of messages) {
       const url = `${this.apiUrl}/sendMessage`;
       const response = await fetch(url, {
@@ -52,23 +52,26 @@ export class TelegramBot {
         body: JSON.stringify({
           chat_id: chatId,
           text: message,
-          parse_mode: parseMode,
+          parse_mode: options.parse_mode || 'Markdown',  // 默认使用 Markdown
+          reply_markup: options.reply_markup,
         }),
       });
-
+  
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
+  
       const result = await response.json() as TelegramTypes.SendMessageResult;
       results.push(result);
     }
-
+  
     return results;
   }
 
   async handleUpdate(update: TelegramTypes.Update): Promise<void> {
-    if (update.message && update.message.text) {
+    if (update.callback_query) {
+      await this.handleCallbackQuery(update.callback_query);
+    } else if (update.message && update.message.text) {
       const chatId = update.message.chat.id;
       const userId = update.message.from?.id?.toString();
       if (!userId) {
@@ -93,17 +96,44 @@ export class TelegramBot {
             ];
             const response = await this.modelAPI.generateResponse(messages);
             const formattedResponse = this.formatResponse(response);
-            await this.sendMessage(chatId, formattedResponse);
+            await this.sendMessage(chatId, formattedResponse, { parse_mode: 'Markdown' });
             await this.storeContext(userId, `User: ${text}\nAssistant: ${response}`);
           } catch (error) {
             console.error('Error generating response:', error);
-            await this.sendMessage(chatId, translate('error' as TranslationKey, language));
+            await this.sendMessage(chatId, translate('error', language), { parse_mode: 'Markdown' });
           }
         }
       } else {
-        await this.sendMessage(chatId, translate('unauthorized' as TranslationKey, language));
+        await this.sendMessage(chatId, translate('unauthorized', language), { parse_mode: 'Markdown' });
       }
     }
+  }
+
+  async handleCallbackQuery(callbackQuery: TelegramTypes.CallbackQuery): Promise<void> {
+    const chatId = callbackQuery.message?.chat.id;
+    const userId = callbackQuery.from.id.toString();
+    const data = callbackQuery.data;
+
+    if (!chatId || !data) return;
+
+    if (data.startsWith('lang_')) {
+      const newLanguage = data.split('_')[1] as SupportedLanguages;
+      await this.setUserLanguage(userId, newLanguage);
+      await this.sendMessage(chatId, translate('language_changed', newLanguage) + translate(`language_${newLanguage}`, newLanguage), { parse_mode: 'Markdown' });
+    } else if (data.startsWith('model_')) {
+      const newModel = data.split('_')[1];
+      await this.setCurrentModel(userId, newModel);
+      const language = await this.getUserLanguage(userId);
+      await this.sendMessage(chatId, translate('model_changed', language) + newModel, { parse_mode: 'Markdown' });
+      await this.clearContext(userId);
+    }
+
+    // Answer the callback query to remove the loading state
+    await fetch(`${this.apiUrl}/answerCallbackQuery`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ callback_query_id: callbackQuery.id })
+    });
   }
 
   async getUserLanguage(userId: string): Promise<SupportedLanguages> {
@@ -143,14 +173,14 @@ export class TelegramBot {
   async clearContext(userId: string): Promise<void> {
     await this.redis.del(`context:${userId}`);
     const language = await this.getUserLanguage(userId);
-    await this.sendMessage(parseInt(userId), translate('new_conversation' as TranslationKey, language));
+    await this.sendMessage(parseInt(userId), translate('new_conversation', language), { parse_mode: 'Markdown' });
   }
 
   async summarizeHistory(userId: string): Promise<string> {
     const context = await this.getContext(userId);
     const language = await this.getUserLanguage(userId);
     if (!context) {
-      return translate('no_history' as TranslationKey, language);
+      return translate('no_history', language);
     }
     const languageNames = {
       'en': 'English',
@@ -162,7 +192,7 @@ export class TelegramBot {
       { role: 'user' as const, content: context }
     ];
     const summary = await this.modelAPI.generateResponse(messages);
-    return `${translate('history_summary' as TranslationKey, language)}\n\n${summary}`;
+    return `${translate('history_summary', language)}\n\n${summary}`;
   }
 
   formatResponse(response: string): string {
