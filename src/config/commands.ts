@@ -99,10 +99,25 @@ export const commands: Command[] = [
         return;
       }
   
-      const sizeArg = args[args.length - 1].toLowerCase();
       const validSizes = ['1024x1024', '1024x1792', '1792x1024'];
-      const size = validSizes.includes(sizeArg) ? sizeArg : '1024x1024';
-      const prompt = sizeArg === size ? args.slice(0, -1).join(' ') : args.join(' ');
+      const sizeArg = args[args.length - 1].toLowerCase();
+      let size: string;
+      let prompt: string;
+  
+      if (validSizes.includes(sizeArg)) {
+        size = sizeArg;
+        prompt = args.slice(0, -1).join(' ');
+      } else {
+        size = '1024x1024'; // Default size
+        prompt = args.join(' ');
+        
+        // Check if the last argument looks like a size specification
+        if (sizeArg.includes('x') || sizeArg.includes('*')) {
+          const sizeOptions = validSizes.map(s => `\`${s}\``).join(', ');
+          await bot.sendMessage(chatId, translate('invalid_size', language) + sizeOptions);
+          return;
+        }
+      }
   
       try {
         await sendChatAction(chatId, 'upload_photo', bot['env']);

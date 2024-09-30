@@ -130,7 +130,8 @@ var translations = {
     language_es: "Spanish",
     image_prompt_required: "Please provide a description for the image you want to generate.",
     image_generation_error: "Sorry, there was an error generating the image. Please try again later.",
-    img_description: "Generate an image using DALL\xB7E. Format: /img <description> [size]"
+    img_description: "Generate an image using DALL\xB7E. Format: /img <description> [size]",
+    invalid_size: "Invalid image size. Please use one of the following sizes: "
   },
   zh: {
     welcome: "\u6B22\u8FCE\u4F7F\u7528 GPT Telegram \u673A\u5668\u4EBA\uFF01",
@@ -158,7 +159,8 @@ var translations = {
     language_es: "\u897F\u73ED\u7259\u8BED",
     image_prompt_required: "\u8BF7\u63D0\u4F9B\u60A8\u60F3\u8981\u751F\u6210\u7684\u56FE\u50CF\u63CF\u8FF0\u3002",
     image_generation_error: "\u62B1\u6B49\uFF0C\u751F\u6210\u56FE\u50CF\u65F6\u51FA\u9519\u3002\u8BF7\u7A0D\u540E\u518D\u8BD5\u3002",
-    img_description: "\u4F7F\u7528 DALL\xB7E \u751F\u6210\u56FE\u50CF\u3002\u683C\u5F0F\uFF1A/img <\u63CF\u8FF0> [\u5C3A\u5BF8]"
+    img_description: "\u4F7F\u7528 DALL\xB7E \u751F\u6210\u56FE\u50CF\u3002\u683C\u5F0F\uFF1A/img <\u63CF\u8FF0> [\u5C3A\u5BF8]",
+    invalid_size: "\u65E0\u6548\u7684\u56FE\u7247\u5C3A\u5BF8\u3002\u8BF7\u4F7F\u7528\u4EE5\u4E0B\u5C3A\u5BF8\u4E4B\u4E00\uFF1A"
   },
   es: {
     welcome: "\xA1Bienvenido al bot de GPT en Telegram!",
@@ -186,7 +188,8 @@ var translations = {
     language_es: "Espa\xF1ol",
     image_prompt_required: "Por favor, proporcione una descripci\xF3n para la imagen que desea generar.",
     image_generation_error: "Lo siento, hubo un error al generar la imagen. Por favor, int\xE9ntelo de nuevo m\xE1s tarde.",
-    img_description: "Generar una imagen usando DALL\xB7E. Formato: /img <descripci\xF3n> [tama\xF1o]"
+    img_description: "Generar una imagen usando DALL\xB7E. Formato: /img <descripci\xF3n> [tama\xF1o]",
+    invalid_size: "Tama\xF1o de imagen no v\xE1lido. Por favor, use uno de los siguientes tama\xF1os: "
   }
 };
 function translate(key, language = "en") {
@@ -329,10 +332,22 @@ var commands = [
         await bot.sendMessage(chatId, translate("image_prompt_required", language));
         return;
       }
-      const sizeArg = args[args.length - 1].toLowerCase();
       const validSizes = ["1024x1024", "1024x1792", "1792x1024"];
-      const size = validSizes.includes(sizeArg) ? sizeArg : "1024x1024";
-      const prompt = sizeArg === size ? args.slice(0, -1).join(" ") : args.join(" ");
+      const sizeArg = args[args.length - 1].toLowerCase();
+      let size;
+      let prompt;
+      if (validSizes.includes(sizeArg)) {
+        size = sizeArg;
+        prompt = args.slice(0, -1).join(" ");
+      } else {
+        size = "1024x1024";
+        prompt = args.join(" ");
+        if (sizeArg.includes("x") || sizeArg.includes("*")) {
+          const sizeOptions = validSizes.map((s) => `\`${s}\``).join(", ");
+          await bot.sendMessage(chatId, translate("invalid_size", language) + sizeOptions);
+          return;
+        }
+      }
       try {
         await sendChatAction(chatId, "upload_photo", bot["env"]);
         const imageApi = new ImageGenerationAPI(bot["env"]);

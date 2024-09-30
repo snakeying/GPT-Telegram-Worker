@@ -27,6 +27,7 @@ export interface Translations {
   image_prompt_required: string;
   image_generation_error: string;
   img_description: string;
+  invalid_size: string;
 }
 
 export type TranslationKey = keyof Translations;
@@ -61,6 +62,7 @@ const translations: TranslationsMap = {
     image_prompt_required: 'Please provide a description for the image you want to generate.',
     image_generation_error: 'Sorry, there was an error generating the image. Please try again later.',
     img_description: 'Generate an image using DALL·E. Format: /img <description> [size]',
+    invalid_size: 'Invalid image size. Please use one of the following sizes: ',
   },
   zh: {
     welcome: "欢迎使用 GPT Telegram 机器人！",
@@ -89,6 +91,7 @@ const translations: TranslationsMap = {
     image_prompt_required: '请提供您想要生成的图像描述。',
     image_generation_error: '抱歉，生成图像时出错。请稍后再试。',
     img_description: '使用 DALL·E 生成图像。格式：/img <描述> [尺寸]',
+    invalid_size: '无效的图片尺寸。请使用以下尺寸之一：',
   },
   es: {
     welcome: "¡Bienvenido al bot de GPT en Telegram!",
@@ -117,6 +120,7 @@ const translations: TranslationsMap = {
     image_prompt_required: 'Por favor, proporcione una descripción para la imagen que desea generar.',
     image_generation_error: 'Lo siento, hubo un error al generar la imagen. Por favor, inténtelo de nuevo más tarde.',
     img_description: 'Generar una imagen usando DALL·E. Formato: /img <descripción> [tamaño]',
+    invalid_size: 'Tamaño de imagen no válido. Por favor, use uno de los siguientes tamaños: ',
   }
 };
 
