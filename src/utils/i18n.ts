@@ -29,6 +29,8 @@ export interface Translations {
   img_description: string;
   invalid_size: string;
   flux_description: string;
+  flux_usage: string;
+  invalid_aspect_ratio: string;
 }
 
 export type TranslationKey = keyof Translations;
@@ -65,6 +67,8 @@ const translations: TranslationsMap = {
     img_description: 'Generate an image using DALL·E. Format: /img <description> [size]',
     invalid_size: 'Invalid image size. Please use one of the following sizes: ',
     flux_description: 'Generate an image using Flux',
+    flux_usage: 'Usage: /flux <description> <aspect ratio>. Valid aspect ratios are: 1:1, 1:2, 3:2, 3:4, 16:9, 9:16',
+    invalid_aspect_ratio: 'Invalid aspect ratio. Valid options are: ',
   },
   zh: {
     welcome: "欢迎使用 GPT Telegram 机器人！",
@@ -95,6 +99,8 @@ const translations: TranslationsMap = {
     img_description: '使用 DALL·E 生成图像。格式：/img <描述> [尺寸]',
     invalid_size: '无效的图片尺寸。请使用以下尺寸之一：',
     flux_description: '使用 Flux 生成图像',
+    flux_usage: '用法：/flux <描述> <宽高比>。有效的宽高比有：1:1, 1:2, 3:2, 3:4, 16:9, 9:16',
+    invalid_aspect_ratio: '无效的宽高比。有效选项为：',
   },
   es: {
     welcome: "¡Bienvenido al bot de GPT en Telegram!",
@@ -125,6 +131,8 @@ const translations: TranslationsMap = {
     img_description: 'Generar una imagen usando DALL·E. Formato: /img <descripción> [tamaño]',
     invalid_size: 'Tamaño de imagen no válido. Por favor, use uno de los siguientes tamaños: ',
     flux_description: 'Generar una imagen usando Flux',
+    flux_usage: 'Uso: /flux <descripción> <relación de aspecto>. Las relaciones de aspecto válidas son: 1:1, 1:2, 3:2, 3:4, 16:9, 9:16',
+    invalid_aspect_ratio: 'Relación de aspecto no válida. Las opciones válidas son: ',
   }
 };
 

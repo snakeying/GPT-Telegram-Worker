@@ -22,11 +22,14 @@ export class FluxAPI implements ModelAPIInterface {
     this.steps = config.fluxSteps;
   }
 
-  async generateImage(prompt: string): Promise<Uint8Array> {
+  async generateImage(prompt: string, aspectRatio: string): Promise<Uint8Array> {
     const url = `https://api.cloudflare.com/client/v4/accounts/${this.accountId}/ai/run/${this.model}`;
     console.log(`Sending request to Flux API: ${url}`);
     console.log(`Prompt: ${prompt}`);
     console.log(`Steps: ${this.steps}`);
+    console.log(`Aspect Ratio: ${aspectRatio}`);
+
+    const [width, height] = this.getImageDimensions(aspectRatio);
 
     // Add a random seed to ensure different images for the same prompt
     const seed = Math.floor(Math.random() * 1000000);
@@ -41,6 +44,8 @@ export class FluxAPI implements ModelAPIInterface {
         prompt: prompt,
         num_steps: this.steps,
         seed: seed,
+        width: width,
+        height: height,
       }),
     });
 
@@ -79,6 +84,18 @@ export class FluxAPI implements ModelAPIInterface {
     return bytes;
   }
 
+  private getImageDimensions(aspectRatio: string): [number, number] {
+    switch (aspectRatio) {
+      case '1:1': return [1024, 1024];
+      case '1:2': return [512, 1024];
+      case '3:2': return [768, 512];
+      case '3:4': return [768, 1024];
+      case '16:9': return [1024, 576];
+      case '9:16': return [576, 1024];
+      default: return [1024, 1024]; // Default to 1:1 if invalid ratio is provided
+    }
+  }
+
   async generateResponse(messages: { role: string; content: string; }[]): Promise<string> {
     throw new Error('Method not implemented for image generation.');
   }
@@ -93,6 +110,10 @@ export class FluxAPI implements ModelAPIInterface {
 
   getAvailableModels(): string[] {
     return [this.model];
+  }
+
+  getValidAspectRatios(): string[] {
+    return ['1:1', '1:2', '3:2', '3:4', '16:9', '9:16'];
   }
 }
 

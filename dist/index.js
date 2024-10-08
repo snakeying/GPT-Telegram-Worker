@@ -135,7 +135,9 @@ var translations = {
     image_generation_error: "Sorry, there was an error generating the image. Please try again later.",
     img_description: "Generate an image using DALL\xB7E. Format: /img <description> [size]",
     invalid_size: "Invalid image size. Please use one of the following sizes: ",
-    flux_description: "Generate an image using Flux"
+    flux_description: "Generate an image using Flux",
+    flux_usage: "Usage: /flux <description> <aspect ratio>. Valid aspect ratios are: 1:1, 1:2, 3:2, 3:4, 16:9, 9:16",
+    invalid_aspect_ratio: "Invalid aspect ratio. Valid options are: "
   },
   zh: {
     welcome: "\u6B22\u8FCE\u4F7F\u7528 GPT Telegram \u673A\u5668\u4EBA\uFF01",
@@ -165,7 +167,9 @@ var translations = {
     image_generation_error: "\u62B1\u6B49\uFF0C\u751F\u6210\u56FE\u50CF\u65F6\u51FA\u9519\u3002\u8BF7\u7A0D\u540E\u518D\u8BD5\u3002",
     img_description: "\u4F7F\u7528 DALL\xB7E \u751F\u6210\u56FE\u50CF\u3002\u683C\u5F0F\uFF1A/img <\u63CF\u8FF0> [\u5C3A\u5BF8]",
     invalid_size: "\u65E0\u6548\u7684\u56FE\u7247\u5C3A\u5BF8\u3002\u8BF7\u4F7F\u7528\u4EE5\u4E0B\u5C3A\u5BF8\u4E4B\u4E00\uFF1A",
-    flux_description: "\u4F7F\u7528 Flux \u751F\u6210\u56FE\u50CF"
+    flux_description: "\u4F7F\u7528 Flux \u751F\u6210\u56FE\u50CF",
+    flux_usage: "\u7528\u6CD5\uFF1A/flux <\u63CF\u8FF0> <\u5BBD\u9AD8\u6BD4>\u3002\u6709\u6548\u7684\u5BBD\u9AD8\u6BD4\u6709\uFF1A1:1, 1:2, 3:2, 3:4, 16:9, 9:16",
+    invalid_aspect_ratio: "\u65E0\u6548\u7684\u5BBD\u9AD8\u6BD4\u3002\u6709\u6548\u9009\u9879\u4E3A\uFF1A"
   },
   es: {
     welcome: "\xA1Bienvenido al bot de GPT en Telegram!",
@@ -195,7 +199,9 @@ var translations = {
     image_generation_error: "Lo siento, hubo un error al generar la imagen. Por favor, int\xE9ntelo de nuevo m\xE1s tarde.",
     img_description: "Generar una imagen usando DALL\xB7E. Formato: /img <descripci\xF3n> [tama\xF1o]",
     invalid_size: "Tama\xF1o de imagen no v\xE1lido. Por favor, use uno de los siguientes tama\xF1os: ",
-    flux_description: "Generar una imagen usando Flux"
+    flux_description: "Generar una imagen usando Flux",
+    flux_usage: "Uso: /flux <descripci\xF3n> <relaci\xF3n de aspecto>. Las relaciones de aspecto v\xE1lidas son: 1:1, 1:2, 3:2, 3:4, 16:9, 9:16",
+    invalid_aspect_ratio: "Relaci\xF3n de aspecto no v\xE1lida. Las opciones v\xE1lidas son: "
   }
 };
 function translate(key, language = "en") {
@@ -263,11 +269,13 @@ var FluxAPI = class {
     this.accountId = config.cloudflareAccountId;
     this.steps = config.fluxSteps;
   }
-  async generateImage(prompt) {
+  async generateImage(prompt, aspectRatio) {
     const url = `https://api.cloudflare.com/client/v4/accounts/${this.accountId}/ai/run/${this.model}`;
     console.log(`Sending request to Flux API: ${url}`);
     console.log(`Prompt: ${prompt}`);
     console.log(`Steps: ${this.steps}`);
+    console.log(`Aspect Ratio: ${aspectRatio}`);
+    const [width, height] = this.getImageDimensions(aspectRatio);
     const seed = Math.floor(Math.random() * 1e6);
     const response = await fetch(url, {
       method: "POST",
@@ -278,7 +286,9 @@ var FluxAPI = class {
       body: JSON.stringify({
         prompt,
         num_steps: this.steps,
-        seed
+        seed,
+        width,
+        height
       })
     });
     console.log(`Flux API response status: ${response.status}`);
@@ -309,6 +319,24 @@ var FluxAPI = class {
     }
     return bytes;
   }
+  getImageDimensions(aspectRatio) {
+    switch (aspectRatio) {
+      case "1:1":
+        return [1024, 1024];
+      case "1:2":
+        return [512, 1024];
+      case "3:2":
+        return [768, 512];
+      case "3:4":
+        return [768, 1024];
+      case "16:9":
+        return [1024, 576];
+      case "9:16":
+        return [576, 1024];
+      default:
+        return [1024, 1024];
+    }
+  }
   async generateResponse(messages) {
     throw new Error("Method not implemented for image generation.");
   }
@@ -320,6 +348,9 @@ var FluxAPI = class {
   }
   getAvailableModels() {
     return [this.model];
+  }
+  getValidAspectRatios() {
+    return ["1:1", "1:2", "3:2", "3:4", "16:9", "9:16"];
   }
 };
 
@@ -443,19 +474,25 @@ var commands = [
     action: async (chatId, bot, args) => {
       const userId = chatId.toString();
       const language = await bot.getUserLanguage(userId);
-      if (!args.length) {
-        await bot.sendMessage(chatId, translate("image_prompt_required", language));
+      if (args.length < 2) {
+        await bot.sendMessage(chatId, translate("flux_usage", language));
         return;
       }
-      const prompt = args.join(" ");
+      const aspectRatio = args[args.length - 1];
+      const prompt = args.slice(0, -1).join(" ");
       try {
         console.log(`Starting Flux image generation for user ${userId}`);
         await sendChatAction(chatId, "upload_photo", bot["env"]);
         const fluxApi = new FluxAPI(bot["env"]);
-        console.log(`Calling Flux API with prompt: ${prompt}`);
-        const imageData = await fluxApi.generateImage(prompt);
+        if (!fluxApi.getValidAspectRatios().includes(aspectRatio)) {
+          const validRatios = fluxApi.getValidAspectRatios().join(", ");
+          await bot.sendMessage(chatId, translate("invalid_aspect_ratio", language) + validRatios);
+          return;
+        }
+        console.log(`Calling Flux API with prompt: ${prompt} and aspect ratio: ${aspectRatio}`);
+        const imageData = await fluxApi.generateImage(prompt, aspectRatio);
         console.log(`Received image data from Flux API (length: ${imageData.length})`);
-        await bot.sendPhoto(chatId, imageData, { caption: prompt });
+        await bot.sendPhoto(chatId, imageData, { caption: `${prompt} (${aspectRatio})` });
         console.log(`Successfully sent Flux image to user ${userId}`);
       } catch (error) {
         console.error(`Error generating Flux image for user ${userId}:`, error);

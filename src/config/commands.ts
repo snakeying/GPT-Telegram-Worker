@@ -138,23 +138,31 @@ export const commands: Command[] = [
       const userId = chatId.toString();
       const language = await bot.getUserLanguage(userId);
 
-      if (!args.length) {
-        await bot.sendMessage(chatId, translate('image_prompt_required', language));
+      if (args.length < 2) {
+        await bot.sendMessage(chatId, translate('flux_usage', language));
         return;
       }
 
-      const prompt = args.join(' ');
+      const aspectRatio = args[args.length - 1];
+      const prompt = args.slice(0, -1).join(' ');
 
       try {
         console.log(`Starting Flux image generation for user ${userId}`);
         await sendChatAction(chatId, 'upload_photo', bot['env']);
         const fluxApi = new FluxAPI(bot['env']);
-        console.log(`Calling Flux API with prompt: ${prompt}`);
-        const imageData = await fluxApi.generateImage(prompt);
+
+        if (!fluxApi.getValidAspectRatios().includes(aspectRatio)) {
+          const validRatios = fluxApi.getValidAspectRatios().join(', ');
+          await bot.sendMessage(chatId, translate('invalid_aspect_ratio', language) + validRatios);
+          return;
+        }
+
+        console.log(`Calling Flux API with prompt: ${prompt} and aspect ratio: ${aspectRatio}`);
+        const imageData = await fluxApi.generateImage(prompt, aspectRatio);
         console.log(`Received image data from Flux API (length: ${imageData.length})`);
         
         // Send photo using Uint8Array data
-        await bot.sendPhoto(chatId, imageData, { caption: prompt });
+        await bot.sendPhoto(chatId, imageData, { caption: `${prompt} (${aspectRatio})` });
         console.log(`Successfully sent Flux image to user ${userId}`);
       } catch (error) {
         console.error(`Error generating Flux image for user ${userId}:`, error);
