@@ -300,10 +300,6 @@ var FluxAPI = class {
       prompt = optimizedPrompt;
     }
     const url = `https://api.cloudflare.com/client/v4/accounts/${this.accountId}/ai/run/${this.model}`;
-    console.log(`Sending request to Flux API: ${url}`);
-    console.log(`Prompt: ${prompt}`);
-    console.log(`Steps: ${this.steps}`);
-    console.log(`Aspect Ratio: ${aspectRatio}`);
     const [width, height] = this.getImageDimensions(aspectRatio);
     const seed = Math.floor(Math.random() * 1e6);
     const response = await fetch(url, {
@@ -320,9 +316,7 @@ var FluxAPI = class {
         height
       })
     });
-    console.log(`Flux API response status: ${response.status}`);
     const responseText = await response.text();
-    console.log(`Flux API response body: ${responseText.substring(0, 100)}...`);
     let data;
     try {
       data = JSON.parse(responseText);
@@ -339,7 +333,6 @@ var FluxAPI = class {
       console.error("Flux API returned no image");
       throw new Error("Flux API returned no image");
     }
-    console.log(`Generated image data received (length: ${data.result.image.length})`);
     const binaryString = atob(data.result.image);
     const len = binaryString.length;
     const bytes = new Uint8Array(len);
@@ -565,12 +558,8 @@ var commands = [
         prompt = args.join(" ");
       }
       try {
-        console.log(`Starting Flux image generation for user ${userId}`);
         await sendChatAction(chatId, "upload_photo", bot["env"]);
-        console.log(`Original prompt: ${prompt}`);
-        console.log(`Calling Flux API with prompt: ${prompt} and aspect ratio: ${aspectRatio}`);
         const { imageData, optimizedPrompt } = await fluxApi.generateImage(prompt, aspectRatio);
-        console.log(`Received image data from Flux API (length: ${imageData.length})`);
         const config = getConfig(bot["env"]);
         let caption = `${translate("original_prompt", language)}: ${prompt}
 `;
@@ -583,7 +572,6 @@ var commands = [
 `;
         }
         await bot.sendPhoto(chatId, imageData, { caption });
-        console.log(`Successfully sent Flux image to user ${userId}`);
       } catch (error) {
         console.error(`Error generating Flux image for user ${userId}:`, error);
         if (error instanceof Error) {

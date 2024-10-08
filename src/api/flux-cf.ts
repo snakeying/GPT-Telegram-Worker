@@ -46,14 +46,7 @@ export class FluxAPI implements ModelAPIInterface {
     }
 
     const url = `https://api.cloudflare.com/client/v4/accounts/${this.accountId}/ai/run/${this.model}`;
-    console.log(`Sending request to Flux API: ${url}`);
-    console.log(`Prompt: ${prompt}`);
-    console.log(`Steps: ${this.steps}`);
-    console.log(`Aspect Ratio: ${aspectRatio}`);
-
     const [width, height] = this.getImageDimensions(aspectRatio);
-
-    // Add a random seed to ensure different images for the same prompt
     const seed = Math.floor(Math.random() * 1000000);
 
     const response = await fetch(url, {
@@ -71,10 +64,7 @@ export class FluxAPI implements ModelAPIInterface {
       }),
     });
 
-    console.log(`Flux API response status: ${response.status}`);
     const responseText = await response.text();
-    console.log(`Flux API response body: ${responseText.substring(0, 100)}...`); // Log only the first 100 characters
-
     let data: FluxResponse;
     try {
       data = JSON.parse(responseText);
@@ -93,10 +83,7 @@ export class FluxAPI implements ModelAPIInterface {
       console.error('Flux API returned no image');
       throw new Error('Flux API returned no image');
     }
-
-    console.log(`Generated image data received (length: ${data.result.image.length})`);
     
-    // Convert base64 to Uint8Array
     const binaryString = atob(data.result.image);
     const len = binaryString.length;
     const bytes = new Uint8Array(len);

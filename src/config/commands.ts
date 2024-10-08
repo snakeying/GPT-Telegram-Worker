@@ -158,13 +158,9 @@ export const commands: Command[] = [
       }
 
       try {
-        console.log(`Starting Flux image generation for user ${userId}`);
         await sendChatAction(chatId, 'upload_photo', bot['env']);
 
-        console.log(`Original prompt: ${prompt}`);
-        console.log(`Calling Flux API with prompt: ${prompt} and aspect ratio: ${aspectRatio}`);
         const { imageData, optimizedPrompt } = await fluxApi.generateImage(prompt, aspectRatio);
-        console.log(`Received image data from Flux API (length: ${imageData.length})`);
         
         const config = getConfig(bot['env']);
         let caption = `${translate('original_prompt', language)}: ${prompt}\n`;
@@ -175,9 +171,7 @@ export const commands: Command[] = [
           caption += `${translate('optimized_prompt', language)}: ${optimizedPrompt}\n`;
         }
 
-        // Send photo using Uint8Array data
         await bot.sendPhoto(chatId, imageData, { caption: caption });
-        console.log(`Successfully sent Flux image to user ${userId}`);
       } catch (error) {
         console.error(`Error generating Flux image for user ${userId}:`, error);
         if (error instanceof Error) {
