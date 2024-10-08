@@ -221,20 +221,27 @@ export class TelegramBot {
     }
   }
 
-  async sendPhoto(chatId: number, photo: string, options: { caption?: string } = {}): Promise<void> {
+  async sendPhoto(chatId: number, photo: string | Uint8Array, options: { caption?: string } = {}): Promise<void> {
     const url = `${this.apiUrl}/sendPhoto`;
+    const formData = new FormData();
+    formData.append('chat_id', chatId.toString());
+  
+    if (typeof photo === 'string') {
+      formData.append('photo', photo);
+    } else {
+      const blob = new Blob([photo], { type: 'image/png' });
+      formData.append('photo', blob, 'image.png');
+    }
+  
+    if (options.caption) {
+      formData.append('caption', options.caption);
+    }
+
     const response = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        chat_id: chatId,
-        photo: photo,
-        caption: options.caption,
-      }),
+      body: formData,
     });
-  
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }

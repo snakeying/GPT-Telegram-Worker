@@ -17,8 +17,11 @@ var getConfig = (env) => ({
   // TTL 配置（以秒为单位）
   languageTTL: 60 * 60 * 24 * 365,
   // 1 year
-  contextTTL: 60 * 60 * 24 * 30
+  contextTTL: 60 * 60 * 24 * 30,
   // 30 days
+  cloudflareApiToken: env.CLOUDFLARE_API_TOKEN,
+  cloudflareAccountId: env.CLOUDFLARE_ACCOUNT_ID,
+  fluxSteps: parseInt(getEnvOrDefault(env, "FLUX_STEPS", "4"))
 });
 
 // src/api/openai_api.ts
@@ -131,7 +134,8 @@ var translations = {
     image_prompt_required: "Please provide a description for the image you want to generate.",
     image_generation_error: "Sorry, there was an error generating the image. Please try again later.",
     img_description: "Generate an image using DALL\xB7E. Format: /img <description> [size]",
-    invalid_size: "Invalid image size. Please use one of the following sizes: "
+    invalid_size: "Invalid image size. Please use one of the following sizes: ",
+    flux_description: "Generate an image using Flux"
   },
   zh: {
     welcome: "\u6B22\u8FCE\u4F7F\u7528 GPT Telegram \u673A\u5668\u4EBA\uFF01",
@@ -160,7 +164,8 @@ var translations = {
     image_prompt_required: "\u8BF7\u63D0\u4F9B\u60A8\u60F3\u8981\u751F\u6210\u7684\u56FE\u50CF\u63CF\u8FF0\u3002",
     image_generation_error: "\u62B1\u6B49\uFF0C\u751F\u6210\u56FE\u50CF\u65F6\u51FA\u9519\u3002\u8BF7\u7A0D\u540E\u518D\u8BD5\u3002",
     img_description: "\u4F7F\u7528 DALL\xB7E \u751F\u6210\u56FE\u50CF\u3002\u683C\u5F0F\uFF1A/img <\u63CF\u8FF0> [\u5C3A\u5BF8]",
-    invalid_size: "\u65E0\u6548\u7684\u56FE\u7247\u5C3A\u5BF8\u3002\u8BF7\u4F7F\u7528\u4EE5\u4E0B\u5C3A\u5BF8\u4E4B\u4E00\uFF1A"
+    invalid_size: "\u65E0\u6548\u7684\u56FE\u7247\u5C3A\u5BF8\u3002\u8BF7\u4F7F\u7528\u4EE5\u4E0B\u5C3A\u5BF8\u4E4B\u4E00\uFF1A",
+    flux_description: "\u4F7F\u7528 Flux \u751F\u6210\u56FE\u50CF"
   },
   es: {
     welcome: "\xA1Bienvenido al bot de GPT en Telegram!",
@@ -189,7 +194,8 @@ var translations = {
     image_prompt_required: "Por favor, proporcione una descripci\xF3n para la imagen que desea generar.",
     image_generation_error: "Lo siento, hubo un error al generar la imagen. Por favor, int\xE9ntelo de nuevo m\xE1s tarde.",
     img_description: "Generar una imagen usando DALL\xB7E. Formato: /img <descripci\xF3n> [tama\xF1o]",
-    invalid_size: "Tama\xF1o de imagen no v\xE1lido. Por favor, use uno de los siguientes tama\xF1os: "
+    invalid_size: "Tama\xF1o de imagen no v\xE1lido. Por favor, use uno de los siguientes tama\xF1os: ",
+    flux_description: "Generar una imagen usando Flux"
   }
 };
 function translate(key, language = "en") {
@@ -242,6 +248,78 @@ var ImageGenerationAPI = class {
   }
   getValidSizes() {
     return ["1024x1024", "1024x1792", "1792x1024"];
+  }
+};
+
+// src/api/flux-cf.ts
+var FluxAPI = class {
+  apiToken;
+  accountId;
+  steps;
+  model = "@cf/black-forest-labs/flux-1-schnell";
+  constructor(env) {
+    const config = getConfig(env);
+    this.apiToken = config.cloudflareApiToken;
+    this.accountId = config.cloudflareAccountId;
+    this.steps = config.fluxSteps;
+  }
+  async generateImage(prompt) {
+    const url = `https://api.cloudflare.com/client/v4/accounts/${this.accountId}/ai/run/${this.model}`;
+    console.log(`Sending request to Flux API: ${url}`);
+    console.log(`Prompt: ${prompt}`);
+    console.log(`Steps: ${this.steps}`);
+    const seed = Math.floor(Math.random() * 1e6);
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${this.apiToken}`
+      },
+      body: JSON.stringify({
+        prompt,
+        num_steps: this.steps,
+        seed
+      })
+    });
+    console.log(`Flux API response status: ${response.status}`);
+    const responseText = await response.text();
+    console.log(`Flux API response body: ${responseText.substring(0, 100)}...`);
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (error) {
+      console.error("Error parsing Flux API response:", error);
+      throw new Error("Invalid response from Flux API");
+    }
+    if (!response.ok || !data.success) {
+      const errorMessage = data.errors ? data.errors.join(", ") : "Unknown error";
+      console.error(`Flux API error: ${errorMessage}`);
+      throw new Error(`Flux API error: ${errorMessage}`);
+    }
+    if (!data.result || !data.result.image) {
+      console.error("Flux API returned no image");
+      throw new Error("Flux API returned no image");
+    }
+    console.log(`Generated image data received (length: ${data.result.image.length})`);
+    const binaryString = atob(data.result.image);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes;
+  }
+  async generateResponse(messages) {
+    throw new Error("Method not implemented for image generation.");
+  }
+  isValidModel(model) {
+    return model === this.model;
+  }
+  getDefaultModel() {
+    return this.model;
+  }
+  getAvailableModels() {
+    return [this.model];
   }
 };
 
@@ -355,6 +433,35 @@ var commands = [
         await bot.sendPhoto(chatId, imageUrl, { caption: prompt });
       } catch (error) {
         console.error("Error generating image:", error);
+        await bot.sendMessage(chatId, translate("image_generation_error", language));
+      }
+    }
+  },
+  {
+    name: "flux",
+    description: "Generate an image using Flux",
+    action: async (chatId, bot, args) => {
+      const userId = chatId.toString();
+      const language = await bot.getUserLanguage(userId);
+      if (!args.length) {
+        await bot.sendMessage(chatId, translate("image_prompt_required", language));
+        return;
+      }
+      const prompt = args.join(" ");
+      try {
+        console.log(`Starting Flux image generation for user ${userId}`);
+        await sendChatAction(chatId, "upload_photo", bot["env"]);
+        const fluxApi = new FluxAPI(bot["env"]);
+        console.log(`Calling Flux API with prompt: ${prompt}`);
+        const imageData = await fluxApi.generateImage(prompt);
+        console.log(`Received image data from Flux API (length: ${imageData.length})`);
+        await bot.sendPhoto(chatId, imageData, { caption: prompt });
+        console.log(`Successfully sent Flux image to user ${userId}`);
+      } catch (error) {
+        console.error(`Error generating Flux image for user ${userId}:`, error);
+        if (error instanceof Error) {
+          console.error("Error details:", error.message);
+        }
         await bot.sendMessage(chatId, translate("image_generation_error", language));
       }
     }
@@ -614,16 +721,20 @@ ${summary}`;
   }
   async sendPhoto(chatId, photo, options = {}) {
     const url = `${this.apiUrl}/sendPhoto`;
+    const formData = new FormData();
+    formData.append("chat_id", chatId.toString());
+    if (typeof photo === "string") {
+      formData.append("photo", photo);
+    } else {
+      const blob = new Blob([photo], { type: "image/png" });
+      formData.append("photo", blob, "image.png");
+    }
+    if (options.caption) {
+      formData.append("caption", options.caption);
+    }
     const response = await fetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        chat_id: chatId,
-        photo,
-        caption: options.caption
-      })
+      body: formData
     });
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);

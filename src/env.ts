@@ -10,6 +10,9 @@ export interface Env {
   UPSTASH_REDIS_REST_URL: string;
   UPSTASH_REDIS_REST_TOKEN: string;
   DALL_E_MODEL?: string;
+  CLOUDFLARE_API_TOKEN: string;
+  CLOUDFLARE_ACCOUNT_ID: string;
+  FLUX_STEPS: string;
 }
 
 const getEnvOrDefault = (env: Env, key: keyof Env, defaultValue: string): string => {
@@ -31,4 +34,7 @@ export const getConfig = (env: Env) => ({
   // TTL 配置（以秒为单位）
   languageTTL: 60 * 60 * 24 * 365, // 1 year
   contextTTL: 60 * 60 * 24 * 30, // 30 days
+  cloudflareApiToken: env.CLOUDFLARE_API_TOKEN,
+  cloudflareAccountId: env.CLOUDFLARE_ACCOUNT_ID,
+  fluxSteps: parseInt(getEnvOrDefault(env, 'FLUX_STEPS', '4')),
 });

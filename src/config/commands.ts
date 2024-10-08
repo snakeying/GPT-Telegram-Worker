@@ -2,6 +2,7 @@ import { TelegramBot } from '../api/telegram';
 import { translate, TranslationKey } from '../utils/i18n';
 import { ImageGenerationAPI } from '../api/image_generation';
 import { sendChatAction } from '../utils/helpers';
+import { FluxAPI } from '../api/flux-cf';
 
 export interface Command {
   name: string;
@@ -126,6 +127,40 @@ export const commands: Command[] = [
         await bot.sendPhoto(chatId, imageUrl, { caption: prompt });
       } catch (error) {
         console.error('Error generating image:', error);
+        await bot.sendMessage(chatId, translate('image_generation_error', language));
+      }
+    },
+  },
+  {
+    name: 'flux',
+    description: 'Generate an image using Flux',
+    action: async (chatId: number, bot: TelegramBot, args: string[]) => {
+      const userId = chatId.toString();
+      const language = await bot.getUserLanguage(userId);
+
+      if (!args.length) {
+        await bot.sendMessage(chatId, translate('image_prompt_required', language));
+        return;
+      }
+
+      const prompt = args.join(' ');
+
+      try {
+        console.log(`Starting Flux image generation for user ${userId}`);
+        await sendChatAction(chatId, 'upload_photo', bot['env']);
+        const fluxApi = new FluxAPI(bot['env']);
+        console.log(`Calling Flux API with prompt: ${prompt}`);
+        const imageData = await fluxApi.generateImage(prompt);
+        console.log(`Received image data from Flux API (length: ${imageData.length})`);
+        
+        // Send photo using Uint8Array data
+        await bot.sendPhoto(chatId, imageData, { caption: prompt });
+        console.log(`Successfully sent Flux image to user ${userId}`);
+      } catch (error) {
+        console.error(`Error generating Flux image for user ${userId}:`, error);
+        if (error instanceof Error) {
+          console.error('Error details:', error.message);
+        }
         await bot.sendMessage(chatId, translate('image_generation_error', language));
       }
     },
