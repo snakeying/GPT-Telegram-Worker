@@ -21,7 +21,11 @@ var getConfig = (env) => ({
   // 30 days
   cloudflareApiToken: env.CLOUDFLARE_API_TOKEN,
   cloudflareAccountId: env.CLOUDFLARE_ACCOUNT_ID,
-  fluxSteps: parseInt(getEnvOrDefault(env, "FLUX_STEPS", "4"))
+  fluxSteps: parseInt(getEnvOrDefault(env, "FLUX_STEPS", "4")),
+  promptOptimization: getEnvOrDefault(env, "PROMPT_OPTIMIZATION", "false") === "true",
+  externalApiBase: env.EXTERNAL_API_BASE,
+  externalModel: env.EXTERNAL_MODEL,
+  externalApiKey: env.EXTERNAL_API_KEY
 });
 
 // src/api/openai_api.ts
@@ -137,7 +141,11 @@ var translations = {
     invalid_size: "Invalid image size. Please use one of the following sizes: ",
     flux_description: "Generate an image using Flux",
     flux_usage: "Usage: /flux <description> [aspect ratio]. Valid aspect ratios are: 1:1 (default), 1:2, 3:2, 3:4, 16:9, 9:16",
-    invalid_aspect_ratio: "Invalid aspect ratio. Valid options are: "
+    invalid_aspect_ratio: "Invalid aspect ratio. Valid options are: ",
+    original_prompt: "\u{1F3A8} Original Prompt",
+    prompt_generation_model: "\u{1F4AC} Prompt Generation Model",
+    optimized_prompt: "\u{1F310} Optimized Prompt",
+    image_specs: "\u{1F4D0} Image Specifications"
   },
   zh: {
     welcome: "\u6B22\u8FCE\u4F7F\u7528 GPT Telegram \u673A\u5668\u4EBA\uFF01",
@@ -169,7 +177,11 @@ var translations = {
     invalid_size: "\u65E0\u6548\u7684\u56FE\u7247\u5C3A\u5BF8\u3002\u8BF7\u4F7F\u7528\u4EE5\u4E0B\u5C3A\u5BF8\u4E4B\u4E00\uFF1A",
     flux_description: "\u4F7F\u7528 Flux \u751F\u6210\u56FE\u50CF",
     flux_usage: "\u7528\u6CD5\uFF1A/flux <\u63CF\u8FF0> [\u5BBD\u9AD8\u6BD4]\u3002\u6709\u6548\u7684\u5BBD\u9AD8\u6BD4\u6709\uFF1A1:1\uFF08\u9ED8\u8BA4\uFF09, 1:2, 3:2, 3:4, 16:9, 9:16",
-    invalid_aspect_ratio: "\u65E0\u6548\u7684\u5BBD\u9AD8\u6BD4\u3002\u6709\u6548\u9009\u9879\u4E3A\uFF1A"
+    invalid_aspect_ratio: "\u65E0\u6548\u7684\u5BBD\u9AD8\u6BD4\u3002\u6709\u6548\u9009\u9879\u4E3A\uFF1A",
+    original_prompt: "\u{1F3A8} \u539F\u59CB\u63D0\u793A\u8BCD",
+    prompt_generation_model: "\u{1F4AC} \u63D0\u793A\u8BCD\u751F\u6210\u6A21\u578B",
+    optimized_prompt: "\u{1F310} \u4F18\u5316\u540E\u7684\u63D0\u793A\u8BCD",
+    image_specs: "\u{1F4D0} \u56FE\u50CF\u89C4\u683C"
   },
   es: {
     welcome: "\xA1Bienvenido al bot de GPT en Telegram!",
@@ -201,7 +213,11 @@ var translations = {
     invalid_size: "Tama\xF1o de imagen no v\xE1lido. Por favor, use uno de los siguientes tama\xF1os: ",
     flux_description: "Generar una imagen usando Flux",
     flux_usage: "Uso: /flux <descripci\xF3n> [relaci\xF3n de aspecto]. Las relaciones de aspecto v\xE1lidas son: 1:1 (predeterminado), 1:2, 3:2, 3:4, 16:9, 9:16",
-    invalid_aspect_ratio: "Relaci\xF3n de aspecto no v\xE1lida. Las opciones v\xE1lidas son: "
+    invalid_aspect_ratio: "Relaci\xF3n de aspecto no v\xE1lida. Las opciones v\xE1lidas son: ",
+    original_prompt: "\u{1F3A8} Prompt Original",
+    prompt_generation_model: "\u{1F4AC} Modelo de Generaci\xF3n de Prompts",
+    optimized_prompt: "\u{1F310} Prompt Optimizado",
+    image_specs: "\u{1F4D0} Especificaciones de la Imagen"
   }
 };
 function translate(key, language = "en") {
@@ -263,13 +279,26 @@ var FluxAPI = class {
   accountId;
   steps;
   model = "@cf/black-forest-labs/flux-1-schnell";
+  promptOptimization;
+  externalApiBase;
+  externalModel;
+  externalApiKey;
   constructor(env) {
     const config = getConfig(env);
     this.apiToken = config.cloudflareApiToken;
     this.accountId = config.cloudflareAccountId;
     this.steps = config.fluxSteps;
+    this.promptOptimization = config.promptOptimization;
+    this.externalApiBase = config.externalApiBase;
+    this.externalModel = config.externalModel;
+    this.externalApiKey = config.externalApiKey;
   }
   async generateImage(prompt, aspectRatio) {
+    let optimizedPrompt;
+    if (this.promptOptimization) {
+      optimizedPrompt = await this.optimizePrompt(prompt, aspectRatio);
+      prompt = optimizedPrompt;
+    }
     const url = `https://api.cloudflare.com/client/v4/accounts/${this.accountId}/ai/run/${this.model}`;
     console.log(`Sending request to Flux API: ${url}`);
     console.log(`Prompt: ${prompt}`);
@@ -317,7 +346,54 @@ var FluxAPI = class {
     for (let i = 0; i < len; i++) {
       bytes[i] = binaryString.charCodeAt(i);
     }
-    return bytes;
+    return {
+      imageData: bytes,
+      optimizedPrompt
+    };
+  }
+  async optimizePrompt(prompt, aspectRatio) {
+    if (!this.externalApiBase || !this.externalModel || !this.externalApiKey) {
+      throw new Error("External API configuration is missing");
+    }
+    const systemPrompt = `You are a prompt generation bot based on the Flux.1 model. Based on the user's requirements, automatically generate drawing prompts that adhere to the Flux.1 format. While you can refer to the provided templates to learn the structure and patterns of the prompts, you must remain flexible to meet various different needs. The final output should be limited to the prompts only, without any additional explanations or information. You must reply to me entirely in English!
+
+### **Prompt Generation Logic**:
+
+1. **Requirement Analysis**: Extract key information from the user's description, including:
+- Characters: Appearance, actions, expressions, etc.
+- Scene: Environment, lighting, weather, etc.
+- Style: Art style, emotional atmosphere, color scheme, etc.
+- **Aspect Ratio**: If the user provides a specific aspect ratio (e.g., "3:2", "16:9"), extract this and integrate it into the final prompt.
+- Other elements: Specific objects, background, or effects.
+
+2. **Prompt Structure Guidelines**:
+- **Concise, precise, and detailed**: Prompts should describe the core subject simply and clearly, with enough detail to generate an image that matches the request.
+- **Flexible and varied**: Use the user's description to dynamically create prompts without following rigid templates. Ensure prompts are adapted based on the specific needs of each user, avoiding overly template-based outputs.
+- **Descriptions following Flux.1 style**: Prompts must follow the requirements of Flux.1, aiming to include descriptions of the art style, visual effects, and emotional atmosphere. Use keywords and description patterns that match the Flux.1 model's generation process. If a specific aspect ratio is mentioned, ensure it is included in the prompt description.
+
+3. **Key Points Summary for Flux.1 Prompts**:
+- **Concise and precise subject description**: Clearly identify the subject or scene of the image.
+- **Specific description of style and emotional atmosphere**: Ensure the prompt includes information about the art style, lighting, color scheme, and emotional atmosphere of the image.
+- **Details on dynamics and action**: Prompts may include important details like actions, emotions, or lighting effects in the scene.`;
+    const response = await fetch(`${this.externalApiBase}/v1/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${this.externalApiKey}`
+      },
+      body: JSON.stringify({
+        model: this.externalModel,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `Optimize this image generation prompt for aspect ratio ${aspectRatio}: ${prompt}` }
+        ]
+      })
+    });
+    if (!response.ok) {
+      throw new Error(`External API error: ${response.statusText}`);
+    }
+    const data = await response.json();
+    return data.choices[0].message.content.trim();
   }
   getImageDimensions(aspectRatio) {
     switch (aspectRatio) {
@@ -491,10 +567,22 @@ var commands = [
       try {
         console.log(`Starting Flux image generation for user ${userId}`);
         await sendChatAction(chatId, "upload_photo", bot["env"]);
+        console.log(`Original prompt: ${prompt}`);
         console.log(`Calling Flux API with prompt: ${prompt} and aspect ratio: ${aspectRatio}`);
-        const imageData = await fluxApi.generateImage(prompt, aspectRatio);
+        const { imageData, optimizedPrompt } = await fluxApi.generateImage(prompt, aspectRatio);
         console.log(`Received image data from Flux API (length: ${imageData.length})`);
-        await bot.sendPhoto(chatId, imageData, { caption: `${prompt} (${aspectRatio})` });
+        const config = getConfig(bot["env"]);
+        let caption = `${translate("original_prompt", language)}: ${prompt}
+`;
+        caption += `${translate("image_specs", language)}: ${aspectRatio}
+`;
+        if (config.promptOptimization && optimizedPrompt) {
+          caption += `${translate("prompt_generation_model", language)}: ${config.externalModel || "Unknown"}
+`;
+          caption += `${translate("optimized_prompt", language)}: ${optimizedPrompt}
+`;
+        }
+        await bot.sendPhoto(chatId, imageData, { caption });
         console.log(`Successfully sent Flux image to user ${userId}`);
       } catch (error) {
         console.error(`Error generating Flux image for user ${userId}:`, error);

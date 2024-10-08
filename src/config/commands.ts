@@ -3,6 +3,7 @@ import { translate, TranslationKey } from '../utils/i18n';
 import { ImageGenerationAPI } from '../api/image_generation';
 import { sendChatAction } from '../utils/helpers';
 import { FluxAPI } from '../api/flux-cf';
+import { getConfig } from '../env';
 
 export interface Command {
   name: string;
@@ -160,12 +161,22 @@ export const commands: Command[] = [
         console.log(`Starting Flux image generation for user ${userId}`);
         await sendChatAction(chatId, 'upload_photo', bot['env']);
 
+        console.log(`Original prompt: ${prompt}`);
         console.log(`Calling Flux API with prompt: ${prompt} and aspect ratio: ${aspectRatio}`);
-        const imageData = await fluxApi.generateImage(prompt, aspectRatio);
+        const { imageData, optimizedPrompt } = await fluxApi.generateImage(prompt, aspectRatio);
         console.log(`Received image data from Flux API (length: ${imageData.length})`);
         
+        const config = getConfig(bot['env']);
+        let caption = `${translate('original_prompt', language)}: ${prompt}\n`;
+        caption += `${translate('image_specs', language)}: ${aspectRatio}\n`;
+        
+        if (config.promptOptimization && optimizedPrompt) {
+          caption += `${translate('prompt_generation_model', language)}: ${config.externalModel || 'Unknown'}\n`;
+          caption += `${translate('optimized_prompt', language)}: ${optimizedPrompt}\n`;
+        }
+
         // Send photo using Uint8Array data
-        await bot.sendPhoto(chatId, imageData, { caption: `${prompt} (${aspectRatio})` });
+        await bot.sendPhoto(chatId, imageData, { caption: caption });
         console.log(`Successfully sent Flux image to user ${userId}`);
       } catch (error) {
         console.error(`Error generating Flux image for user ${userId}:`, error);

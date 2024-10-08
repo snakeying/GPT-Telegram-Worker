@@ -31,6 +31,10 @@ export interface Translations {
   flux_description: string;
   flux_usage: string;
   invalid_aspect_ratio: string;
+  original_prompt: string;
+  prompt_generation_model: string;
+  optimized_prompt: string;
+  image_specs: string;
 }
 
 export type TranslationKey = keyof Translations;
@@ -69,6 +73,10 @@ const translations: TranslationsMap = {
     flux_description: 'Generate an image using Flux',
     flux_usage: 'Usage: /flux <description> [aspect ratio]. Valid aspect ratios are: 1:1 (default), 1:2, 3:2, 3:4, 16:9, 9:16',
     invalid_aspect_ratio: 'Invalid aspect ratio. Valid options are: ',
+    original_prompt: "🎨 Original Prompt",
+    prompt_generation_model: "💬 Prompt Generation Model",
+    optimized_prompt: "🌐 Optimized Prompt",
+    image_specs: "📐 Image Specifications",
   },
   zh: {
     welcome: "欢迎使用 GPT Telegram 机器人！",
@@ -101,6 +109,10 @@ const translations: TranslationsMap = {
     flux_description: '使用 Flux 生成图像',
     flux_usage: '用法：/flux <描述> [宽高比]。有效的宽高比有：1:1（默认）, 1:2, 3:2, 3:4, 16:9, 9:16',
     invalid_aspect_ratio: '无效的宽高比。有效选项为：',
+    original_prompt: "🎨 原始提示词",
+    prompt_generation_model: "💬 提示词生成模型",
+    optimized_prompt: "🌐 优化后的提示词",
+    image_specs: "📐 图像规格",
   },
   es: {
     welcome: "¡Bienvenido al bot de GPT en Telegram!",
@@ -133,6 +145,10 @@ const translations: TranslationsMap = {
     flux_description: 'Generar una imagen usando Flux',
     flux_usage: 'Uso: /flux <descripción> [relación de aspecto]. Las relaciones de aspecto válidas son: 1:1 (predeterminado), 1:2, 3:2, 3:4, 16:9, 9:16',
     invalid_aspect_ratio: 'Relación de aspecto no válida. Las opciones válidas son: ',
+    original_prompt: "🎨 Prompt Original",
+    prompt_generation_model: "💬 Modelo de Generación de Prompts",
+    optimized_prompt: "🌐 Prompt Optimizado",
+    image_specs: "📐 Especificaciones de la Imagen",
   }
 };
 

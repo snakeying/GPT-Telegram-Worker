@@ -13,6 +13,10 @@ export interface Env {
   CLOUDFLARE_API_TOKEN: string;
   CLOUDFLARE_ACCOUNT_ID: string;
   FLUX_STEPS: string;
+  PROMPT_OPTIMIZATION?: string;
+  EXTERNAL_API_BASE?: string;
+  EXTERNAL_MODEL?: string;
+  EXTERNAL_API_KEY?: string;
 }
 
 const getEnvOrDefault = (env: Env, key: keyof Env, defaultValue: string): string => {
@@ -37,4 +41,8 @@ export const getConfig = (env: Env) => ({
   cloudflareApiToken: env.CLOUDFLARE_API_TOKEN,
   cloudflareAccountId: env.CLOUDFLARE_ACCOUNT_ID,
   fluxSteps: parseInt(getEnvOrDefault(env, 'FLUX_STEPS', '4')),
+  promptOptimization: getEnvOrDefault(env, 'PROMPT_OPTIMIZATION', 'false') === 'true',
+  externalApiBase: env.EXTERNAL_API_BASE,
+  externalModel: env.EXTERNAL_MODEL,
+  externalApiKey: env.EXTERNAL_API_KEY,
 });
