@@ -138,24 +138,27 @@ export const commands: Command[] = [
       const userId = chatId.toString();
       const language = await bot.getUserLanguage(userId);
 
-      if (args.length < 2) {
+      if (!args.length) {
         await bot.sendMessage(chatId, translate('flux_usage', language));
         return;
       }
 
-      const aspectRatio = args[args.length - 1];
-      const prompt = args.slice(0, -1).join(' ');
+      let aspectRatio = '1:1'; // 默认比例
+      let prompt: string;
+
+      const fluxApi = new FluxAPI(bot['env']);
+      const validRatios = fluxApi.getValidAspectRatios();
+
+      if (validRatios.includes(args[args.length - 1])) {
+        aspectRatio = args[args.length - 1];
+        prompt = args.slice(0, -1).join(' ');
+      } else {
+        prompt = args.join(' ');
+      }
 
       try {
         console.log(`Starting Flux image generation for user ${userId}`);
         await sendChatAction(chatId, 'upload_photo', bot['env']);
-        const fluxApi = new FluxAPI(bot['env']);
-
-        if (!fluxApi.getValidAspectRatios().includes(aspectRatio)) {
-          const validRatios = fluxApi.getValidAspectRatios().join(', ');
-          await bot.sendMessage(chatId, translate('invalid_aspect_ratio', language) + validRatios);
-          return;
-        }
 
         console.log(`Calling Flux API with prompt: ${prompt} and aspect ratio: ${aspectRatio}`);
         const imageData = await fluxApi.generateImage(prompt, aspectRatio);

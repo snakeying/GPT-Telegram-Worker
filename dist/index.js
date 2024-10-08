@@ -136,7 +136,7 @@ var translations = {
     img_description: "Generate an image using DALL\xB7E. Format: /img <description> [size]",
     invalid_size: "Invalid image size. Please use one of the following sizes: ",
     flux_description: "Generate an image using Flux",
-    flux_usage: "Usage: /flux <description> <aspect ratio>. Valid aspect ratios are: 1:1, 1:2, 3:2, 3:4, 16:9, 9:16",
+    flux_usage: "Usage: /flux <description> [aspect ratio]. Valid aspect ratios are: 1:1 (default), 1:2, 3:2, 3:4, 16:9, 9:16",
     invalid_aspect_ratio: "Invalid aspect ratio. Valid options are: "
   },
   zh: {
@@ -168,7 +168,7 @@ var translations = {
     img_description: "\u4F7F\u7528 DALL\xB7E \u751F\u6210\u56FE\u50CF\u3002\u683C\u5F0F\uFF1A/img <\u63CF\u8FF0> [\u5C3A\u5BF8]",
     invalid_size: "\u65E0\u6548\u7684\u56FE\u7247\u5C3A\u5BF8\u3002\u8BF7\u4F7F\u7528\u4EE5\u4E0B\u5C3A\u5BF8\u4E4B\u4E00\uFF1A",
     flux_description: "\u4F7F\u7528 Flux \u751F\u6210\u56FE\u50CF",
-    flux_usage: "\u7528\u6CD5\uFF1A/flux <\u63CF\u8FF0> <\u5BBD\u9AD8\u6BD4>\u3002\u6709\u6548\u7684\u5BBD\u9AD8\u6BD4\u6709\uFF1A1:1, 1:2, 3:2, 3:4, 16:9, 9:16",
+    flux_usage: "\u7528\u6CD5\uFF1A/flux <\u63CF\u8FF0> [\u5BBD\u9AD8\u6BD4]\u3002\u6709\u6548\u7684\u5BBD\u9AD8\u6BD4\u6709\uFF1A1:1\uFF08\u9ED8\u8BA4\uFF09, 1:2, 3:2, 3:4, 16:9, 9:16",
     invalid_aspect_ratio: "\u65E0\u6548\u7684\u5BBD\u9AD8\u6BD4\u3002\u6709\u6548\u9009\u9879\u4E3A\uFF1A"
   },
   es: {
@@ -200,7 +200,7 @@ var translations = {
     img_description: "Generar una imagen usando DALL\xB7E. Formato: /img <descripci\xF3n> [tama\xF1o]",
     invalid_size: "Tama\xF1o de imagen no v\xE1lido. Por favor, use uno de los siguientes tama\xF1os: ",
     flux_description: "Generar una imagen usando Flux",
-    flux_usage: "Uso: /flux <descripci\xF3n> <relaci\xF3n de aspecto>. Las relaciones de aspecto v\xE1lidas son: 1:1, 1:2, 3:2, 3:4, 16:9, 9:16",
+    flux_usage: "Uso: /flux <descripci\xF3n> [relaci\xF3n de aspecto]. Las relaciones de aspecto v\xE1lidas son: 1:1 (predeterminado), 1:2, 3:2, 3:4, 16:9, 9:16",
     invalid_aspect_ratio: "Relaci\xF3n de aspecto no v\xE1lida. Las opciones v\xE1lidas son: "
   }
 };
@@ -474,21 +474,23 @@ var commands = [
     action: async (chatId, bot, args) => {
       const userId = chatId.toString();
       const language = await bot.getUserLanguage(userId);
-      if (args.length < 2) {
+      if (!args.length) {
         await bot.sendMessage(chatId, translate("flux_usage", language));
         return;
       }
-      const aspectRatio = args[args.length - 1];
-      const prompt = args.slice(0, -1).join(" ");
+      let aspectRatio = "1:1";
+      let prompt;
+      const fluxApi = new FluxAPI(bot["env"]);
+      const validRatios = fluxApi.getValidAspectRatios();
+      if (validRatios.includes(args[args.length - 1])) {
+        aspectRatio = args[args.length - 1];
+        prompt = args.slice(0, -1).join(" ");
+      } else {
+        prompt = args.join(" ");
+      }
       try {
         console.log(`Starting Flux image generation for user ${userId}`);
         await sendChatAction(chatId, "upload_photo", bot["env"]);
-        const fluxApi = new FluxAPI(bot["env"]);
-        if (!fluxApi.getValidAspectRatios().includes(aspectRatio)) {
-          const validRatios = fluxApi.getValidAspectRatios().join(", ");
-          await bot.sendMessage(chatId, translate("invalid_aspect_ratio", language) + validRatios);
-          return;
-        }
         console.log(`Calling Flux API with prompt: ${prompt} and aspect ratio: ${aspectRatio}`);
         const imageData = await fluxApi.generateImage(prompt, aspectRatio);
         console.log(`Received image data from Flux API (length: ${imageData.length})`);
