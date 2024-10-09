@@ -4,6 +4,7 @@ import { ImageGenerationAPI } from '../api/image_generation';
 import { sendChatAction } from '../utils/helpers';
 import { FluxAPI } from '../api/flux-cf';
 import { getConfig } from '../env';
+import GeminiAPI from '../api/gemini';
 
 export interface Command {
   name: string;
@@ -21,7 +22,7 @@ export const commands: Command[] = [
       const currentModel = await bot.getCurrentModel(userId);
       const welcomeMessage = translate('welcome', language) + '\n' + 
                              translate('current_model', language) + currentModel;
-      await bot.sendMessage(chatId, welcomeMessage);
+      await bot.sendMessageWithFallback(chatId, welcomeMessage);
     },
   },
   {
@@ -48,7 +49,10 @@ export const commands: Command[] = [
     action: async (chatId: number, bot: TelegramBot, args: string[]) => {
       const userId = chatId.toString();
       const language = await bot.getUserLanguage(userId);
-      const availableModels = bot.getAvailableModels();
+      const availableModels = [
+        ...bot.getAvailableModels(),
+        ...new GeminiAPI(bot['env']).getAvailableModels()
+      ];
       const keyboard = {
         inline_keyboard: availableModels.map(model => [{text: model, callback_data: `model_${model}`}])
       };
@@ -83,9 +87,11 @@ export const commands: Command[] = [
       
       for (const command of commands) {
         const descriptionKey = `${command.name}_description` as TranslationKey;
+        // 使用普通文本，不添加任何格式化
         helpMessage += `/${command.name} - ${translate(descriptionKey, language)}\n`;
       }
       
+      // 使用普通的 sendMessage 方法，不指定 parse_mode
       await bot.sendMessage(chatId, helpMessage);
     },
   },
@@ -97,7 +103,7 @@ export const commands: Command[] = [
       const language = await bot.getUserLanguage(userId);
   
       if (!args.length) {
-        await bot.sendMessage(chatId, translate('image_prompt_required', language));
+        await bot.sendMessageWithFallback(chatId, translate('image_prompt_required', language));
         return;
       }
   

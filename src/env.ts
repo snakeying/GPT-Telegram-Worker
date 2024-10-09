@@ -17,6 +17,9 @@ export interface Env {
   EXTERNAL_API_BASE?: string;
   EXTERNAL_MODEL?: string;
   EXTERNAL_API_KEY?: string;
+  GOOGLE_MODEL_KEY: string;
+  GOOGLE_MODEL_BASEURL?: string;
+  GOOGLE_MODELS: string;
 }
 
 const getEnvOrDefault = (env: Env, key: keyof Env, defaultValue: string): string => {
@@ -45,4 +48,7 @@ export const getConfig = (env: Env) => ({
   externalApiBase: env.EXTERNAL_API_BASE,
   externalModel: env.EXTERNAL_MODEL,
   externalApiKey: env.EXTERNAL_API_KEY,
+  googleModelKey: env.GOOGLE_MODEL_KEY,
+  googleModelBaseUrl: getEnvOrDefault(env, 'GOOGLE_MODEL_BASEURL', 'https://generativelanguage.googleapis.com/v1beta'),
+  googleModels: env.GOOGLE_MODELS.split(',').map(model => model.trim()),
 });

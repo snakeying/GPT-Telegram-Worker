@@ -35,6 +35,7 @@ export interface Translations {
   prompt_generation_model: string;
   optimized_prompt: string;
   image_specs: string;
+  command_not_found: string;
 }
 
 export type TranslationKey = keyof Translations;
@@ -77,6 +78,7 @@ const translations: TranslationsMap = {
     prompt_generation_model: "💬 Prompt Generation Model",
     optimized_prompt: "🌐 Optimized Prompt",
     image_specs: "📐 Image Specifications",
+    command_not_found: "Command not found. Type /help for a list of available commands.",
   },
   zh: {
     welcome: "欢迎使用 GPT Telegram 机器人！",
@@ -113,6 +115,7 @@ const translations: TranslationsMap = {
     prompt_generation_model: "💬 提示词生成模型",
     optimized_prompt: "🌐 优化后的提示词",
     image_specs: "📐 图像规格",
+    command_not_found: "未找到该命令。输入 /help 查看可用命令列表。",
   },
   es: {
     welcome: "¡Bienvenido al bot de GPT en Telegram!",
@@ -149,6 +152,7 @@ const translations: TranslationsMap = {
     prompt_generation_model: "💬 Modelo de Generación de Prompts",
     optimized_prompt: "🌐 Prompt Optimizado",
     image_specs: "📐 Especificaciones de la Imagen",
+    command_not_found: "Comando no encontrado. Escribe /help para ver una lista de comandos disponibles.",
   }
 };
 

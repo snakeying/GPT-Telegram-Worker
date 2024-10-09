@@ -25,7 +25,10 @@ var getConfig = (env) => ({
   promptOptimization: getEnvOrDefault(env, "PROMPT_OPTIMIZATION", "false") === "true",
   externalApiBase: env.EXTERNAL_API_BASE,
   externalModel: env.EXTERNAL_MODEL,
-  externalApiKey: env.EXTERNAL_API_KEY
+  externalApiKey: env.EXTERNAL_API_KEY,
+  googleModelKey: env.GOOGLE_MODEL_KEY,
+  googleModelBaseUrl: getEnvOrDefault(env, "GOOGLE_MODEL_BASEURL", "https://generativelanguage.googleapis.com/v1beta"),
+  googleModels: env.GOOGLE_MODELS.split(",").map((model) => model.trim())
 });
 
 // src/api/openai_api.ts
@@ -145,7 +148,8 @@ var translations = {
     original_prompt: "\u{1F3A8} Original Prompt",
     prompt_generation_model: "\u{1F4AC} Prompt Generation Model",
     optimized_prompt: "\u{1F310} Optimized Prompt",
-    image_specs: "\u{1F4D0} Image Specifications"
+    image_specs: "\u{1F4D0} Image Specifications",
+    command_not_found: "Command not found. Type /help for a list of available commands."
   },
   zh: {
     welcome: "\u6B22\u8FCE\u4F7F\u7528 GPT Telegram \u673A\u5668\u4EBA\uFF01",
@@ -181,7 +185,8 @@ var translations = {
     original_prompt: "\u{1F3A8} \u539F\u59CB\u63D0\u793A\u8BCD",
     prompt_generation_model: "\u{1F4AC} \u63D0\u793A\u8BCD\u751F\u6210\u6A21\u578B",
     optimized_prompt: "\u{1F310} \u4F18\u5316\u540E\u7684\u63D0\u793A\u8BCD",
-    image_specs: "\u{1F4D0} \u56FE\u50CF\u89C4\u683C"
+    image_specs: "\u{1F4D0} \u56FE\u50CF\u89C4\u683C",
+    command_not_found: "\u672A\u627E\u5230\u8BE5\u547D\u4EE4\u3002\u8F93\u5165 /help \u67E5\u770B\u53EF\u7528\u547D\u4EE4\u5217\u8868\u3002"
   },
   es: {
     welcome: "\xA1Bienvenido al bot de GPT en Telegram!",
@@ -217,7 +222,8 @@ var translations = {
     original_prompt: "\u{1F3A8} Prompt Original",
     prompt_generation_model: "\u{1F4AC} Modelo de Generaci\xF3n de Prompts",
     optimized_prompt: "\u{1F310} Prompt Optimizado",
-    image_specs: "\u{1F4D0} Especificaciones de la Imagen"
+    image_specs: "\u{1F4D0} Especificaciones de la Imagen",
+    command_not_found: "Comando no encontrado. Escribe /help para ver una lista de comandos disponibles."
   }
 };
 function translate(key, language = "en") {
@@ -423,6 +429,71 @@ var FluxAPI = class {
   }
 };
 
+// src/api/gemini.ts
+var GeminiAPI = class {
+  apiKey;
+  baseUrl;
+  models;
+  defaultModel;
+  constructor(env) {
+    const config = getConfig(env);
+    this.apiKey = config.googleModelKey;
+    this.baseUrl = config.googleModelBaseUrl || "https://generativelanguage.googleapis.com/v1beta";
+    this.models = config.googleModels;
+    this.defaultModel = this.models[0];
+  }
+  async generateResponse(messages, model) {
+    const useModel = model || this.defaultModel;
+    console.log(`Generating response with Gemini model: ${useModel}`);
+    const url = `${this.baseUrl}/models/${useModel}:generateContent?key=${this.apiKey}`;
+    const geminiMessages = messages.filter((msg) => msg.role !== "system").map((msg) => ({
+      role: msg.role === "assistant" ? "model" : "user",
+      parts: [{ text: msg.content }]
+    }));
+    const requestBody = {
+      contents: geminiMessages,
+      generationConfig: {
+        temperature: 0.7,
+        topP: 1,
+        topK: 1,
+        maxOutputTokens: 2048
+      }
+    };
+    console.log("Request body:", JSON.stringify(requestBody, null, 2));
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(requestBody)
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Gemini API error: ${response.statusText}`, errorText);
+      throw new Error(`Gemini API error: ${response.statusText}
+${errorText}`);
+    }
+    const data = await response.json();
+    console.log("Gemini API response received");
+    if (!data.candidates || data.candidates.length === 0) {
+      throw new Error("No response generated from Gemini API");
+    }
+    const generatedText = data.candidates[0].content.parts[0].text.trim();
+    console.log(`Generated text length: ${generatedText.length}`);
+    return generatedText;
+  }
+  isValidModel(model) {
+    return this.models.includes(model);
+  }
+  getDefaultModel() {
+    return this.defaultModel;
+  }
+  getAvailableModels() {
+    return this.models;
+  }
+};
+var gemini_default = GeminiAPI;
+
 // src/config/commands.ts
 var commands = [
   {
@@ -433,7 +504,7 @@ var commands = [
       const language = await bot.getUserLanguage(userId);
       const currentModel = await bot.getCurrentModel(userId);
       const welcomeMessage = translate("welcome", language) + "\n" + translate("current_model", language) + currentModel;
-      await bot.sendMessage(chatId, welcomeMessage);
+      await bot.sendMessageWithFallback(chatId, welcomeMessage);
     }
   },
   {
@@ -460,7 +531,10 @@ var commands = [
     action: async (chatId, bot, args) => {
       const userId = chatId.toString();
       const language = await bot.getUserLanguage(userId);
-      const availableModels = bot.getAvailableModels();
+      const availableModels = [
+        ...bot.getAvailableModels(),
+        ...new gemini_default(bot["env"]).getAvailableModels()
+      ];
       const keyboard = {
         inline_keyboard: availableModels.map((model) => [{ text: model, callback_data: `model_${model}` }])
       };
@@ -507,7 +581,7 @@ var commands = [
       const userId = chatId.toString();
       const language = await bot.getUserLanguage(userId);
       if (!args.length) {
-        await bot.sendMessage(chatId, translate("image_prompt_required", language));
+        await bot.sendMessageWithFallback(chatId, translate("image_prompt_required", language));
         return;
       }
       const validSizes = ["1024x1024", "1024x1792", "1792x1024"];
@@ -664,12 +738,22 @@ var TelegramBot = class {
     this.redis = new RedisClient(env);
     this.modelAPI = new openai_api_default(env);
   }
+  async initializeModelAPI(userId) {
+    const currentModel = await this.getCurrentModel(userId);
+    console.log(`Initializing API for model: ${currentModel}`);
+    if (currentModel.startsWith("gemini-")) {
+      return new gemini_default(this.env);
+    }
+    return new openai_api_default(this.env);
+  }
   async executeCommand(commandName, chatId, args) {
     const command = this.commands.find((cmd) => cmd.name === commandName);
     if (command) {
       await command.action(chatId, this, args);
     } else {
       console.log(`Unknown command: ${commandName}`);
+      const language = await this.getUserLanguage(chatId.toString());
+      await this.sendMessage(chatId, translate("command_not_found", language));
     }
   }
   async sendMessage(chatId, text, options = {}) {
@@ -677,24 +761,33 @@ var TelegramBot = class {
     const results = [];
     for (const message of messages) {
       const url = `${this.apiUrl}/sendMessage`;
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text: message,
-          parse_mode: options.parse_mode || "Markdown",
-          // 默认使用 Markdown
-          reply_markup: options.reply_markup
-        })
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      console.log(`Sending message part (length: ${message.length})`);
+      try {
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: message,
+            parse_mode: options.parse_mode,
+            // 只有在明确指定时才使用 parse_mode
+            reply_markup: options.reply_markup
+          })
+        });
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`Telegram API error: ${response.statusText}`, errorText);
+          throw new Error(`Telegram API error: ${response.statusText}
+${errorText}`);
+        }
+        const result = await response.json();
+        results.push(result);
+      } catch (error) {
+        console.error("Error sending message part:", error);
+        throw error;
       }
-      const result = await response.json();
-      results.push(result);
     }
     return results;
   }
@@ -717,24 +810,39 @@ var TelegramBot = class {
         } else {
           try {
             await sendChatAction(chatId, "typing", this.env);
+            this.modelAPI = await this.initializeModelAPI(userId);
             const context = await this.getContext(userId);
-            const messages = [
-              { role: "system", content: this.systemMessage },
-              ...context ? [{ role: "user", content: context }] : [],
-              { role: "user", content: text }
-            ];
-            const response = await this.modelAPI.generateResponse(messages);
+            const currentModel = await this.getCurrentModel(userId);
+            let messages = [];
+            if (currentModel.startsWith("gemini-")) {
+              messages = [
+                ...context ? [{ role: "user", content: context }] : [],
+                { role: "user", content: text }
+              ];
+            } else {
+              messages = [
+                { role: "system", content: this.systemMessage },
+                ...context ? [{ role: "user", content: context }] : [],
+                { role: "user", content: text }
+              ];
+            }
+            console.log(`Current modelAPI type: ${this.modelAPI.constructor.name}`);
+            console.log(`Generating response with model: ${currentModel}`);
+            const response = await this.modelAPI.generateResponse(messages, currentModel);
+            console.log(`Generated response length: ${response.length}`);
             const formattedResponse = this.formatResponse(response);
-            await this.sendMessage(chatId, formattedResponse, { parse_mode: "Markdown" });
+            console.log(`Formatted response length: ${formattedResponse.length}`);
+            await this.sendMessageWithFallback(chatId, formattedResponse);
             await this.storeContext(userId, `User: ${text}
 Assistant: ${response}`);
           } catch (error) {
-            console.error("Error generating response:", error);
-            await this.sendMessage(chatId, translate("error", language), { parse_mode: "Markdown" });
+            console.error("Error in handleUpdate:", error);
+            const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+            await this.sendMessage(chatId, translate("error", language) + ": " + errorMessage);
           }
         }
       } else {
-        await this.sendMessage(chatId, translate("unauthorized", language), { parse_mode: "Markdown" });
+        await this.sendMessageWithFallback(chatId, translate("unauthorized", language));
       }
     }
   }
@@ -747,12 +855,12 @@ Assistant: ${response}`);
     if (data.startsWith("lang_")) {
       const newLanguage = data.split("_")[1];
       await this.setUserLanguage(userId, newLanguage);
-      await this.sendMessage(chatId, translate("language_changed", newLanguage) + translate(`language_${newLanguage}`, newLanguage), { parse_mode: "Markdown" });
+      await this.sendMessageWithFallback(chatId, translate("language_changed", newLanguage) + translate(`language_${newLanguage}`, newLanguage));
     } else if (data.startsWith("model_")) {
       const newModel = data.split("_")[1];
       await this.setCurrentModel(userId, newModel);
       const language = await this.getUserLanguage(userId);
-      await this.sendMessage(chatId, translate("model_changed", language) + newModel, { parse_mode: "Markdown" });
+      await this.sendMessageWithFallback(chatId, translate("model_changed", language) + newModel);
       await this.clearContext(userId);
     }
     await fetch(`${this.apiUrl}/answerCallbackQuery`, {
@@ -774,6 +882,9 @@ Assistant: ${response}`);
   }
   async setCurrentModel(userId, model) {
     await this.redis.set(`model:${userId}`, model);
+    console.log(`Switching to model: ${model}`);
+    this.modelAPI = await this.initializeModelAPI(userId);
+    console.log(`Current modelAPI type: ${this.modelAPI.constructor.name}`);
   }
   getAvailableModels() {
     return this.modelAPI.getAvailableModels();
@@ -790,9 +901,10 @@ Assistant: ${response}`);
   async clearContext(userId) {
     await this.redis.del(`context:${userId}`);
     const language = await this.getUserLanguage(userId);
-    await this.sendMessage(parseInt(userId), translate("new_conversation", language), { parse_mode: "Markdown" });
+    await this.sendMessageWithFallback(parseInt(userId), translate("new_conversation", language));
   }
   async summarizeHistory(userId) {
+    this.modelAPI = await this.initializeModelAPI(userId);
     const context = await this.getContext(userId);
     const language = await this.getUserLanguage(userId);
     if (!context) {
@@ -803,11 +915,22 @@ Assistant: ${response}`);
       "zh": "Chinese",
       "es": "Spanish"
     };
-    const messages = [
-      { role: "system", content: `Summarize the following conversation in ${languageNames[language]}:` },
-      { role: "user", content: context }
-    ];
-    const summary = await this.modelAPI.generateResponse(messages);
+    const currentModel = await this.getCurrentModel(userId);
+    console.log(`Summarizing history with model: ${currentModel}`);
+    let messages;
+    if (currentModel.startsWith("gemini-")) {
+      messages = [
+        { role: "user", content: `Please summarize the following conversation in ${languageNames[language]}:
+
+${context}` }
+      ];
+    } else {
+      messages = [
+        { role: "system", content: `Summarize the following conversation in ${languageNames[language]}:` },
+        { role: "user", content: context }
+      ];
+    }
+    const summary = await this.modelAPI.generateResponse(messages, currentModel);
     return `${translate("history_summary", language)}
 
 ${summary}`;
@@ -871,6 +994,21 @@ ${summary}`;
     if (!result.ok) {
       throw new Error(`Telegram API error: ${result.description}`);
     }
+  }
+  async sendMessageWithFallback(chatId, text) {
+    const messages = splitMessage(text);
+    const results = [];
+    for (const message of messages) {
+      try {
+        const result = await this.sendMessage(chatId, message, { parse_mode: "Markdown" });
+        results.push(...result);
+      } catch (error) {
+        console.error("Error sending message with Markdown, falling back to plain text:", error);
+        const plainTextResult = await this.sendMessage(chatId, message);
+        results.push(...plainTextResult);
+      }
+    }
+    return results;
   }
 };
 var telegram_default = TelegramBot;
