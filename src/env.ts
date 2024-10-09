@@ -25,6 +25,9 @@ export interface Env {
   CLAUDE_API_KEY: string;
   CLAUDE_MODELS: string;
   CLAUDE_ENDPOINT?: string;
+  AZURE_API_KEY: string;       // Azure API 密钥
+  AZURE_MODELS: string;        // 逗号分隔的 Azure 模型列表
+  AZURE_ENDPOINT: string;      // Azure API 端点
 }
 
 const getEnvOrDefault = (env: Env, key: keyof Env, defaultValue: string): string => {
@@ -37,9 +40,10 @@ export const getConfig = (env: Env) => {
   const hasGoogle = !!env.GOOGLE_MODEL_KEY;
   const hasGroq = !!env.GROQ_API_KEY;
   const hasClaude = !!env.CLAUDE_API_KEY;
+  const hasAzure = !!env.AZURE_API_KEY;
 
-  if (!hasOpenAI && !hasGoogle && !hasGroq && !hasClaude) {
-    throw new Error('At least one model API key must be set (OpenAI, Google, Groq, or Claude)');
+  if (!hasOpenAI && !hasGoogle && !hasGroq && !hasClaude && !hasAzure) {
+    throw new Error('At least one model API key must be set (OpenAI, Google, Groq, Claude, or Azure)');
   }
 
   return {
@@ -71,5 +75,8 @@ export const getConfig = (env: Env) => {
     claudeApiKey: env.CLAUDE_API_KEY,
     claudeModels: env.CLAUDE_MODELS ? env.CLAUDE_MODELS.split(',').map(model => model.trim()) : [],
     claudeEndpoint: getEnvOrDefault(env, 'CLAUDE_ENDPOINT', 'https://api.anthropic.com/v1'),
+    azureApiKey: env.AZURE_API_KEY,
+    azureModels: env.AZURE_MODELS ? env.AZURE_MODELS.split(',').map(model => model.trim()) : [],
+    azureEndpoint: env.AZURE_ENDPOINT,
   };
 };

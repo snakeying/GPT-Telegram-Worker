@@ -9,6 +9,7 @@ import { ModelAPIInterface } from './model_api_interface';
 import GeminiAPI from './gemini';
 import GroqAPI from './groq';
 import ClaudeAPI from './claude';
+import AzureAPI from './azure'; // 新增 AzureAPI 导入
 
 export class TelegramBot {
   private token: string;
@@ -46,6 +47,8 @@ export class TelegramBot {
       return new GroqAPI(this.env);
     } else if (config.claudeModels.includes(currentModel)) {
       return new ClaudeAPI(this.env);
+    } else if (config.azureModels.includes(currentModel)) { // 新增 Azure 模型检查
+      return new AzureAPI(this.env);
     }
     
     // 如果没有匹配的模型,使用默认的 OpenAI API

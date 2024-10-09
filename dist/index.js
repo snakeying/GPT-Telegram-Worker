@@ -7,8 +7,9 @@ var getConfig = (env) => {
   const hasGoogle = !!env.GOOGLE_MODEL_KEY;
   const hasGroq = !!env.GROQ_API_KEY;
   const hasClaude = !!env.CLAUDE_API_KEY;
-  if (!hasOpenAI && !hasGoogle && !hasGroq && !hasClaude) {
-    throw new Error("At least one model API key must be set (OpenAI, Google, Groq, or Claude)");
+  const hasAzure = !!env.AZURE_API_KEY;
+  if (!hasOpenAI && !hasGoogle && !hasGroq && !hasClaude && !hasAzure) {
+    throw new Error("At least one model API key must be set (OpenAI, Google, Groq, Claude, or Azure)");
   }
   return {
     openaiApiKey: env.OPENAI_API_KEY,
@@ -38,7 +39,10 @@ var getConfig = (env) => {
     groqModels: env.GROQ_MODELS ? env.GROQ_MODELS.split(",").map((model) => model.trim()) : [],
     claudeApiKey: env.CLAUDE_API_KEY,
     claudeModels: env.CLAUDE_MODELS ? env.CLAUDE_MODELS.split(",").map((model) => model.trim()) : [],
-    claudeEndpoint: getEnvOrDefault(env, "CLAUDE_ENDPOINT", "https://api.anthropic.com/v1")
+    claudeEndpoint: getEnvOrDefault(env, "CLAUDE_ENDPOINT", "https://api.anthropic.com/v1"),
+    azureApiKey: env.AZURE_API_KEY,
+    azureModels: env.AZURE_MODELS ? env.AZURE_MODELS.split(",").map((model) => model.trim()) : [],
+    azureEndpoint: env.AZURE_ENDPOINT
   };
 };
 
@@ -482,8 +486,9 @@ var commands = [
         ...config.openaiModels,
         ...config.googleModels,
         ...config.groqModels,
-        ...config.claudeModels
-        // 添加 Claude 模型
+        ...config.claudeModels,
+        ...config.azureModels
+        // 新增 Azure 模型
       ];
       const keyboard = {
         inline_keyboard: availableModels.map((model) => [{ text: model, callback_data: `model_${model}` }])
@@ -846,6 +851,56 @@ ${errorText}`);
 };
 var claude_default = ClaudeAPI;
 
+// src/api/azure.ts
+var AzureAPI = class {
+  apiKey;
+  baseUrl;
+  models;
+  defaultModel;
+  constructor(env) {
+    const config = getConfig(env);
+    this.apiKey = config.azureApiKey;
+    this.baseUrl = config.azureEndpoint;
+    this.models = config.azureModels;
+    this.defaultModel = this.models[0];
+  }
+  async generateResponse(messages, model) {
+    const useModel = model || this.defaultModel;
+    const url = `${this.baseUrl}/openai/deployments/${useModel}/chat/completions?api-version=2024-02-01`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "api-key": this.apiKey
+      },
+      body: JSON.stringify({
+        messages
+      })
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Azure API error: ${response.statusText}`, errorText);
+      throw new Error(`Azure API error: ${response.statusText}
+${errorText}`);
+    }
+    const data = await response.json();
+    if (!data.choices || data.choices.length === 0) {
+      throw new Error("Azure API \u672A\u751F\u6210\u4EFB\u4F55\u54CD\u5E94");
+    }
+    return data.choices[0].message.content.trim();
+  }
+  isValidModel(model) {
+    return this.models.includes(model);
+  }
+  getDefaultModel() {
+    return this.defaultModel;
+  }
+  getAvailableModels() {
+    return this.models;
+  }
+};
+var azure_default = AzureAPI;
+
 // src/api/telegram.ts
 var TelegramBot = class {
   token;
@@ -879,6 +934,8 @@ var TelegramBot = class {
       return new groq_default(this.env);
     } else if (config.claudeModels.includes(currentModel)) {
       return new claude_default(this.env);
+    } else if (config.azureModels.includes(currentModel)) {
+      return new azure_default(this.env);
     }
     console.warn(`Unknown model: ${currentModel}. Falling back to OpenAI API.`);
     return new openai_api_default(this.env);

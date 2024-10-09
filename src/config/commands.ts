@@ -23,7 +23,7 @@ export const commands: Command[] = [
       const language = await bot.getUserLanguage(userId);
       const currentModel = await bot.getCurrentModel(userId);
       const welcomeMessage = translate('welcome', language) + '\n' + 
-                             translate('current_model', language) + currentModel;
+                           translate('current_model', language) + currentModel;
       await bot.sendMessageWithFallback(chatId, welcomeMessage);
     },
   },
@@ -56,7 +56,8 @@ export const commands: Command[] = [
         ...config.openaiModels,
         ...config.googleModels,
         ...config.groqModels,
-        ...config.claudeModels  // 添加 Claude 模型
+        ...config.claudeModels,
+        ...config.azureModels, // 新增 Azure 模型
       ];
       const keyboard = {
         inline_keyboard: availableModels.map(model => [{text: model, callback_data: `model_${model}`}])
