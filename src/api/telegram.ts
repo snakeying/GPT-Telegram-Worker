@@ -7,6 +7,7 @@ import { commands, Command } from '../config/commands';
 import { RedisClient } from '../utils/redis';
 import { ModelAPIInterface } from './model_api_interface';
 import GeminiAPI from './gemini';
+import GroqAPI from './groq';
 
 export class TelegramBot {
   private token: string;
@@ -33,9 +34,19 @@ export class TelegramBot {
   private async initializeModelAPI(userId: string): Promise<ModelAPIInterface> {
     const currentModel = await this.getCurrentModel(userId);
     console.log(`Initializing API for model: ${currentModel}`);
-    if (currentModel.startsWith('gemini-')) {
+    
+    const config = getConfig(this.env);
+    
+    if (config.openaiModels.includes(currentModel)) {
+      return new OpenAIAPI(this.env);
+    } else if (config.googleModels.includes(currentModel)) {
       return new GeminiAPI(this.env);
+    } else if (config.groqModels.includes(currentModel)) {
+      return new GroqAPI(this.env);
     }
+    
+    // 如果没有匹配的模型,使用默认的 OpenAI API
+    console.warn(`Unknown model: ${currentModel}. Falling back to OpenAI API.`);
     return new OpenAIAPI(this.env);
   }
 

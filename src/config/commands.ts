@@ -5,6 +5,7 @@ import { sendChatAction } from '../utils/helpers';
 import { FluxAPI } from '../api/flux-cf';
 import { getConfig } from '../env';
 import GeminiAPI from '../api/gemini';
+import GroqAPI from '../api/groq';
 
 export interface Command {
   name: string;
@@ -49,9 +50,11 @@ export const commands: Command[] = [
     action: async (chatId: number, bot: TelegramBot, args: string[]) => {
       const userId = chatId.toString();
       const language = await bot.getUserLanguage(userId);
+      const config = getConfig(bot['env']);
       const availableModels = [
-        ...bot.getAvailableModels(),
-        ...new GeminiAPI(bot['env']).getAvailableModels()
+        ...config.openaiModels,
+        ...config.googleModels,
+        ...config.groqModels
       ];
       const keyboard = {
         inline_keyboard: availableModels.map(model => [{text: model, callback_data: `model_${model}`}])

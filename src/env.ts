@@ -20,6 +20,8 @@ export interface Env {
   GOOGLE_MODEL_KEY: string;
   GOOGLE_MODEL_BASEURL?: string;
   GOOGLE_MODELS: string;
+  GROQ_API_KEY: string;
+  GROQ_MODELS: string;
 }
 
 const getEnvOrDefault = (env: Env, key: keyof Env, defaultValue: string): string => {
@@ -51,4 +53,6 @@ export const getConfig = (env: Env) => ({
   googleModelKey: env.GOOGLE_MODEL_KEY,
   googleModelBaseUrl: getEnvOrDefault(env, 'GOOGLE_MODEL_BASEURL', 'https://generativelanguage.googleapis.com/v1beta'),
   googleModels: env.GOOGLE_MODELS.split(',').map(model => model.trim()),
+  groqApiKey: env.GROQ_API_KEY,
+  groqModels: env.GROQ_MODELS.split(',').map(model => model.trim()),
 });

@@ -28,7 +28,9 @@ var getConfig = (env) => ({
   externalApiKey: env.EXTERNAL_API_KEY,
   googleModelKey: env.GOOGLE_MODEL_KEY,
   googleModelBaseUrl: getEnvOrDefault(env, "GOOGLE_MODEL_BASEURL", "https://generativelanguage.googleapis.com/v1beta"),
-  googleModels: env.GOOGLE_MODELS.split(",").map((model) => model.trim())
+  googleModels: env.GOOGLE_MODELS.split(",").map((model) => model.trim()),
+  groqApiKey: env.GROQ_API_KEY,
+  groqModels: env.GROQ_MODELS.split(",").map((model) => model.trim())
 });
 
 // src/api/openai_api.ts
@@ -429,71 +431,6 @@ var FluxAPI = class {
   }
 };
 
-// src/api/gemini.ts
-var GeminiAPI = class {
-  apiKey;
-  baseUrl;
-  models;
-  defaultModel;
-  constructor(env) {
-    const config = getConfig(env);
-    this.apiKey = config.googleModelKey;
-    this.baseUrl = config.googleModelBaseUrl || "https://generativelanguage.googleapis.com/v1beta";
-    this.models = config.googleModels;
-    this.defaultModel = this.models[0];
-  }
-  async generateResponse(messages, model) {
-    const useModel = model || this.defaultModel;
-    console.log(`Generating response with Gemini model: ${useModel}`);
-    const url = `${this.baseUrl}/models/${useModel}:generateContent?key=${this.apiKey}`;
-    const geminiMessages = messages.filter((msg) => msg.role !== "system").map((msg) => ({
-      role: msg.role === "assistant" ? "model" : "user",
-      parts: [{ text: msg.content }]
-    }));
-    const requestBody = {
-      contents: geminiMessages,
-      generationConfig: {
-        temperature: 0.7,
-        topP: 1,
-        topK: 1,
-        maxOutputTokens: 2048
-      }
-    };
-    console.log("Request body:", JSON.stringify(requestBody, null, 2));
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(requestBody)
-    });
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Gemini API error: ${response.statusText}`, errorText);
-      throw new Error(`Gemini API error: ${response.statusText}
-${errorText}`);
-    }
-    const data = await response.json();
-    console.log("Gemini API response received");
-    if (!data.candidates || data.candidates.length === 0) {
-      throw new Error("No response generated from Gemini API");
-    }
-    const generatedText = data.candidates[0].content.parts[0].text.trim();
-    console.log(`Generated text length: ${generatedText.length}`);
-    return generatedText;
-  }
-  isValidModel(model) {
-    return this.models.includes(model);
-  }
-  getDefaultModel() {
-    return this.defaultModel;
-  }
-  getAvailableModels() {
-    return this.models;
-  }
-};
-var gemini_default = GeminiAPI;
-
 // src/config/commands.ts
 var commands = [
   {
@@ -531,9 +468,11 @@ var commands = [
     action: async (chatId, bot, args) => {
       const userId = chatId.toString();
       const language = await bot.getUserLanguage(userId);
+      const config = getConfig(bot["env"]);
       const availableModels = [
-        ...bot.getAvailableModels(),
-        ...new gemini_default(bot["env"]).getAvailableModels()
+        ...config.openaiModels,
+        ...config.googleModels,
+        ...config.groqModels
       ];
       const keyboard = {
         inline_keyboard: availableModels.map((model) => [{ text: model, callback_data: `model_${model}` }])
@@ -717,6 +656,125 @@ ${newContext}` : newContext;
   }
 };
 
+// src/api/gemini.ts
+var GeminiAPI = class {
+  apiKey;
+  baseUrl;
+  models;
+  defaultModel;
+  constructor(env) {
+    const config = getConfig(env);
+    this.apiKey = config.googleModelKey;
+    this.baseUrl = config.googleModelBaseUrl || "https://generativelanguage.googleapis.com/v1beta";
+    this.models = config.googleModels;
+    this.defaultModel = this.models[0];
+  }
+  async generateResponse(messages, model) {
+    const useModel = model || this.defaultModel;
+    console.log(`Generating response with Gemini model: ${useModel}`);
+    const url = `${this.baseUrl}/models/${useModel}:generateContent?key=${this.apiKey}`;
+    const geminiMessages = messages.filter((msg) => msg.role !== "system").map((msg) => ({
+      role: msg.role === "assistant" ? "model" : "user",
+      parts: [{ text: msg.content }]
+    }));
+    const requestBody = {
+      contents: geminiMessages,
+      generationConfig: {
+        temperature: 0.7,
+        topP: 1,
+        topK: 1,
+        maxOutputTokens: 2048
+      }
+    };
+    console.log("Request body:", JSON.stringify(requestBody, null, 2));
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(requestBody)
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Gemini API error: ${response.statusText}`, errorText);
+      throw new Error(`Gemini API error: ${response.statusText}
+${errorText}`);
+    }
+    const data = await response.json();
+    console.log("Gemini API response received");
+    if (!data.candidates || data.candidates.length === 0) {
+      throw new Error("No response generated from Gemini API");
+    }
+    const generatedText = data.candidates[0].content.parts[0].text.trim();
+    console.log(`Generated text length: ${generatedText.length}`);
+    return generatedText;
+  }
+  isValidModel(model) {
+    return this.models.includes(model);
+  }
+  getDefaultModel() {
+    return this.defaultModel;
+  }
+  getAvailableModels() {
+    return this.models;
+  }
+};
+var gemini_default = GeminiAPI;
+
+// src/api/groq.ts
+var GroqAPI = class {
+  apiKey;
+  baseUrl = "https://api.groq.com/openai/v1";
+  models;
+  defaultModel;
+  constructor(env) {
+    const config = getConfig(env);
+    this.apiKey = config.groqApiKey;
+    this.models = config.groqModels;
+    this.defaultModel = this.models[0];
+  }
+  async generateResponse(messages, model) {
+    const useModel = model || this.defaultModel;
+    console.log(`Generating response with Groq model: ${useModel}`);
+    const url = `${this.baseUrl}/chat/completions`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${this.apiKey}`
+      },
+      body: JSON.stringify({
+        model: useModel,
+        messages
+      })
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Groq API error: ${response.statusText}`, errorText);
+      throw new Error(`Groq API error: ${response.statusText}
+${errorText}`);
+    }
+    const data = await response.json();
+    console.log("Groq API response received");
+    if (!data.choices || data.choices.length === 0) {
+      throw new Error("No response generated from Groq API");
+    }
+    const generatedText = data.choices[0].message.content.trim();
+    console.log(`Generated text length: ${generatedText.length}`);
+    return generatedText;
+  }
+  isValidModel(model) {
+    return this.models.includes(model);
+  }
+  getDefaultModel() {
+    return this.defaultModel;
+  }
+  getAvailableModels() {
+    return this.models;
+  }
+};
+var groq_default = GroqAPI;
+
 // src/api/telegram.ts
 var TelegramBot = class {
   token;
@@ -741,9 +799,15 @@ var TelegramBot = class {
   async initializeModelAPI(userId) {
     const currentModel = await this.getCurrentModel(userId);
     console.log(`Initializing API for model: ${currentModel}`);
-    if (currentModel.startsWith("gemini-")) {
+    const config = getConfig(this.env);
+    if (config.openaiModels.includes(currentModel)) {
+      return new openai_api_default(this.env);
+    } else if (config.googleModels.includes(currentModel)) {
       return new gemini_default(this.env);
+    } else if (config.groqModels.includes(currentModel)) {
+      return new groq_default(this.env);
     }
+    console.warn(`Unknown model: ${currentModel}. Falling back to OpenAI API.`);
     return new openai_api_default(this.env);
   }
   async executeCommand(commandName, chatId, args) {
