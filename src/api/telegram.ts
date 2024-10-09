@@ -8,6 +8,7 @@ import { RedisClient } from '../utils/redis';
 import { ModelAPIInterface } from './model_api_interface';
 import GeminiAPI from './gemini';
 import GroqAPI from './groq';
+import ClaudeAPI from './claude';
 
 export class TelegramBot {
   private token: string;
@@ -43,6 +44,8 @@ export class TelegramBot {
       return new GeminiAPI(this.env);
     } else if (config.groqModels.includes(currentModel)) {
       return new GroqAPI(this.env);
+    } else if (config.claudeModels.includes(currentModel)) {
+      return new ClaudeAPI(this.env);
     }
     
     // 如果没有匹配的模型,使用默认的 OpenAI API

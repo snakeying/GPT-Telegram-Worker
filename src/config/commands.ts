@@ -6,6 +6,7 @@ import { FluxAPI } from '../api/flux-cf';
 import { getConfig } from '../env';
 import GeminiAPI from '../api/gemini';
 import GroqAPI from '../api/groq';
+import ClaudeAPI from '../api/claude';
 
 export interface Command {
   name: string;
@@ -54,7 +55,8 @@ export const commands: Command[] = [
       const availableModels = [
         ...config.openaiModels,
         ...config.googleModels,
-        ...config.groqModels
+        ...config.groqModels,
+        ...config.claudeModels  // 添加 Claude 模型
       ];
       const keyboard = {
         inline_keyboard: availableModels.map(model => [{text: model, callback_data: `model_${model}`}])

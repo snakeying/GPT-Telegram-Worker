@@ -2,36 +2,45 @@
 var getEnvOrDefault = (env, key, defaultValue) => {
   return env[key] || defaultValue;
 };
-var getConfig = (env) => ({
-  openaiApiKey: env.OPENAI_API_KEY,
-  openaiBaseUrl: getEnvOrDefault(env, "OPENAI_BASE_URL", "https://api.openai.com/v1"),
-  openaiModels: env.OPENAI_MODELS.split(",").map((model) => model.trim()),
-  telegramBotToken: env.TELEGRAM_BOT_TOKEN,
-  whitelistedUsers: env.WHITELISTED_USERS.split(",").map((id) => id.trim()),
-  systemInitMessage: getEnvOrDefault(env, "SYSTEM_INIT_MESSAGE", "You are a helpful assistant."),
-  systemInitMessageRole: getEnvOrDefault(env, "SYSTEM_INIT_MESSAGE_ROLE", "system"),
-  defaultModel: env.DEFAULT_MODEL,
-  upstashRedisRestUrl: env.UPSTASH_REDIS_REST_URL,
-  upstashRedisRestToken: env.UPSTASH_REDIS_REST_TOKEN,
-  dallEModel: getEnvOrDefault(env, "DALL_E_MODEL", "dall-e-3"),
-  // TTL 配置（以秒为单位）
-  languageTTL: 60 * 60 * 24 * 365,
-  // 1 year
-  contextTTL: 60 * 60 * 24 * 30,
-  // 30 days
-  cloudflareApiToken: env.CLOUDFLARE_API_TOKEN,
-  cloudflareAccountId: env.CLOUDFLARE_ACCOUNT_ID,
-  fluxSteps: parseInt(getEnvOrDefault(env, "FLUX_STEPS", "4")),
-  promptOptimization: getEnvOrDefault(env, "PROMPT_OPTIMIZATION", "false") === "true",
-  externalApiBase: env.EXTERNAL_API_BASE,
-  externalModel: env.EXTERNAL_MODEL,
-  externalApiKey: env.EXTERNAL_API_KEY,
-  googleModelKey: env.GOOGLE_MODEL_KEY,
-  googleModelBaseUrl: getEnvOrDefault(env, "GOOGLE_MODEL_BASEURL", "https://generativelanguage.googleapis.com/v1beta"),
-  googleModels: env.GOOGLE_MODELS.split(",").map((model) => model.trim()),
-  groqApiKey: env.GROQ_API_KEY,
-  groqModels: env.GROQ_MODELS.split(",").map((model) => model.trim())
-});
+var getConfig = (env) => {
+  const hasOpenAI = !!env.OPENAI_API_KEY;
+  const hasGoogle = !!env.GOOGLE_MODEL_KEY;
+  const hasGroq = !!env.GROQ_API_KEY;
+  const hasClaude = !!env.CLAUDE_API_KEY;
+  if (!hasOpenAI && !hasGoogle && !hasGroq && !hasClaude) {
+    throw new Error("At least one model API key must be set (OpenAI, Google, Groq, or Claude)");
+  }
+  return {
+    openaiApiKey: env.OPENAI_API_KEY,
+    openaiBaseUrl: getEnvOrDefault(env, "OPENAI_BASE_URL", "https://api.openai.com/v1"),
+    openaiModels: env.OPENAI_MODELS ? env.OPENAI_MODELS.split(",").map((model) => model.trim()) : [],
+    telegramBotToken: env.TELEGRAM_BOT_TOKEN,
+    whitelistedUsers: env.WHITELISTED_USERS ? env.WHITELISTED_USERS.split(",").map((id) => id.trim()) : [],
+    systemInitMessage: getEnvOrDefault(env, "SYSTEM_INIT_MESSAGE", "You are a helpful assistant."),
+    systemInitMessageRole: getEnvOrDefault(env, "SYSTEM_INIT_MESSAGE_ROLE", "system"),
+    defaultModel: env.DEFAULT_MODEL,
+    upstashRedisRestUrl: env.UPSTASH_REDIS_REST_URL,
+    upstashRedisRestToken: env.UPSTASH_REDIS_REST_TOKEN,
+    dallEModel: getEnvOrDefault(env, "DALL_E_MODEL", "dall-e-3"),
+    languageTTL: 60 * 60 * 24 * 365,
+    contextTTL: 60 * 60 * 24 * 30,
+    cloudflareApiToken: env.CLOUDFLARE_API_TOKEN,
+    cloudflareAccountId: env.CLOUDFLARE_ACCOUNT_ID,
+    fluxSteps: parseInt(getEnvOrDefault(env, "FLUX_STEPS", "4")),
+    promptOptimization: getEnvOrDefault(env, "PROMPT_OPTIMIZATION", "false") === "true",
+    externalApiBase: env.EXTERNAL_API_BASE,
+    externalModel: env.EXTERNAL_MODEL,
+    externalApiKey: env.EXTERNAL_API_KEY,
+    googleModelKey: env.GOOGLE_MODEL_KEY,
+    googleModelBaseUrl: getEnvOrDefault(env, "GOOGLE_MODEL_BASEURL", "https://generativelanguage.googleapis.com/v1beta"),
+    googleModels: env.GOOGLE_MODELS ? env.GOOGLE_MODELS.split(",").map((model) => model.trim()) : [],
+    groqApiKey: env.GROQ_API_KEY,
+    groqModels: env.GROQ_MODELS ? env.GROQ_MODELS.split(",").map((model) => model.trim()) : [],
+    claudeApiKey: env.CLAUDE_API_KEY,
+    claudeModels: env.CLAUDE_MODELS ? env.CLAUDE_MODELS.split(",").map((model) => model.trim()) : [],
+    claudeEndpoint: getEnvOrDefault(env, "CLAUDE_ENDPOINT", "https://api.anthropic.com/v1")
+  };
+};
 
 // src/api/openai_api.ts
 var OpenAIAPI = class {
@@ -472,7 +481,9 @@ var commands = [
       const availableModels = [
         ...config.openaiModels,
         ...config.googleModels,
-        ...config.groqModels
+        ...config.groqModels,
+        ...config.claudeModels
+        // 添加 Claude 模型
       ];
       const keyboard = {
         inline_keyboard: availableModels.map((model) => [{ text: model, callback_data: `model_${model}` }])
@@ -775,6 +786,66 @@ ${errorText}`);
 };
 var groq_default = GroqAPI;
 
+// src/api/claude.ts
+var ClaudeAPI = class {
+  apiKey;
+  baseUrl;
+  models;
+  defaultModel;
+  constructor(env) {
+    const config = getConfig(env);
+    this.apiKey = config.claudeApiKey;
+    this.baseUrl = config.claudeEndpoint || "https://api.anthropic.com/v1";
+    this.models = config.claudeModels;
+    this.defaultModel = this.models[0];
+  }
+  async generateResponse(messages, model) {
+    const useModel = model || this.defaultModel;
+    console.log(`Generating response with Claude model: ${useModel}`);
+    const url = `${this.baseUrl}/messages`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": this.apiKey,
+        "anthropic-version": "2023-06-01"
+      },
+      body: JSON.stringify({
+        model: useModel,
+        messages: messages.map((msg) => ({
+          role: msg.role === "assistant" ? "assistant" : "user",
+          content: msg.content
+        })),
+        max_tokens: 1e3
+      })
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Claude API error: ${response.statusText}`, errorText);
+      throw new Error(`Claude API error: ${response.statusText}
+${errorText}`);
+    }
+    const data = await response.json();
+    console.log("Claude API response received");
+    if (!data.content || data.content.length === 0) {
+      throw new Error("No response generated from Claude API");
+    }
+    const generatedText = data.content[0].text.trim();
+    console.log(`Generated text length: ${generatedText.length}`);
+    return generatedText;
+  }
+  isValidModel(model) {
+    return this.models.includes(model);
+  }
+  getDefaultModel() {
+    return this.defaultModel;
+  }
+  getAvailableModels() {
+    return this.models;
+  }
+};
+var claude_default = ClaudeAPI;
+
 // src/api/telegram.ts
 var TelegramBot = class {
   token;
@@ -806,6 +877,8 @@ var TelegramBot = class {
       return new gemini_default(this.env);
     } else if (config.groqModels.includes(currentModel)) {
       return new groq_default(this.env);
+    } else if (config.claudeModels.includes(currentModel)) {
+      return new claude_default(this.env);
     }
     console.warn(`Unknown model: ${currentModel}. Falling back to OpenAI API.`);
     return new openai_api_default(this.env);
