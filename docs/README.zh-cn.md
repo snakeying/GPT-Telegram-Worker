@@ -4,7 +4,7 @@
 
 ## 📖 项目简介
 
-欢迎来到 Telegram GPT Worker 项目！这是一个基于 TypeScript 构建的 Telegram 机器人，支持多种语言和 AI 模型，并通过部署在 Cloudflare Workers 上，提供高效、可扩展的服务体验。
+欢迎来到 Telegram GPT Worker~ 这是一个基于 TypeScript 构建的 Telegram 机器人，支持多种语言和 AI 模型，并通过部署在 Cloudflare Workers 上，提供高效、可扩展的服务体验。
 
 ## 🌟 功能特色
 
