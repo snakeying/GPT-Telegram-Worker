@@ -199,7 +199,7 @@ https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://your-worker.
 
 ## 🚀 图像分析功能
 
-我们新增了图像分析功能，允许用户上传图片并获得 AI 分析结果。使用方法如下：
+允许用户上传图片并获得 AI 分析结果。使用方法如下：
 
 1. 用户向机器人发送一张图片。
 2. 在图片说明中添加分析提示，例如"请分析这张图片"。
