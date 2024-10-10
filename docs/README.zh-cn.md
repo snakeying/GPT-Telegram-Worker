@@ -11,11 +11,12 @@
 1. 🧠 **多模型支持**: 集成 OpenAI、Google Gemini、Anthropic Claude、Groq 和 Azure OpenAI 等多个 AI 模型。
 2. 💬 **智能对话**: 具备上下文记忆能力，确保对话流畅自然。
 3. 🎨 **图像生成**: 支持文本描述生成图像，采用 DALL·E 和 Cloudflare Flux 技术。
-4. 🌍 **多语言支持**: 内置 i18n 功能，支持 8 种语言，满足多样化需求。
-5. 🔒 **用户权限管理**: 通过白名单功能控制访问权限，提升安全性。
-6. ☁️ **高性能部署**: 利用 Cloudflare Workers 的边缘计算能力，实现快速响应。
-7. 🗄️ **高效数据管理**: 使用 Redis 进行数据缓存和管理，确保高效处理。
-8. 🔧 **Flux 提示词优化**: 可选功能，通过外部 API 优化 Flux 模型的图像生成提示词。
+4. 🖼️ **图像分析**: 支持用户上传图片并进行智能分析，可使用 OpenAI 或 Google Gemini 模型。
+5. 🌍 **多语言支持**: 内置 i18n 功能，支持 8 种语言，满足多样化需求。
+6. 🔒 **用户权限管理**: 通过白名单功能控制访问权限，提升安全性。
+7. ☁️ **高性能部署**: 利用 Cloudflare Workers 的边缘计算能力，实现快速响应。
+8. 🗄️ **高效数据管理**: 使用 Redis 进行数据缓存和管理，确保高效处理。
+9. 🔧 **Flux 提示词优化**: 可选功能，通过外部 API 优化 Flux 模型的图像生成提示词。
 
 ## 📋 系统要求
 
@@ -48,34 +49,35 @@
 
 ## 📁 项目结构
 
-```plaintext
+```
 /GPT-Telegram-Worker
 │
 ├── /src
 │   ├── /api
-│   │   ├── azure.ts               # Azure API 交互
-│   │   ├── claude.ts              # Claude API 交互
-│   │   ├── flux-cf.ts             # Cloudflare AI 图像生成接口
-│   │   ├── gemini.ts              # Google Gemini API 交互
-│   │   ├── groq.ts                # Groq API 交互
-│   │   ├── image_generation.ts    # DALL·E 图像生成接口
-│   │   ├── model_api_interface.ts # 模型 API 标准接口
-│   │   ├── openai_api.ts          # OpenAI API 交互
-│   │   └── telegram.ts            # Telegram bot 逻辑
+│   │   ├── azure .ts              # 处理Azure API交互
+│   │   ├── claude.ts              # 处理Claude API交互
+│   │   ├── flux-cf.ts             # 处理Cloudflare AI绘画接口
+│   │   ├── gemini.ts              # 处理Google Gemini API交互
+│   │   ├── groq.ts                # 处理Groq API交互
+│   │   ├── image_generation.ts    # 处理DALL·E 绘画接口
+│   │   ├── model_api_interface.ts # 通用接口，定义模型API标准结构
+│   │   ├── openai_api.ts          # 处理OpenAI API交互
+│   │   └── telegram.ts            # 处理 Telegram bot 的逻辑
 │   ├── /config                    # 配置文件
-│   │   └── commands.ts            # bot 命令配置
+│   │   └── commands.ts            # Telegram bot 命令
 │   ├── /utils
-│   │   ├── helpers.ts             # 工具函数
-│   │   ├── i18n.ts                # 多语言支持
-│   │   └── redis.ts               # Redis 操作
-│   ├── index.ts                   # 入口文件
-│   └── env.ts                     # 环境变量配置
+│   │   └── helpers.ts             # 实用函数和工具
+│   │   └── i18n.ts                # 多语言函数
+│   │   └── redis.ts               # Upstash Redis函数
+│   │   └── image_analyze.ts       # 图片上传函数
+│   ├── index.ts                   # 入口文件，处理请求与响应
+│   └── env.ts                     # 配置环境变量
 ├── /types                         # 类型定义文件
-│   └── telegram.d.ts              # Telegram API 类型定义
-├── wrangler.toml                  # Cloudflare Worker 配置
-├── tsconfig.json                  # TypeScript 配置
-├── package.json                   # 项目依赖
-└── README.md                      # 项目说明
+│   └── telegram.d.ts              # Telegram API 的类型定义
+├── wrangler.toml                  # Cloudflare Worker 配置文件
+├── tsconfig.json                  # TypeScript 配置文件
+├── package.json                   # 项目依赖文件
+└── README.md                      # 项目说明文档
 ```
 
 ## 🚀 详细教程
@@ -195,9 +197,20 @@ https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://your-worker.
 
 注意：部分变量需要手动配置，无默认值。
 
+## 🚀 图像分析功能
+
+我们新增了图像分析功能，允许用户上传图片并获得 AI 分析结果。使用方法如下：
+
+1. 用户向机器人发送一张图片。
+2. 在图片说明中添加分析提示，例如"请分析这张图片"。
+3. 机器人将使用当前选择的 AI 模型（OpenAI 或 Google Gemini）来分析图片。
+4. 分析结果将作为文本消息返回给用户。
+
+注意：确保您使用的 AI 模型支持图像分析功能。如果当前模型不支持，机器人会提示您切换到支持多模态的模型。
+
 ## ⚠️ 注意事项
 
-1. 🚦 **合理使用 API 配额**: 特别是图像生成服务，请注意使用限制。
+1. 🚦 **合理使用 API 配额**: 特别是图像生成和分析服务，请注意使用限制。
 2. 🔐 **保护敏感信息**: 妥善保管环境变量和 API 密钥。
 3. 🧠 **了解模型特性**: 选择最适合您应用场景的 AI 模型。
 4. 🔄 **保持更新**: 定期更新代码和功能以获得最佳性能。
@@ -218,6 +231,7 @@ https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://your-worker.
 
 - 机器人无响应？检查 Webhook 设置和环境变量配置。
 - 遇到 API 限制？查看您的 API 配额使用情况。
+- 图像分析失败？确保您使用的是支持多模态的模型，如 GPT-4 Vision 或 Gemini Pro Vision。
 
 ## 📄 许可证
 
