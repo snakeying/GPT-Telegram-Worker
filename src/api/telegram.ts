@@ -1,15 +1,16 @@
 import { Env, getConfig } from '../env';
 import { TelegramTypes } from '../../types/telegram';
-import OpenAIAPI, { Message } from './openai_api';
+import { Message, ModelAPIInterface } from './model_api_interface';
 import { formatCodeBlock, escapeMarkdown, sendChatAction, splitMessage } from '../utils/helpers';
 import { translate, SupportedLanguages, Translations } from '../utils/i18n';
 import { commands, Command } from '../config/commands';
 import { RedisClient } from '../utils/redis';
-import { ModelAPIInterface } from './model_api_interface';
+import OpenAIAPI from './openai_api';
 import GeminiAPI from './gemini';
 import GroqAPI from './groq';
 import ClaudeAPI from './claude';
 import AzureAPI from './azure';
+import { analyzeImage } from '../utils/image_analyze';
 
 export class TelegramBot {
   private token: string;
@@ -110,57 +111,107 @@ export class TelegramBot {
   async handleUpdate(update: TelegramTypes.Update): Promise<void> {
     if (update.callback_query) {
       await this.handleCallbackQuery(update.callback_query);
-    } else if (update.message && update.message.text) {
+    } else if (update.message) {
       const chatId = update.message.chat.id;
       const userId = update.message.from?.id?.toString();
       if (!userId) {
         console.error('User ID is undefined');
         return;
       }
-      const text = update.message.text;
       const language = await this.getUserLanguage(userId);
 
       if (this.isUserWhitelisted(userId)) {
-        if (text.startsWith('/')) {
-          const [commandName, ...args] = text.slice(1).split(' ');
-          await this.executeCommand(commandName, chatId, args);
-        } else {
-          try {
-            await sendChatAction(chatId, 'typing', this.env);
-            this.modelAPI = await this.initializeModelAPI(userId);
-            const context = await this.getContext(userId);
-            const currentModel = await this.getCurrentModel(userId);
+        if (update.message.photo && update.message.photo.length > 0 && update.message.caption) {
+          // 处理图片上传和分析
+          await this.handleImageAnalysis(chatId, userId, update.message);
+        } else if (update.message.text) {
+          const text = update.message.text;
+          if (text.startsWith('/')) {
+            const [commandName, ...args] = text.slice(1).split(' ');
+            await this.executeCommand(commandName, chatId, args);
+          } else {
+            try {
+              await sendChatAction(chatId, 'typing', this.env);
+              this.modelAPI = await this.initializeModelAPI(userId);
+              const context = await this.getContext(userId);
+              const currentModel = await this.getCurrentModel(userId);
 
-            let messages: Message[] = [];
-            if (currentModel.startsWith('gemini-')) {
-              messages = [
-                ...(context ? [{ role: 'user' as const, content: context }] : []),
-                { role: 'user' as const, content: text }
-              ];
-            } else {
-              messages = [
-                { role: 'system' as const, content: this.systemMessage },
-                ...(context ? [{ role: 'user' as const, content: context }] : []),
-                { role: 'user' as const, content: text }
-              ];
+              let messages: Message[] = [];
+              if (currentModel.startsWith('gemini-')) {
+                messages = [
+                  ...(context ? [{ role: 'user' as const, content: context }] : []),
+                  { role: 'user' as const, content: text }
+                ];
+              } else {
+                messages = [
+                  { role: 'system' as const, content: this.systemMessage },
+                  ...(context ? [{ role: 'user' as const, content: context }] : []),
+                  { role: 'user' as const, content: text }
+                ];
+              }
+
+              const response = await this.modelAPI.generateResponse(messages, currentModel);
+              const formattedResponse = this.formatResponse(response);
+
+              await this.sendMessageWithFallback(chatId, formattedResponse);
+
+              await this.storeContext(userId, `User: ${text}\nAssistant: ${response}`);
+            } catch (error) {
+              console.error('Error in handleUpdate:', error);
+              const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+              await this.sendMessage(chatId, translate('error', language) + ': ' + errorMessage);
             }
-
-            const response = await this.modelAPI.generateResponse(messages, currentModel);
-            const formattedResponse = this.formatResponse(response);
-
-            await this.sendMessageWithFallback(chatId, formattedResponse);
-
-            await this.storeContext(userId, `User: ${text}\nAssistant: ${response}`);
-          } catch (error) {
-            console.error('Error in handleUpdate:', error);
-            const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-            await this.sendMessage(chatId, translate('error', language) + ': ' + errorMessage);
           }
         }
       } else {
         await this.sendMessageWithFallback(chatId, translate('unauthorized', language));
       }
     }
+  }
+
+  async handleImageAnalysis(chatId: number, userId: string, message: TelegramTypes.Message): Promise<void> {
+    if (!message.photo || message.photo.length === 0 || !message.caption) {
+      return;
+    }
+
+    const fileId = message.photo[message.photo.length - 1].file_id;
+    const caption = message.caption;
+    const language = await this.getUserLanguage(userId);
+
+    try {
+      await sendChatAction(chatId, 'typing', this.env);
+
+      // 获取图片URL
+      const fileUrl = await this.getFileUrl(fileId);
+
+      // 获取当前模型
+      const currentModel = await this.getCurrentModel(userId);
+
+      // 分析图片
+      const analysis = await analyzeImage(fileUrl, caption, this.env, currentModel);
+
+      // 发送分析结果
+      await this.sendMessageWithFallback(chatId, analysis);
+    } catch (error) {
+      console.error('Error in handleImageAnalysis:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      
+      if (errorMessage.includes('does not support image analysis')) {
+        await this.sendMessage(chatId, translate('model_not_support_multimodal', language));
+      } else {
+        await this.sendMessage(chatId, translate('image_analysis_error', language) + ': ' + errorMessage);
+      }
+    }
+  }
+
+  async getFileUrl(fileId: string): Promise<string> {
+    const getFileUrl = `https://api.telegram.org/bot${this.token}/getFile?file_id=${fileId}`;
+    const response = await fetch(getFileUrl);
+    const data = await response.json() as { ok: boolean; result: { file_path: string } };
+    if (data.ok) {
+      return `https://api.telegram.org/file/bot${this.token}/${data.result.file_path}`;
+    }
+    throw new Error('Failed to get file URL');
   }
 
   async handleCallbackQuery(callbackQuery: TelegramTypes.CallbackQuery): Promise<void> {

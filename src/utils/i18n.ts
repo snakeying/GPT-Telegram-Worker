@@ -41,6 +41,8 @@ export interface Translations {
   optimized_prompt: string;
   image_specs: string;
   command_not_found: string;
+  image_analysis_error: string;
+  model_not_support_multimodal: string;
 }
 
 export type TranslationKey = keyof Translations;
@@ -89,6 +91,8 @@ const translations: TranslationsMap = {
     optimized_prompt: "🌐 Enhanced Description",
     image_specs: "📐 Image Details",
     command_not_found: "❓ Hmm, I don't know that command. Type /help to see what I can do!",
+    image_analysis_error: "Error analyzing image. Please try again.",
+    model_not_support_multimodal: "The current model does not support image analysis. Please switch to a multimodal model.",
   },
   zh: {
     welcome: "👋 嘿，欢迎使用你的专属助手机器人！",
@@ -131,6 +135,8 @@ const translations: TranslationsMap = {
     optimized_prompt: "🌐 Enhanced Description",
     image_specs: "📐 Image Details",
     command_not_found: "❓ Hmm, I don't know that command. Type /help to see what I can do!",
+    image_analysis_error: "分析图片时出错。请重试。",
+    model_not_support_multimodal: "当前模型不支持图像分析。请切换到多模态模型。",
   },
   es: {
     welcome: "👋 ¡Hola! ¡Bienvenido a tu bot asistente personal con IA!",
@@ -173,6 +179,8 @@ const translations: TranslationsMap = {
     optimized_prompt: "🌐 Descripción Mejorada",
     image_specs: "📐 Detalles de la Imagen",
     command_not_found: "❓ Mmm, no conozco ese comando. ¡Escribe /help para ver lo que puedo hacer!",
+    image_analysis_error: "Error al analizar la imagen. Por favor, inténtelo de nuevo.",
+    model_not_support_multimodal: "El modelo actual no admite análisis de imágenes. Cambie a un modelo multimodal.",
   },
   'zh-TW': {
     welcome: "👋 嘿，歡迎使用你的專屬助手機器人！",
@@ -215,6 +223,8 @@ const translations: TranslationsMap = {
     optimized_prompt: "🌐 優化後的描述",
     image_specs: "📐 圖像詳情",
     command_not_found: "❓ 嗯，我不認識這個命令。輸入 /help 看看我能做什麼！",
+    image_analysis_error: "分析圖片時出錯。請重試。",
+    model_not_support_multimodal: "當前模型不支持圖像分析。請切換到多模態模型。",
   },
   ja: {
     welcome: "👋 こんにちは！あなた専用のAIアシスタントボットへようこそ！",
@@ -257,6 +267,8 @@ const translations: TranslationsMap = {
     optimized_prompt: "🌐 最適化された説明",
     image_specs: "📐 画像の詳細",
     command_not_found: "❓ すみません、そのコマンドは分かりません。/help と入力して、私にできることを確認してください！",
+    image_analysis_error: "画像の分析中にエラーが発生しました。もう一度お試しください。",
+    model_not_support_multimodal: "現在のモデルは画像分析をサポートしていません。マルチモーダルモデルに切り替えてください。",
   },
   de: {
     welcome: "👋 Hallo! Willkommen bei deinem persönlichen KI-Assistenten-Bot!",
@@ -299,6 +311,8 @@ const translations: TranslationsMap = {
     optimized_prompt: "🌐 Verbesserte Beschreibung",
     image_specs: "📐 Bilddetails",
     command_not_found: "❓ Hmm, ich kenne diesen Befehl nicht. Gib /help ein, um zu sehen, was ich kann!",
+    image_analysis_error: "Fehler bei der Bildanalyse. Bitte versuchen Sie es erneut.",
+    model_not_support_multimodal: "Das aktuelle Modell unterstützt keine Bildanalyse. Bitte wechseln Sie zu einem multimodalen Modell.",
   },
   fr: {
     welcome: "👋 Salut ! Bienvenue sur votre assistant IA personnel !",
@@ -341,6 +355,8 @@ const translations: TranslationsMap = {
     optimized_prompt: "🌐 Description améliorée",
     image_specs: "📐 Détails de l'image",
     command_not_found: "❓ Hmm, je ne connais pas cette commande. Tapez /help pour voir ce que je peux faire !",
+    image_analysis_error: "Erreur lors de l'analyse de l'image. Veuillez réessayer.",
+    model_not_support_multimodal: "Le modèle actuel ne prend pas en charge l'analyse d'images. Veuillez passer à un modèle multimodal.",
   },
   ru: {
     welcome: "👋 Привет! Добро пожаловать в вашего персонального ИИ-ассистента!",
@@ -383,6 +399,8 @@ const translations: TranslationsMap = {
     optimized_prompt: "🌐 Улучшенное описание",
     image_specs: "📐 Детали изображения",
     command_not_found: "❓ Хмм, я не знаю эту команду. Введите /help, чтобы увидеть, что я могу сделать!",
+    image_analysis_error: "Ошибка при анализе изображения. Пожалуйста, попробуйте еще раз.",
+    model_not_support_multimodal: "Текущая модель не поддерживает анализ изображений. Пожалуйста, переключитесь на мультимодальную модель.",
   },
 };
 

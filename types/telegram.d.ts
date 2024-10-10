@@ -15,6 +15,8 @@ export namespace TelegramTypes {
     chat: Chat;
     text?: string;
     entities?: MessageEntity[];
+    photo?: PhotoSize[];
+    caption?: string;
   }
 
   interface User {
@@ -41,6 +43,14 @@ export namespace TelegramTypes {
     length: number;
     url?: string;
     user?: User;
+  }
+
+  interface PhotoSize {
+    file_id: string;
+    file_unique_id: string;
+    width: number;
+    height: number;
+    file_size?: number;
   }
 
   interface SendMessageParams {

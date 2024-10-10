@@ -46,50 +46,6 @@ var getConfig = (env) => {
   };
 };
 
-// src/api/openai_api.ts
-var OpenAIAPI = class {
-  apiKey;
-  baseUrl;
-  models;
-  defaultModel;
-  constructor(env) {
-    const config = getConfig(env);
-    this.apiKey = config.openaiApiKey;
-    this.baseUrl = config.openaiBaseUrl;
-    this.models = config.openaiModels;
-    this.defaultModel = config.defaultModel || this.models[0];
-  }
-  async generateResponse(messages, model) {
-    const url = `${this.baseUrl}/chat/completions`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${this.apiKey}`
-      },
-      body: JSON.stringify({
-        model: model || this.defaultModel,
-        messages
-      })
-    });
-    if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.statusText}`);
-    }
-    const data = await response.json();
-    return data.choices[0].message.content.trim();
-  }
-  isValidModel(model) {
-    return this.models.includes(model);
-  }
-  getDefaultModel() {
-    return this.defaultModel;
-  }
-  getAvailableModels() {
-    return this.models;
-  }
-};
-var openai_api_default = OpenAIAPI;
-
 // src/utils/helpers.ts
 function formatCodeBlock(code, language) {
   return `\`\`\`${language}
@@ -170,7 +126,9 @@ var translations = {
     prompt_generation_model: "\u{1F4AC} Prompt Generation Model",
     optimized_prompt: "\u{1F310} Enhanced Description",
     image_specs: "\u{1F4D0} Image Details",
-    command_not_found: "\u2753 Hmm, I don't know that command. Type /help to see what I can do!"
+    command_not_found: "\u2753 Hmm, I don't know that command. Type /help to see what I can do!",
+    image_analysis_error: "Error analyzing image. Please try again.",
+    model_not_support_multimodal: "The current model does not support image analysis. Please switch to a multimodal model."
   },
   zh: {
     welcome: "\u{1F44B} \u563F\uFF0C\u6B22\u8FCE\u4F7F\u7528\u4F60\u7684\u4E13\u5C5E\u52A9\u624B\u673A\u5668\u4EBA\uFF01",
@@ -213,7 +171,9 @@ var translations = {
     prompt_generation_model: "\u{1F4AC} Prompt Generation Model",
     optimized_prompt: "\u{1F310} Enhanced Description",
     image_specs: "\u{1F4D0} Image Details",
-    command_not_found: "\u2753 Hmm, I don't know that command. Type /help to see what I can do!"
+    command_not_found: "\u2753 Hmm, I don't know that command. Type /help to see what I can do!",
+    image_analysis_error: "\u5206\u6790\u56FE\u7247\u65F6\u51FA\u9519\u3002\u8BF7\u91CD\u8BD5\u3002",
+    model_not_support_multimodal: "\u5F53\u524D\u6A21\u578B\u4E0D\u652F\u6301\u56FE\u50CF\u5206\u6790\u3002\u8BF7\u5207\u6362\u5230\u591A\u6A21\u6001\u6A21\u578B\u3002"
   },
   es: {
     welcome: "\u{1F44B} \xA1Hola! \xA1Bienvenido a tu bot asistente personal con IA!",
@@ -256,7 +216,9 @@ var translations = {
     prompt_generation_model: "\u{1F4AC} Modelo de Generaci\xF3n de Prompts",
     optimized_prompt: "\u{1F310} Descripci\xF3n Mejorada",
     image_specs: "\u{1F4D0} Detalles de la Imagen",
-    command_not_found: "\u2753 Mmm, no conozco ese comando. \xA1Escribe /help para ver lo que puedo hacer!"
+    command_not_found: "\u2753 Mmm, no conozco ese comando. \xA1Escribe /help para ver lo que puedo hacer!",
+    image_analysis_error: "Error al analizar la imagen. Por favor, int\xE9ntelo de nuevo.",
+    model_not_support_multimodal: "El modelo actual no admite an\xE1lisis de im\xE1genes. Cambie a un modelo multimodal."
   },
   "zh-TW": {
     welcome: "\u{1F44B} \u563F\uFF0C\u6B61\u8FCE\u4F7F\u7528\u4F60\u7684\u5C08\u5C6C\u52A9\u624B\u6A5F\u5668\u4EBA\uFF01",
@@ -298,7 +260,9 @@ var translations = {
     prompt_generation_model: "\u{1F4AC} \u63D0\u793A\u751F\u6210\u6A21\u578B",
     optimized_prompt: "\u{1F310} \u512A\u5316\u5F8C\u7684\u63CF\u8FF0",
     image_specs: "\u{1F4D0} \u5716\u50CF\u8A73\u60C5",
-    command_not_found: "\u2753 \u55EF\uFF0C\u6211\u4E0D\u8A8D\u8B58\u9019\u500B\u547D\u4EE4\u3002\u8F38\u5165 /help \u770B\u770B\u6211\u80FD\u505A\u4EC0\u9EBC\uFF01"
+    command_not_found: "\u2753 \u55EF\uFF0C\u6211\u4E0D\u8A8D\u8B58\u9019\u500B\u547D\u4EE4\u3002\u8F38\u5165 /help \u770B\u770B\u6211\u80FD\u505A\u4EC0\u9EBC\uFF01",
+    image_analysis_error: "\u5206\u6790\u5716\u7247\u6642\u51FA\u932F\u3002\u8ACB\u91CD\u8A66\u3002",
+    model_not_support_multimodal: "\u7576\u524D\u6A21\u578B\u4E0D\u652F\u6301\u5716\u50CF\u5206\u6790\u3002\u8ACB\u5207\u63DB\u5230\u591A\u6A21\u614B\u6A21\u578B\u3002"
   },
   ja: {
     welcome: "\u{1F44B} \u3053\u3093\u306B\u3061\u306F\uFF01\u3042\u306A\u305F\u5C02\u7528\u306EAI\u30A2\u30B7\u30B9\u30BF\u30F3\u30C8\u30DC\u30C3\u30C8\u3078\u3088\u3046\u3053\u305D\uFF01",
@@ -340,7 +304,9 @@ var translations = {
     prompt_generation_model: "\u{1F4AC} \u30D7\u30ED\u30F3\u30D7\u30C8\u751F\u6210\u30E2\u30C7\u30EB",
     optimized_prompt: "\u{1F310} \u6700\u9069\u5316\u3055\u308C\u305F\u8AAC\u660E",
     image_specs: "\u{1F4D0} \u753B\u50CF\u306E\u8A73\u7D30",
-    command_not_found: "\u2753 \u3059\u307F\u307E\u305B\u3093\u3001\u305D\u306E\u30B3\u30DE\u30F3\u30C9\u306F\u5206\u304B\u308A\u307E\u305B\u3093\u3002/help \u3068\u5165\u529B\u3057\u3066\u3001\u79C1\u306B\u3067\u304D\u308B\u3053\u3068\u3092\u78BA\u8A8D\u3057\u3066\u304F\u3060\u3055\u3044\uFF01"
+    command_not_found: "\u2753 \u3059\u307F\u307E\u305B\u3093\u3001\u305D\u306E\u30B3\u30DE\u30F3\u30C9\u306F\u5206\u304B\u308A\u307E\u305B\u3093\u3002/help \u3068\u5165\u529B\u3057\u3066\u3001\u79C1\u306B\u3067\u304D\u308B\u3053\u3068\u3092\u78BA\u8A8D\u3057\u3066\u304F\u3060\u3055\u3044\uFF01",
+    image_analysis_error: "\u753B\u50CF\u306E\u5206\u6790\u4E2D\u306B\u30A8\u30E9\u30FC\u304C\u767A\u751F\u3057\u307E\u3057\u305F\u3002\u3082\u3046\u4E00\u5EA6\u304A\u8A66\u3057\u304F\u3060\u3055\u3044\u3002",
+    model_not_support_multimodal: "\u73FE\u5728\u306E\u30E2\u30C7\u30EB\u306F\u753B\u50CF\u5206\u6790\u3092\u30B5\u30DD\u30FC\u30C8\u3057\u3066\u3044\u307E\u305B\u3093\u3002\u30DE\u30EB\u30C1\u30E2\u30FC\u30C0\u30EB\u30E2\u30C7\u30EB\u306B\u5207\u308A\u66FF\u3048\u3066\u304F\u3060\u3055\u3044\u3002"
   },
   de: {
     welcome: "\u{1F44B} Hallo! Willkommen bei deinem pers\xF6nlichen KI-Assistenten-Bot!",
@@ -382,7 +348,9 @@ var translations = {
     prompt_generation_model: "\u{1F4AC} Prompt-Generierungsmodell",
     optimized_prompt: "\u{1F310} Verbesserte Beschreibung",
     image_specs: "\u{1F4D0} Bilddetails",
-    command_not_found: "\u2753 Hmm, ich kenne diesen Befehl nicht. Gib /help ein, um zu sehen, was ich kann!"
+    command_not_found: "\u2753 Hmm, ich kenne diesen Befehl nicht. Gib /help ein, um zu sehen, was ich kann!",
+    image_analysis_error: "Fehler bei der Bildanalyse. Bitte versuchen Sie es erneut.",
+    model_not_support_multimodal: "Das aktuelle Modell unterst\xFCtzt keine Bildanalyse. Bitte wechseln Sie zu einem multimodalen Modell."
   },
   fr: {
     welcome: "\u{1F44B} Salut ! Bienvenue sur votre assistant IA personnel !",
@@ -424,7 +392,9 @@ var translations = {
     prompt_generation_model: "\u{1F4AC} Mod\xE8le de g\xE9n\xE9ration de prompt",
     optimized_prompt: "\u{1F310} Description am\xE9lior\xE9e",
     image_specs: "\u{1F4D0} D\xE9tails de l'image",
-    command_not_found: "\u2753 Hmm, je ne connais pas cette commande. Tapez /help pour voir ce que je peux faire !"
+    command_not_found: "\u2753 Hmm, je ne connais pas cette commande. Tapez /help pour voir ce que je peux faire !",
+    image_analysis_error: "Erreur lors de l'analyse de l'image. Veuillez r\xE9essayer.",
+    model_not_support_multimodal: "Le mod\xE8le actuel ne prend pas en charge l'analyse d'images. Veuillez passer \xE0 un mod\xE8le multimodal."
   },
   ru: {
     welcome: "\u{1F44B} \u041F\u0440\u0438\u0432\u0435\u0442! \u0414\u043E\u0431\u0440\u043E \u043F\u043E\u0436\u0430\u043B\u043E\u0432\u0430\u0442\u044C \u0432 \u0432\u0430\u0448\u0435\u0433\u043E \u043F\u0435\u0440\u0441\u043E\u043D\u0430\u043B\u044C\u043D\u043E\u0433\u043E \u0418\u0418-\u0430\u0441\u0441\u0438\u0441\u0442\u0435\u043D\u0442\u0430!",
@@ -466,7 +436,9 @@ var translations = {
     prompt_generation_model: "\u{1F4AC} \u041C\u043E\u0434\u0435\u043B\u044C \u0433\u0435\u043D\u0435\u0440\u0430\u0446\u0438\u0438 \u043F\u043E\u0434\u0441\u043A\u0430\u0437\u043E\u043A",
     optimized_prompt: "\u{1F310} \u0423\u043B\u0443\u0447\u0448\u0435\u043D\u043D\u043E\u0435 \u043E\u043F\u0438\u0441\u0430\u043D\u0438\u0435",
     image_specs: "\u{1F4D0} \u0414\u0435\u0442\u0430\u043B\u0438 \u0438\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F",
-    command_not_found: "\u2753 \u0425\u043C\u043C, \u044F \u043D\u0435 \u0437\u043D\u0430\u044E \u044D\u0442\u0443 \u043A\u043E\u043C\u0430\u043D\u0434\u0443. \u0412\u0432\u0435\u0434\u0438\u0442\u0435 /help, \u0447\u0442\u043E\u0431\u044B \u0443\u0432\u0438\u0434\u0435\u0442\u044C, \u0447\u0442\u043E \u044F \u043C\u043E\u0433\u0443 \u0441\u0434\u0435\u043B\u0430\u0442\u044C!"
+    command_not_found: "\u2753 \u0425\u043C\u043C, \u044F \u043D\u0435 \u0437\u043D\u0430\u044E \u044D\u0442\u0443 \u043A\u043E\u043C\u0430\u043D\u0434\u0443. \u0412\u0432\u0435\u0434\u0438\u0442\u0435 /help, \u0447\u0442\u043E\u0431\u044B \u0443\u0432\u0438\u0434\u0435\u0442\u044C, \u0447\u0442\u043E \u044F \u043C\u043E\u0433\u0443 \u0441\u0434\u0435\u043B\u0430\u0442\u044C!",
+    image_analysis_error: "\u041E\u0448\u0438\u0431\u043A\u0430 \u043F\u0440\u0438 \u0430\u043D\u0430\u043B\u0438\u0437\u0435 \u0438\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F. \u041F\u043E\u0436\u0430\u043B\u0443\u0439\u0441\u0442\u0430, \u043F\u043E\u043F\u0440\u043E\u0431\u0443\u0439\u0442\u0435 \u0435\u0449\u0435 \u0440\u0430\u0437.",
+    model_not_support_multimodal: "\u0422\u0435\u043A\u0443\u0449\u0430\u044F \u043C\u043E\u0434\u0435\u043B\u044C \u043D\u0435 \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u0435\u0442 \u0430\u043D\u0430\u043B\u0438\u0437 \u0438\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u0439. \u041F\u043E\u0436\u0430\u043B\u0443\u0439\u0441\u0442\u0430, \u043F\u0435\u0440\u0435\u043A\u043B\u044E\u0447\u0438\u0442\u0435\u0441\u044C \u043D\u0430 \u043C\u0443\u043B\u044C\u0442\u0438\u043C\u043E\u0434\u0430\u043B\u044C\u043D\u0443\u044E \u043C\u043E\u0434\u0435\u043B\u044C."
   }
 };
 function translate(key, language = "en") {
@@ -933,6 +905,55 @@ ${newContext}` : newContext;
   }
 };
 
+// src/api/openai_api.ts
+var OpenAIAPI = class {
+  apiKey;
+  baseUrl;
+  models;
+  defaultModel;
+  constructor(env) {
+    const config = getConfig(env);
+    this.apiKey = config.openaiApiKey;
+    this.baseUrl = config.openaiBaseUrl;
+    this.models = config.openaiModels;
+    this.defaultModel = config.defaultModel || this.models[0];
+  }
+  async generateResponse(messages, model) {
+    const url = `${this.baseUrl}/chat/completions`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${this.apiKey}`
+      },
+      body: JSON.stringify({
+        model: model || this.defaultModel,
+        messages: messages.map((msg) => ({
+          role: msg.role,
+          content: Array.isArray(msg.content) ? msg.content : [{ type: "text", text: msg.content }]
+        })),
+        max_tokens: 300
+      })
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`OpenAI API error: ${errorData.error.message}`);
+    }
+    const data = await response.json();
+    return data.choices[0].message.content.trim();
+  }
+  isValidModel(model) {
+    return this.models.includes(model);
+  }
+  getDefaultModel() {
+    return this.defaultModel;
+  }
+  getAvailableModels() {
+    return this.models;
+  }
+};
+var openai_api_default = OpenAIAPI;
+
 // src/api/gemini.ts
 var GeminiAPI = class {
   apiKey;
@@ -949,9 +970,29 @@ var GeminiAPI = class {
   async generateResponse(messages, model) {
     const useModel = model || this.defaultModel;
     const url = `${this.baseUrl}/models/${useModel}:generateContent?key=${this.apiKey}`;
-    const geminiMessages = messages.filter((msg) => msg.role !== "system").map((msg) => ({
-      role: msg.role === "assistant" ? "model" : "user",
-      parts: [{ text: msg.content }]
+    const geminiMessages = await Promise.all(messages.map(async (msg) => {
+      const parts = [];
+      if (typeof msg.content === "string") {
+        parts.push({ text: msg.content });
+      } else if (Array.isArray(msg.content)) {
+        for (const part of msg.content) {
+          if (part.type === "text") {
+            parts.push({ text: part.text });
+          } else if (part.type === "image_url") {
+            const base64Image = part.image_url.url.split(",")[1];
+            parts.push({
+              inline_data: {
+                mime_type: "image/jpeg",
+                data: base64Image
+              }
+            });
+          }
+        }
+      }
+      return {
+        role: msg.role === "assistant" ? "model" : "user",
+        parts
+      };
     }));
     const requestBody = {
       contents: geminiMessages,
@@ -971,7 +1012,6 @@ var GeminiAPI = class {
     });
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Gemini API error: ${response.statusText}`, errorText);
       throw new Error(`Gemini API error: ${response.statusText}
 ${errorText}`);
     }
@@ -1150,6 +1190,68 @@ ${errorText}`);
 };
 var azure_default = AzureAPI;
 
+// src/utils/image_analyze.ts
+async function analyzeImage(imageUrl, prompt, env, currentModel) {
+  const config = getConfig(env);
+  let api;
+  if (config.openaiModels.includes(currentModel)) {
+    api = new openai_api_default(env);
+    return await analyzeWithOpenAI(api, imageUrl, prompt, currentModel);
+  } else if (config.googleModels.includes(currentModel)) {
+    api = new gemini_default(env);
+    return await analyzeWithGemini(api, imageUrl, prompt, currentModel);
+  } else {
+    throw new Error(`Current model ${currentModel} does not support image analysis`);
+  }
+}
+async function analyzeWithOpenAI(api, imageUrl, prompt, model) {
+  const base64Image = await fetchImageAsBase64(imageUrl);
+  const messages = [
+    {
+      role: "user",
+      content: [
+        {
+          type: "text",
+          text: prompt
+        },
+        {
+          type: "image_url",
+          image_url: {
+            url: `data:image/jpeg;base64,${base64Image}`
+          }
+        }
+      ]
+    }
+  ];
+  return await api.generateResponse(messages, model);
+}
+async function analyzeWithGemini(api, imageUrl, prompt, model) {
+  const base64Image = await fetchImageAsBase64(imageUrl);
+  const messages = [
+    {
+      role: "user",
+      content: [
+        {
+          type: "text",
+          text: prompt
+        },
+        {
+          type: "image_url",
+          image_url: {
+            url: `data:image/jpeg;base64,${base64Image}`
+          }
+        }
+      ]
+    }
+  ];
+  return await api.generateResponse(messages, model);
+}
+async function fetchImageAsBase64(url) {
+  const response = await fetch(url);
+  const arrayBuffer = await response.arrayBuffer();
+  return btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+}
+
 // src/api/telegram.ts
 var TelegramBot = class {
   token;
@@ -1238,53 +1340,89 @@ ${errorText}`);
   async handleUpdate(update) {
     if (update.callback_query) {
       await this.handleCallbackQuery(update.callback_query);
-    } else if (update.message && update.message.text) {
+    } else if (update.message) {
       const chatId = update.message.chat.id;
       const userId = update.message.from?.id?.toString();
       if (!userId) {
         console.error("User ID is undefined");
         return;
       }
-      const text = update.message.text;
       const language = await this.getUserLanguage(userId);
       if (this.isUserWhitelisted(userId)) {
-        if (text.startsWith("/")) {
-          const [commandName, ...args] = text.slice(1).split(" ");
-          await this.executeCommand(commandName, chatId, args);
-        } else {
-          try {
-            await sendChatAction(chatId, "typing", this.env);
-            this.modelAPI = await this.initializeModelAPI(userId);
-            const context = await this.getContext(userId);
-            const currentModel = await this.getCurrentModel(userId);
-            let messages = [];
-            if (currentModel.startsWith("gemini-")) {
-              messages = [
-                ...context ? [{ role: "user", content: context }] : [],
-                { role: "user", content: text }
-              ];
-            } else {
-              messages = [
-                { role: "system", content: this.systemMessage },
-                ...context ? [{ role: "user", content: context }] : [],
-                { role: "user", content: text }
-              ];
-            }
-            const response = await this.modelAPI.generateResponse(messages, currentModel);
-            const formattedResponse = this.formatResponse(response);
-            await this.sendMessageWithFallback(chatId, formattedResponse);
-            await this.storeContext(userId, `User: ${text}
+        if (update.message.photo && update.message.photo.length > 0 && update.message.caption) {
+          await this.handleImageAnalysis(chatId, userId, update.message);
+        } else if (update.message.text) {
+          const text = update.message.text;
+          if (text.startsWith("/")) {
+            const [commandName, ...args] = text.slice(1).split(" ");
+            await this.executeCommand(commandName, chatId, args);
+          } else {
+            try {
+              await sendChatAction(chatId, "typing", this.env);
+              this.modelAPI = await this.initializeModelAPI(userId);
+              const context = await this.getContext(userId);
+              const currentModel = await this.getCurrentModel(userId);
+              let messages = [];
+              if (currentModel.startsWith("gemini-")) {
+                messages = [
+                  ...context ? [{ role: "user", content: context }] : [],
+                  { role: "user", content: text }
+                ];
+              } else {
+                messages = [
+                  { role: "system", content: this.systemMessage },
+                  ...context ? [{ role: "user", content: context }] : [],
+                  { role: "user", content: text }
+                ];
+              }
+              const response = await this.modelAPI.generateResponse(messages, currentModel);
+              const formattedResponse = this.formatResponse(response);
+              await this.sendMessageWithFallback(chatId, formattedResponse);
+              await this.storeContext(userId, `User: ${text}
 Assistant: ${response}`);
-          } catch (error) {
-            console.error("Error in handleUpdate:", error);
-            const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
-            await this.sendMessage(chatId, translate("error", language) + ": " + errorMessage);
+            } catch (error) {
+              console.error("Error in handleUpdate:", error);
+              const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+              await this.sendMessage(chatId, translate("error", language) + ": " + errorMessage);
+            }
           }
         }
       } else {
         await this.sendMessageWithFallback(chatId, translate("unauthorized", language));
       }
     }
+  }
+  async handleImageAnalysis(chatId, userId, message) {
+    if (!message.photo || message.photo.length === 0 || !message.caption) {
+      return;
+    }
+    const fileId = message.photo[message.photo.length - 1].file_id;
+    const caption = message.caption;
+    const language = await this.getUserLanguage(userId);
+    try {
+      await sendChatAction(chatId, "typing", this.env);
+      const fileUrl = await this.getFileUrl(fileId);
+      const currentModel = await this.getCurrentModel(userId);
+      const analysis = await analyzeImage(fileUrl, caption, this.env, currentModel);
+      await this.sendMessageWithFallback(chatId, analysis);
+    } catch (error) {
+      console.error("Error in handleImageAnalysis:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+      if (errorMessage.includes("does not support image analysis")) {
+        await this.sendMessage(chatId, translate("model_not_support_multimodal", language));
+      } else {
+        await this.sendMessage(chatId, translate("image_analysis_error", language) + ": " + errorMessage);
+      }
+    }
+  }
+  async getFileUrl(fileId) {
+    const getFileUrl = `https://api.telegram.org/bot${this.token}/getFile?file_id=${fileId}`;
+    const response = await fetch(getFileUrl);
+    const data = await response.json();
+    if (data.ok) {
+      return `https://api.telegram.org/file/bot${this.token}/${data.result.file_path}`;
+    }
+    throw new Error("Failed to get file URL");
   }
   async handleCallbackQuery(callbackQuery) {
     const chatId = callbackQuery.message?.chat.id;
