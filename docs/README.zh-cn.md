@@ -187,15 +187,10 @@ https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://your-worker.
 | GOOGLE_MODEL_KEY | Google AI 模型 API 密钥 | - | your-google-api-key |
 | GOOGLE_MODEL_BASEURL | Google AI 模型 API 基础 URL | https://generativelanguage.googleapis.com/v1beta | https://your-custom-google-endpoint.com |
 | GOOGLE_MODELS | 可用的 Google AI 模型列表 | - | gemini-pro,gemini-pro-vision |
-| GROQ_API_KEY | Groq API 密钥 | - | your
-
--groq-api-key |
+| GROQ_API_KEY | Groq API 密钥 | - | your-groq-api-key |
 | ANTHROPIC_API_KEY | Anthropic API 密钥 | - | your-anthropic-api-key |
 | ANTHROPIC_BASE_URL | Anthropic API 基础 URL | https://api.anthropic.com | https://your-custom-anthropic-endpoint.com |
 
-## 🤝 贡献指南
-
-欢迎贡献代码、报告 Bug 和提交功能请求！请确保提交前已阅读我们的 [贡献指南](CONTRIBUTING.md)。
 
 ## 📜 开源许可
 
