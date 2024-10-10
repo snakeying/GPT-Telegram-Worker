@@ -191,7 +191,34 @@ https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://your-worker.
 | ANTHROPIC_API_KEY | Anthropic API 密钥 | - | your-anthropic-api-key |
 | ANTHROPIC_BASE_URL | Anthropic API 基础 URL | https://api.anthropic.com | https://your-custom-anthropic-endpoint.com |
 
+注意：部分变量需要手动配置，无默认值。
 
-## 📜 开源许可
+## ⚠️ 注意事项
+
+1. **合理使用 API 配额**：特别是图像生成服务，避免超限。
+2. **保管好环境变量和 API 密钥**：确保敏感信息安全。
+3. **熟悉不同 AI 模型特性**：选择最适合应用场景的模型。
+4. **定期更新**：保持代码与功能的最新状态。
+5. **保障安全**：定期更新 API 密钥，遵循最小权限原则。
+6. **Flux 提示词优化**：当启用 PROMPT_OPTIMIZATION 时，确保正确配置 EXTERNAL_API_BASE、EXTERNAL_MODEL 和 EXTERNAL_API_KEY。
+
+## 🚀 Flux 提示词优化
+
+当 PROMPT_OPTIMIZATION 环境变量设置为 true 时，Flux 图像生成功能会使用外部 API 来优化提示词。这个功能通过以下步骤工作：
+
+1. 用户提供原始提示词。
+2. 系统使用 EXTERNAL_API_BASE、EXTERNAL_MODEL 和 EXTERNAL_API_KEY 配置的外部 API 来优化提示词。
+3. 优化后的提示词被用于 Flux 模型生成图像。
+
+这个功能可以帮助生成更精确、更符合 Flux 模型特性的图像。要使用此功能，请确保正确配置了所有相关的环境变量。
+
+## 🔧 故障排除
+
+- 无响应？检查 Webhook 设置和环境变量。
+- API 限制？查看配额使用情况。
+
+## 📄 许可证
 
 本项目使用 [MIT 许可](LICENSE)。
+
+Copyright (c) 2024 [snakeying]
