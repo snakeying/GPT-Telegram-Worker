@@ -1,5 +1,7 @@
 # 🤖💬 Telegram GPT Worker - Multifunctional AI Assistant
 
+[English](./README.md) | [简体中文](./docs/README.zh-cn.md) | [繁體中文](./docs/README.zh-hant.md) | [日本語](./docs/README.ja.md) | [Español](./docs/README.es.md) | [Français](./docs/README.fr.md) | [Русский](./docs/README.ru.md) | [Deutsch](./docs/README.de.md)
+
 ## 📖 Project Overview
 
 Welcome to Telegram GPT Worker! 👋 This is a highly efficient Telegram bot developed using TypeScript. It supports multiple languages and AI models, deployed on Cloudflare Workers, providing users with a fast and scalable service experience.
