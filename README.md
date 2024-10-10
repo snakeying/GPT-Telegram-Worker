@@ -169,7 +169,7 @@ https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://your-worker.
 | OPENAI_MODELS | List of available OpenAI models | - | gpt-3.5-turbo,gpt-4 |
 | TELEGRAM_BOT_TOKEN | Telegram bot token | - | 123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11 |
 | WHITELISTED_USERS | List of user IDs allowed to use the bot | - | 12345678,87654321 |
-| SYSTEM_INIT_MESSAGE | System initialization message | You are a helpful assistant. | 您是一个有用的助手。 |
+| SYSTEM_INIT_MESSAGE | System initialization message | You are a helpful assistant. | You are a helpful assistant. |
 | SYSTEM_INIT_MESSAGE_ROLE | System initialization message role | system | system |
 | DEFAULT_MODEL | Default AI model to use | - | gpt-3.5-turbo |
 | UPSTASH_REDIS_REST_URL | Upstash Redis REST URL | - | https://your-redis-url.upstash.io |
