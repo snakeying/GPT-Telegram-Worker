@@ -2,7 +2,7 @@ import { Env, getConfig } from '../env';
 import { TelegramTypes } from '../../types/telegram';
 import OpenAIAPI, { Message } from './openai_api';
 import { formatCodeBlock, escapeMarkdown, sendChatAction, splitMessage } from '../utils/helpers';
-import { translate, SupportedLanguages } from '../utils/i18n';
+import { translate, SupportedLanguages, Translations } from '../utils/i18n';
 import { commands, Command } from '../config/commands';
 import { RedisClient } from '../utils/redis';
 import { ModelAPIInterface } from './model_api_interface';
@@ -173,7 +173,7 @@ export class TelegramBot {
     if (data.startsWith('lang_')) {
       const newLanguage = data.split('_')[1] as SupportedLanguages;
       await this.setUserLanguage(userId, newLanguage);
-      await this.sendMessageWithFallback(chatId, translate('language_changed', newLanguage) + translate(`language_${newLanguage}`, newLanguage));
+      await this.sendMessageWithFallback(chatId, translate('language_changed', newLanguage) + translate(`language_${newLanguage}` as keyof Translations, newLanguage));
       
       // 重新设置菜单按钮
       await this.setMenuButton();
@@ -247,7 +247,12 @@ export class TelegramBot {
     const languageNames = {
       'en': 'English',
       'zh': 'Chinese',
-      'es': 'Spanish'
+      'es': 'Spanish',
+      'zh-TW': 'Traditional Chinese', // 修改这里
+      'ja': 'Japanese',
+      'de': 'German',
+      'fr': 'French',
+      'ru': 'Russian'
     };
     const currentModel = await this.getCurrentModel(userId);
     console.log(`Summarizing history with model: ${currentModel}`);

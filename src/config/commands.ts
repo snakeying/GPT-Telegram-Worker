@@ -4,9 +4,6 @@ import { ImageGenerationAPI } from '../api/image_generation';
 import { sendChatAction } from '../utils/helpers';
 import { FluxAPI } from '../api/flux-cf';
 import { getConfig } from '../env';
-import GeminiAPI from '../api/gemini';
-import GroqAPI from '../api/groq';
-import ClaudeAPI from '../api/claude';
 
 export interface Command {
   name: string;
@@ -37,8 +34,17 @@ export const commands: Command[] = [
         inline_keyboard: [
           [
             { text: '🇺🇸 English', callback_data: 'lang_en' },
-            { text: '🇨🇳 中文', callback_data: 'lang_zh' },
+            { text: '🇨🇳 简体中文', callback_data: 'lang_zh' },
             { text: '🇪🇸 Español', callback_data: 'lang_es' }
+          ],
+          [
+            { text: '🇹🇼 繁體中文', callback_data: 'lang_zh-TW' }, // 修改这里
+            { text: '🇯🇵 日本語', callback_data: 'lang_ja' },
+            { text: '🇩🇪 Deutsch', callback_data: 'lang_de' }
+          ],
+          [
+            { text: '🇫🇷 Français', callback_data: 'lang_fr' },
+            { text: '🇷🇺 Русский', callback_data: 'lang_ru' }
           ]
         ]
       };
