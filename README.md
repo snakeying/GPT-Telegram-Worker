@@ -205,9 +205,7 @@ Note: Some variables require manual configuration and do not have default values
 When the PROMPT_OPTIMIZATION environment variable is set to true, the Flux image generation function uses an external API to optimize prompts. This feature works through the following steps:
 
 1. The user provides the original prompt.
-2. The system uses the external API configured with EXTERNAL_API_BASE, EX
-
-TERNAL_MODEL, and EXTERNAL_API_KEY to optimize the prompt.
+2. The system uses the external API configured with EXTERNAL_API_BASE, EXTERNAL_MODEL, and EXTERNAL_API_KEY to optimize the prompt.
 3. The optimized prompt is used for Flux model image generation.
 
 This feature can help generate more accurate and Flux-model-specific images. To use this, ensure that all related environment variables are correctly configured.
