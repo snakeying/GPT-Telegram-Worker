@@ -231,7 +231,7 @@ https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://your-worker.
 
 - 机器人无响应？检查 Webhook 设置和环境变量配置。
 - 遇到 API 限制？查看您的 API 配额使用情况。
-- 图像分析失败？确保您使用的是支持多模态的模型，如 GPT-4 Vision 或 Gemini Pro Vision。
+- 图像分析失败？确保您使用的是支持多模态的模型，如 GPT-4o/GPT-4o-mini 或 Gemini 1.5 Pro/flash等模型。
 
 ## 📄 许可证
 
