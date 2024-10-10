@@ -179,7 +179,7 @@ https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://your-worker.
 | DALL_E_MODEL | DALL-E 模型版本 | dall-e-3 | dall-e-3 |
 | CLOUDFLARE_API_TOKEN | Cloudflare API 令牌 | - | your-cloudflare-api-token |
 | CLOUDFLARE_ACCOUNT_ID | Cloudflare 账户 ID | - | your-cloudflare-account-id |
-| FLUX_STEPS | Flux 生成步骤数 | 4 | 4 |
+| FLUX_STEPS | Flux 生成步骤数 | 4 | 4-8，最高步数为8 |
 | PROMPT_OPTIMIZATION | 启用提示优化 | false | true |
 | EXTERNAL_API_BASE | 外部 API 基础 URL | - | https://external-api.com |
 | EXTERNAL_MODEL | 外部模型名称 | - | external-model-name |
