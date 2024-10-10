@@ -1,37 +1,37 @@
-# 🤖💬 Telegram GPT Worker 多功能 AI 助手 
-
-[English](../README.md) | [简体中文](./README.zh-cn.md) | [繁體中文](./README.zh-hant.md) | [日本語](./README.ja.md) | [Español](./README.es.md) | [Français](./README.fr.md) | [Русский](./README.ru.md) | [Deutsch](./README.de.md)
+# 🤖💬 Telegram GPT Worker - 多功能 AI 助手
 
 ## 📖 项目简介
 
-欢迎来到 Telegram GPT Worker~ 这是一个基于 TypeScript 构建的 Telegram 机器人，支持多种语言和 AI 模型，并通过部署在 Cloudflare Workers 上，提供高效、可扩展的服务体验。
+欢迎使用 Telegram GPT Worker! 👋 这是一个基于 TypeScript 开发的高效 Telegram 机器人。它支持多种语言和 AI 模型，部署在 Cloudflare Workers 上，为用户提供快速、可扩展的服务体验。
 
-## 🌟 功能特色
+## 🌟 核心功能
 
-1. 🧠 **多模型支持**：支持 OpenAI、Google Gemini、Anthropic Claude、Groq 和 Azure OpenAI 等多个 AI 模型。
-2. 💬 **智能对话**：机器人可以记住对话上下文，带来更加自然、流畅的聊天体验。
-3. 🎨 **图像生成**：支持通过文字描述生成图像，集成了 DALL·E 和 Cloudflare Flux 模型。
-4. 🌍 **多语言支持**：内置 i18n 功能，支持多达 8 种语言。
-5. 🔒 **用户白名单**：通过白名单功能控制访问权限，提升安全性。
-6. ☁️ **Cloudflare Workers 部署**：利用 Cloudflare 的边缘计算，提供极速响应。
-7. 🗄️ **Redis 数据存储**：通过 Redis 进行数据缓存和管理，确保数据高效处理。
-8. 🔧 **Flux 提示词优化**：启用后，可通过外部 API 优化 Flux 模型生成图像时的提示词。
+1. 🧠 **多模型支持**: 集成 OpenAI、Google Gemini、Anthropic Claude、Groq 和 Azure OpenAI 等多个 AI 模型。
+2. 💬 **智能对话**: 具备上下文记忆能力，确保对话流畅自然。
+3. 🎨 **图像生成**: 支持文本描述生成图像，采用 DALL·E 和 Cloudflare Flux 技术。
+4. 🌍 **多语言支持**: 内置 i18n 功能，支持 8 种语言，满足多样化需求。
+5. 🔒 **用户权限管理**: 通过白名单功能控制访问权限，提升安全性。
+6. ☁️ **高性能部署**: 利用 Cloudflare Workers 的边缘计算能力，实现快速响应。
+7. 🗄️ **高效数据管理**: 使用 Redis 进行数据缓存和管理，确保高效处理。
+8. 🔧 **Flux 提示词优化**: 可选功能，通过外部 API 优化 Flux 模型的图像生成提示词。
 
-### 📋 前置要求
+## 📋 系统要求
+
+在开始使用前，请确保您已准备以下内容：
 
 - [Cloudflare](https://dash.cloudflare.com/) 账号
 - Telegram 账号和 Bot Token
-- [Upstash](https://upstash.com/) 选择 Redis 数据库并开启 [Eviction](https://upstash.com/docs/redis/features/eviction) 功能
+- [Upstash](https://upstash.com/) Redis 数据库（需开启 [Eviction](https://upstash.com/docs/redis/features/eviction) 功能）
 - 至少一个 AI 服务的 API 密钥
 
-## 🚀 快速开始
+## 🚀 快速上手
 
-1. 克隆项目仓库。
-2. 设置环境变量。
-3. 部署至 Cloudflare Workers。
-4. 配置 Telegram Webhook。
+1. 克隆项目仓库
+2. 配置必要的环境变量
+3. 部署至 Cloudflare Workers
+4. 设置 Telegram Webhook
 
-详细部署步骤请参考下方教程。
+详细的部署步骤请参考下方教程。
 
 ## 📝 可用命令
 
@@ -120,11 +120,11 @@
 #### 使用 Cloudflare Dashboard
 
 1. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)。
-2. 选择 “Workers & Pages”。
-3. 点击 “Create application” 并选择 “Create Worker”。
-4. 为 Worker 命名并点击 “Deploy”。
+2. 选择 "Workers & Pages"。
+3. 点击 "Create application" 并选择 "Create Worker"。
+4. 为 Worker 命名并点击 "Deploy"。
 5. 将 `dist/index.js` 复制粘贴到编辑器中，保存文件。
-6. 在 “Settings” 中添加必要的环境变量。
+6. 在 "Settings" 中添加必要的环境变量。
 
 ### 配置 Telegram Webhook
 
@@ -195,12 +195,12 @@ https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://your-worker.
 
 ## ⚠️ 注意事项
 
-1. **合理使用 API 配额**：特别是图像生成服务，避免超限。
-2. **保管好环境变量和 API 密钥**：确保敏感信息安全。
-3. **熟悉不同 AI 模型特性**：选择最适合应用场景的模型。
-4. **定期更新**：保持代码与功能的最新状态。
-5. **保障安全**：定期更新 API 密钥，遵循最小权限原则。
-6. **Flux 提示词优化**：当启用 PROMPT_OPTIMIZATION 时，确保正确配置 EXTERNAL_API_BASE、EXTERNAL_MODEL 和 EXTERNAL_API_KEY。
+1. 🚦 **合理使用 API 配额**: 特别是图像生成服务，请注意使用限制。
+2. 🔐 **保护敏感信息**: 妥善保管环境变量和 API 密钥。
+3. 🧠 **了解模型特性**: 选择最适合您应用场景的 AI 模型。
+4. 🔄 **保持更新**: 定期更新代码和功能以获得最佳性能。
+5. 🛡️ **安全第一**: 定期更新 API 密钥，遵循最小权限原则。
+6. 🎨 **Flux 提示词优化**: 启用 PROMPT_OPTIMIZATION 时，请确保正确配置 EXTERNAL_API_BASE、EXTERNAL_MODEL 和 EXTERNAL_API_KEY。
 
 ## 🚀 Flux 提示词优化
 
@@ -214,8 +214,8 @@ https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://your-worker.
 
 ## 🔧 故障排除
 
-- 无响应？检查 Webhook 设置和环境变量。
-- API 限制？查看配额使用情况。
+- 机器人无响应？检查 Webhook 设置和环境变量配置。
+- 遇到 API 限制？查看您的 API 配额使用情况。
 
 ## 📄 许可证
 
