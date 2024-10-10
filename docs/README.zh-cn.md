@@ -171,7 +171,7 @@ https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://your-worker.
 | OPENAI_MODELS | 可用的 OpenAI 模型列表 | - | gpt-3.5-turbo,gpt-4 |
 | TELEGRAM_BOT_TOKEN | Telegram 机器人令牌 | - | 123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11 |
 | WHITELISTED_USERS | 允许使用机器人的用户 ID 列表 | - | 12345678,87654321 |
-| SYSTEM_INIT_MESSAGE | 系统初始化消息 | You are a helpful assistant. | 您是一个有用的助手。 |
+| SYSTEM_INIT_MESSAGE | 系统初始化消息 | You are a helpful assistant. | You are a helpful assistant. |
 | SYSTEM_INIT_MESSAGE_ROLE | 系统初始化消息角色 | system | system |
 | DEFAULT_MODEL | 默认使用的 AI 模型 | - | gpt-3.5-turbo |
 | UPSTASH_REDIS_REST_URL | Upstash Redis REST URL | - | https://your-redis-url.upstash.io |
