@@ -14,6 +14,13 @@
 6. ☁️ **Cloudflare Workers 部署**：利用 Cloudflare 边缘计算，提供快速响应。
 7. 🗄️ **Redis 数据存储**：通过 Redis 进行数据缓存与管理。
 
+### 前置要求
+
+- [Cloudflare](https://dash.cloudflare.com/) 账号
+- Telegram 账号和 Bot Token
+- [Upstash](https://upstash.com/) 请选择 Redis 数据库并开启 [Eviction](https://upstash.com/docs/redis/features/eviction) 功能
+- 至少一个 AI 服务的 API 密钥
+
 ## 🚀 快速开始
 
 1. 克隆仓库
