@@ -1,5 +1,7 @@
 # 🤖 Telegram GPT Worker Bot
 
+[English](./README.md) | [简体中文](./docs/README.zh-cn.md) | [繁體中文](./docs/README.zh-hant.md) | [日本語](./docs/README.ja.md) | [Español](./docs/README.es.md) | [Français](./docs/README.fr.md) | [Русский](./docs/README.ru.md) | [Deutsch](./docs/README.de.md)
+
 ## 📖 Project Overview
 
 Welcome to the Telegram GPT Worker project! This is a Telegram bot built using TypeScript that supports multiple languages and AI models. It can be deployed on Cloudflare Workers to provide efficient, scalable services.
@@ -182,7 +184,7 @@ https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://your-worker.
 | DALL_E_MODEL             | DALL-E model version                      | dall-e-3                              | dall-e-3                                         |
 | CLOUDFLARE_API_TOKEN     | Cloudflare API token                      | -                                     | your-cloudflare-api-token                        |
 | CLOUDFLARE_ACCOUNT_ID    | Cloudflare account ID                     | -                                     | your-cloudflare-account-id                       |
-| FLUX_STEPS               | Number of Flux steps                      | 4                                     | 4                                                |
+| FLUX_STEPS               | Number of Flux steps                      | 4                                     | 4, max 8                                         |
 | PROMPT_OPTIMIZATION      | Enable prompt optimization                | false                                 | true                                             |
 | EXTERNAL_API_BASE        | External API base URL                     | -                                     | https://external-api.com                         |
 | EXTERNAL_MODEL           | External model name                       | -                                     | external-model-name                              |
