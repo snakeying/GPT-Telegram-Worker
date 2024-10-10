@@ -31,12 +31,6 @@
 3. 部署至 Cloudflare Workers。
 4. 配置 Telegram Webhook。
 
-Webhook 示例：
-
-```bash
-https://api.telegram.org/bot<Your-Bot-Token>/setWebhook?url=https://<your-worker-subdomain>.workers.dev/webhook 
-```
-
 详细部署步骤请参考下方教程。
 
 ## 📝 可用命令
