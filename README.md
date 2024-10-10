@@ -4,7 +4,7 @@
 
 ## 📖 Project Overview
 
-Welcome to Telegram GPT Worker! This is a Telegram bot built with TypeScript, supporting multiple languages and AI models. It is deployed on Cloudflare Workers, providing a highly efficient and scalable service experience.
+Welcome to Telegram GPT Worker~ This is a Telegram bot built with TypeScript, supporting multiple languages and AI models. It is deployed on Cloudflare Workers, providing a highly efficient and scalable service experience.
 
 ## 🌟 Key Features
 
@@ -207,9 +207,7 @@ Note: Some variables require manual setup and do not have default values.
 When the PROMPT_OPTIMIZATION environment variable is set to true, the Flux image generation feature will use an external API to optimize prompts. The process works as follows:
 
 1. Users provide the initial prompt.
-2. The system
-
- optimizes the prompt using the external API configured with EXTERNAL_API_BASE, EXTERNAL_MODEL, and EXTERNAL_API_KEY.
+2. The system optimizes the prompt using the external API configured with EXTERNAL_API_BASE, EXTERNAL_MODEL, and EXTERNAL_API_KEY.
 3. The optimized prompt is used for image generation with the Flux model.
 
 This feature helps generate more accurate images tailored to the Flux model's characteristics. Ensure all related environment variables are properly configured to use this feature.
