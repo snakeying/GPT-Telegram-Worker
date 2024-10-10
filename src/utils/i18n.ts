@@ -24,7 +24,7 @@ export interface Translations {
   language_en: string;
   language_zh: string;
   language_es: string;
-  'language_zh-TW': string;  // 修改这里
+  'language_zh-TW': string;
   language_ja: string;
   language_de: string;
   language_fr: string;
@@ -43,6 +43,7 @@ export interface Translations {
   command_not_found: string;
   image_analysis_error: string;
   model_not_support_multimodal: string;
+  image_analysis_description: string;
 }
 
 export type TranslationKey = keyof Translations;
@@ -74,7 +75,7 @@ const translations: TranslationsMap = {
     language_en: "🇬🇧 English",
     language_zh: "🇨🇳 Chinese",
     language_es: "🇪🇸 Spanish",
-    'language_zh-TW': "🇹🇼 Chinese (Traditional)",  // 修改这里
+    'language_zh-TW': "🇹🇼 Chinese (Traditional)",
     language_ja: "🇯🇵 Japanese",
     language_de: "🇩🇪 German",
     language_fr: "🇫🇷 French",
@@ -91,8 +92,9 @@ const translations: TranslationsMap = {
     optimized_prompt: "🌐 Enhanced Description",
     image_specs: "📐 Image Details",
     command_not_found: "❓ Hmm, I don't know that command. Type /help to see what I can do!",
-    image_analysis_error: "Error analyzing image. Please try again.",
-    model_not_support_multimodal: "The current model does not support image analysis. Please switch to a multimodal model.",
+    image_analysis_error: "🖼️ Error analyzing image. Please try again.",
+    model_not_support_multimodal: "🤖 The current model does not support image analysis. Please switch to a multimodal model.",
+    image_analysis_description: "🖼️ Analyze images with AI:\n1. Send an image to the bot.\n2. Add your analysis request in the caption, e.g., 'Describe this image' or 'Read the text in this image'.\n3. The bot will use the current AI model to analyze it.\n4. You'll receive the analysis as a text message.",
   },
   zh: {
     welcome: "👋 嘿，欢迎使用你的专属助手机器人！",
@@ -118,25 +120,26 @@ const translations: TranslationsMap = {
     language_en: "🇬🇧 英语",
     language_zh: "🇨🇳 简体中文",
     language_es: "🇪🇸 西班牙语",
-    'language_zh-TW': "🇹🇼 Chinese (Traditional)",  // 修改这里
-    language_ja: "🇯🇵 Japanese",
-    language_de: "🇩🇪 German",
-    language_fr: "🇫🇷 French",
-    language_ru: "🇷🇺 Russian",
-    image_prompt_required: "🖼️ To create an image, tell me what you'd like to see!",
-    image_generation_error: "😞 Uh-oh, there was a hiccup creating the image. Mind trying again?",
-    img_description: "🎨 Create amazing images with DALL·E",
-    invalid_size: "📏 Oops, that size doesn't work. How about trying one of these: ",
-    flux_description: "🖼️ Create beautiful images using Flux",
-    flux_usage: "📝 Here's how to use it: /flux <description> [aspect ratio]. You can choose from these ratios: 1:1 (default), 1:2, 3:2, 3:4, 16:9, 9:16",
-    invalid_aspect_ratio: "🔢 That aspect ratio isn't quite right. You can pick from these: ",
-    original_prompt: "🎨 Original Description",
-    prompt_generation_model: "💬 Prompt Generation Model",
-    optimized_prompt: "🌐 Enhanced Description",
-    image_specs: "📐 Image Details",
-    command_not_found: "❓ Hmm, I don't know that command. Type /help to see what I can do!",
-    image_analysis_error: "分析图片时出错。请重试。",
-    model_not_support_multimodal: "当前模型不支持图像分析。请切换到多模态模型。",
+    'language_zh-TW': "🇹🇼 繁体中文",
+    language_ja: "🇯🇵 日语",
+    language_de: "🇩🇪 德语",
+    language_fr: "🇫🇷 法语",
+    language_ru: "🇷🇺 俄语",
+    image_prompt_required: "🖼️ 要创建图像，请告诉我你想看到什么！",
+    image_generation_error: "😞 哎呀，创建图像时出了点问题。要不要再试一次？",
+    img_description: "🎨 使用 DALL·E 创建惊人的图像",
+    invalid_size: "📏 哎呀，这个尺寸不行。不如试试这些：",
+    flux_description: "🖼️ 使用 Flux 创建美丽的图像",
+    flux_usage: "📝 以下是使用方法：/flux <描述> [长宽比]。你可以从这些比例中选择：1:1（默认）、1:2、3:2、3:4、16:9、9:16",
+    invalid_aspect_ratio: "🔢 这个长宽比不太对。你可以从这些中选择：",
+    original_prompt: "🎨 原始描述",
+    prompt_generation_model: "💬 提示生成模型",
+    optimized_prompt: "🌐 优化后的描述",
+    image_specs: "📐 图像详情",
+    command_not_found: "❓ 嗯，我不认识这个命令。输入 /help 看看我能做什么！",
+    image_analysis_error: "🖼️ 分析图片时出错。请重试。",
+    model_not_support_multimodal: "🤖 当前模型不支持图像分析。请切换到多模态模型。",
+    image_analysis_description: "🖼️ 使用 AI 分析图片：\n1. 向机器人发送一张图片。\n2. 在图片说明中添加您的分析请求，例如'描述这张图片'或'读取图片中的文字'。\n3. 机器人将使用当前的 AI 模型进行分析。\n4. 您将收到一条包含分析结果的文本消息。"
   },
   es: {
     welcome: "👋 ¡Hola! ¡Bienvenido a tu bot asistente personal con IA!",
@@ -162,7 +165,7 @@ const translations: TranslationsMap = {
     language_en: "🇬🇧 Inglés",
     language_zh: "🇨🇳 Chino",
     language_es: "🇪🇸 Español",
-    'language_zh-TW': "🇹🇼 Chinese (Traditional)",  // 修改这里
+    'language_zh-TW': "🇹🇼 Chinese (Traditional)",
     language_ja: "🇯🇵 Japanese",
     language_de: "🇩🇪 German",
     language_fr: "🇫🇷 French",
@@ -179,8 +182,9 @@ const translations: TranslationsMap = {
     optimized_prompt: "🌐 Descripción Mejorada",
     image_specs: "📐 Detalles de la Imagen",
     command_not_found: "❓ Mmm, no conozco ese comando. ¡Escribe /help para ver lo que puedo hacer!",
-    image_analysis_error: "Error al analizar la imagen. Por favor, inténtelo de nuevo.",
-    model_not_support_multimodal: "El modelo actual no admite análisis de imágenes. Cambie a un modelo multimodal.",
+    image_analysis_error: "🖼️ Error al analizar la imagen. Por favor, inténtelo de nuevo.",
+    model_not_support_multimodal: "🤖 El modelo actual no admite análisis de imágenes. Cambie a un modelo multimodal.",
+    image_analysis_description: "🖼️ Analiza imágenes con IA:\n1. Envía una imagen al bot.\n2. Añade tu solicitud de análisis en el pie de foto, por ejemplo, 'Describe esta imagen' o 'Lee el texto en esta imagen'.\n3. El bot utilizará el modelo de IA actual para analizarla.\n4. Recibirás el análisis como un mensaje de texto.",
   },
   'zh-TW': {
     welcome: "👋 嘿，歡迎使用你的專屬助手機器人！",
@@ -223,8 +227,9 @@ const translations: TranslationsMap = {
     optimized_prompt: "🌐 優化後的描述",
     image_specs: "📐 圖像詳情",
     command_not_found: "❓ 嗯，我不認識這個命令。輸入 /help 看看我能做什麼！",
-    image_analysis_error: "分析圖片時出錯。請重試。",
-    model_not_support_multimodal: "當前模型不支持圖像分析。請切換到多模態模型。",
+    image_analysis_error: "🖼️ 分析圖片時出錯。請重試。",
+    model_not_support_multimodal: "🤖 當前模型不支持圖像分析。請切換到多模態模型。",
+    image_analysis_description: "🖼️ 使用 AI 分析圖片：\n1. 向機器人發送一張圖片。\n2. 在圖片說明中添加您的分析請求，例如「描述這張圖片」或「讀取圖片中的文字」。\n3. 機器人將使用當前的 AI 模型進行分析。\n4. 您將收到一條包含分析結果的文本消息。",
   },
   ja: {
     welcome: "👋 こんにちは！あなた専用のAIアシスタントボットへようこそ！",
@@ -267,8 +272,9 @@ const translations: TranslationsMap = {
     optimized_prompt: "🌐 最適化された説明",
     image_specs: "📐 画像の詳細",
     command_not_found: "❓ すみません、そのコマンドは分かりません。/help と入力して、私にできることを確認してください！",
-    image_analysis_error: "画像の分析中にエラーが発生しました。もう一度お試しください。",
-    model_not_support_multimodal: "現在のモデルは画像分析をサポートしていません。マルチモーダルモデルに切り替えてください。",
+    image_analysis_error: "🖼️ 画像の分析中にエラーが発生しました。もう一度お試しください。",
+    model_not_support_multimodal: "🤖 現在のモデルは画像分析をサポートしていません。マルチモーダルモデルに切り替えてください。",
+    image_analysis_description: "🖼️ AIで画像を分析します：\n1. ボットに画像を送信します。\n2. 画像のキャプションに分析リクエストを追加します。例：「この画像を説明して」や「この画像のテキストを読み取って」\n3. ボットは現在選択されているAIモデルを使用して画像を分析します。\n4. 分析結果はテキストメッセージとして返信されます。",
   },
   de: {
     welcome: "👋 Hallo! Willkommen bei deinem persönlichen KI-Assistenten-Bot!",
@@ -311,8 +317,9 @@ const translations: TranslationsMap = {
     optimized_prompt: "🌐 Verbesserte Beschreibung",
     image_specs: "📐 Bilddetails",
     command_not_found: "❓ Hmm, ich kenne diesen Befehl nicht. Gib /help ein, um zu sehen, was ich kann!",
-    image_analysis_error: "Fehler bei der Bildanalyse. Bitte versuchen Sie es erneut.",
-    model_not_support_multimodal: "Das aktuelle Modell unterstützt keine Bildanalyse. Bitte wechseln Sie zu einem multimodalen Modell.",
+    image_analysis_error: "🖼️ Fehler bei der Bildanalyse. Bitte versuchen Sie es erneut.",
+    model_not_support_multimodal: "🤖 Das aktuelle Modell unterstützt keine Bildanalyse. Bitte wechseln Sie zu einem multimodalen Modell.",
+    image_analysis_description: "🖼️ Analysiere Bilder mit KI:\n1. Sende ein Bild an den Bot.\n2. Füge deine Analyseanfrage in der Bildunterschrift hinzu, z.B. 'Beschreibe dieses Bild' oder 'Lies den Text in diesem Bild'.\n3. Der Bot verwendet das aktuelle KI-Modell, um es zu analysieren.\n4. Du erhältst die Analyse als Textnachricht.",
   },
   fr: {
     welcome: "👋 Salut ! Bienvenue sur votre assistant IA personnel !",
@@ -355,8 +362,9 @@ const translations: TranslationsMap = {
     optimized_prompt: "🌐 Description améliorée",
     image_specs: "📐 Détails de l'image",
     command_not_found: "❓ Hmm, je ne connais pas cette commande. Tapez /help pour voir ce que je peux faire !",
-    image_analysis_error: "Erreur lors de l'analyse de l'image. Veuillez réessayer.",
-    model_not_support_multimodal: "Le modèle actuel ne prend pas en charge l'analyse d'images. Veuillez passer à un modèle multimodal.",
+    image_analysis_error: "🖼️ Erreur lors de l'analyse de l'image. Veuillez réessayer.",
+    model_not_support_multimodal: "🤖 Le modèle actuel ne prend pas en charge l'analyse d'images. Veuillez passer à un modèle multimodal.",
+    image_analysis_description: "🖼️ Analysez des images avec l'IA :\n1. Envoyez une image au bot.\n2. Ajoutez votre demande d'analyse dans la légende, par exemple 'Décris cette image' ou 'Lis le texte dans cette image'.\n3. Le bot utilisera le modèle d'IA actuel pour l'analyser.\n4. Vous recevrez l'analyse sous forme de message texte.",
   },
   ru: {
     welcome: "👋 Привет! Добро пожаловать в вашего персонального ИИ-ассистента!",
@@ -399,8 +407,9 @@ const translations: TranslationsMap = {
     optimized_prompt: "🌐 Улучшенное описание",
     image_specs: "📐 Детали изображения",
     command_not_found: "❓ Хмм, я не знаю эту команду. Введите /help, чтобы увидеть, что я могу сделать!",
-    image_analysis_error: "Ошибка при анализе изображения. Пожалуйста, попробуйте еще раз.",
-    model_not_support_multimodal: "Текущая модель не поддерживает анализ изображений. Пожалуйста, переключитесь на мультимодальную модель.",
+    image_analysis_error: "🖼️ Ошибка при анализе изображения. Пожалуйста, попробуйте еще раз.",
+    model_not_support_multimodal: "🤖 Текущая модель не поддерживает анализ изображений. Пожалуйста, переключитесь на мультимодальную модель.",
+    image_analysis_description: "🖼️ Анализируйте изображения с помощью ИИ:\n1. Отправьте изображение боту.\n2. Добавьте ваш запрос на анализ в подпись к изображению, например, 'Опиши это изображение' или 'Прочитай текст на этом изображении'.\n3. Бот использует текущую модель ИИ для анализа.\n4. Вы получите результат анализа в виде текстового сообщения.",
   },
 };
 

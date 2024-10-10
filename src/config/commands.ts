@@ -99,11 +99,12 @@ export const commands: Command[] = [
       
       for (const command of commands) {
         const descriptionKey = `${command.name}_description` as TranslationKey;
-        // 使用普通文本，不添加任何格式化
         helpMessage += `/${command.name} - ${translate(descriptionKey, language)}\n`;
       }
       
-      // 使用普通的 sendMessage 方法，不指定 parse_mode
+      // 添加图片分析功能的说明
+      helpMessage += '\n' + translate('image_analysis_description', language);
+      
       await bot.sendMessage(chatId, helpMessage);
     },
   },
