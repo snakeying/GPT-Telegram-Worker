@@ -1,5 +1,7 @@
 # 🤖💬 Telegram GPT Worker 多功能 AI 助手 
 
+[English](../README.md) | [简体中文](./README.zh-cn.md) | [繁體中文](./README.zh-hant.md) | [日本語](./README.ja.md) | [Español](./README.es.md) | [Français](./README.fr.md) | [Русский](./README.ru.md) | [Deutsch](./README.de.md)
+
 ## 📖 項目簡介
 
 歡迎來到 Telegram GPT Worker~ 這是一個基於 TypeScript 構建的 Telegram 機器人，支持多種語言和 AI 模型，並通過部署在 Cloudflare Workers 上，提供高效、可擴展的服務體驗。
