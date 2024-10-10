@@ -10,14 +10,14 @@ import ClaudeAPI from '../api/claude';
 
 export interface Command {
   name: string;
-  description: string;
+  description: TranslationKey; // 修改这里,使用 TranslationKey
   action: (chatId: number, bot: TelegramBot, args: string[]) => Promise<void>;
 }
 
 export const commands: Command[] = [
   {
     name: 'start',
-    description: 'Start the bot',
+    description: 'start_description',
     action: async (chatId: number, bot: TelegramBot, args: string[]) => {
       const userId = chatId.toString();
       const language = await bot.getUserLanguage(userId);
@@ -29,7 +29,7 @@ export const commands: Command[] = [
   },
   {
     name: 'language',
-    description: 'Set your preferred language',
+    description: 'language_description',
     action: async (chatId: number, bot: TelegramBot, args: string[]) => {
       const userId = chatId.toString();
       const currentLanguage = await bot.getUserLanguage(userId);
@@ -47,7 +47,7 @@ export const commands: Command[] = [
   },
   {
     name: 'switchmodel',
-    description: 'Switch the current model',
+    description: 'switchmodel_description',
     action: async (chatId: number, bot: TelegramBot, args: string[]) => {
       const userId = chatId.toString();
       const language = await bot.getUserLanguage(userId);
@@ -67,7 +67,7 @@ export const commands: Command[] = [
   },
   {
     name: 'new',
-    description: 'Start a new conversation',
+    description: 'new_description',
     action: async (chatId: number, bot: TelegramBot, args: string[]) => {
       const userId = chatId.toString();
       await bot.clearContext(userId);
@@ -75,7 +75,7 @@ export const commands: Command[] = [
   },
   {
     name: 'history',
-    description: 'Summarize conversation history',
+    description: 'history_description',
     action: async (chatId: number, bot: TelegramBot, args: string[]) => {
       const userId = chatId.toString();
       const language = await bot.getUserLanguage(userId);
@@ -85,7 +85,7 @@ export const commands: Command[] = [
   },
   {
     name: 'help',
-    description: 'Show available commands and their descriptions',
+    description: 'help_description',
     action: async (chatId: number, bot: TelegramBot, args: string[]) => {
       const userId = chatId.toString();
       const language = await bot.getUserLanguage(userId);
@@ -103,7 +103,7 @@ export const commands: Command[] = [
   },
   {
     name: 'img',
-    description: 'Generate an image using DALL·E',
+    description: 'img_description',
     action: async (chatId: number, bot: TelegramBot, args: string[]) => {
       const userId = chatId.toString();
       const language = await bot.getUserLanguage(userId);
@@ -146,7 +146,7 @@ export const commands: Command[] = [
   },
   {
     name: 'flux',
-    description: 'Generate an image using Flux',
+    description: 'flux_description',
     action: async (chatId: number, bot: TelegramBot, args: string[]) => {
       const userId = chatId.toString();
       const language = await bot.getUserLanguage(userId);

@@ -75,4 +75,34 @@ export class RedisClient {
       : newContext;
     await this.set(key, updatedContext, this.config.contextTTL);
   }
+
+  async getAllUserLanguages(): Promise<Record<string, string>> {
+    const keys = await this.keys('language:*');
+    const userLanguages: Record<string, string> = {};
+
+    for (const key of keys) {
+      const userId = key.split(':')[1];
+      const language = await this.get(key);
+      if (language) {
+        userLanguages[userId] = language;
+      }
+    }
+
+    return userLanguages;
+  }
+
+  async keys(pattern: string): Promise<string[]> {
+    const response = await fetch(`${this.url}/keys/${pattern}`, {
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json() as { result: string[] };
+    return data.result;
+  }
 }

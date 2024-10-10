@@ -24,7 +24,6 @@ export class ClaudeAPI implements ModelAPIInterface {
 
   async generateResponse(messages: Message[], model?: string): Promise<string> {
     const useModel = model || this.defaultModel;
-    console.log(`Generating response with Claude model: ${useModel}`);
     const url = `${this.baseUrl}/messages`;
 
     const response = await fetch(url, {
@@ -51,12 +50,10 @@ export class ClaudeAPI implements ModelAPIInterface {
     }
 
     const data: ClaudeResponse = await response.json();
-    console.log('Claude API response received');
     if (!data.content || data.content.length === 0) {
       throw new Error('No response generated from Claude API');
     }
     const generatedText = data.content[0].text.trim();
-    console.log(`Generated text length: ${generatedText.length}`);
     return generatedText;
   }
 

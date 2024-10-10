@@ -25,7 +25,6 @@ export class GroqAPI implements ModelAPIInterface {
 
   async generateResponse(messages: Message[], model?: string): Promise<string> {
     const useModel = model || this.defaultModel;
-    console.log(`Generating response with Groq model: ${useModel}`);
     const url = `${this.baseUrl}/chat/completions`;
 
     const response = await fetch(url, {
@@ -47,13 +46,10 @@ export class GroqAPI implements ModelAPIInterface {
     }
 
     const data: GroqResponse = await response.json();
-    console.log('Groq API response received');
     if (!data.choices || data.choices.length === 0) {
       throw new Error('No response generated from Groq API');
     }
-    const generatedText = data.choices[0].message.content.trim();
-    console.log(`Generated text length: ${generatedText.length}`);
-    return generatedText;
+    return data.choices[0].message.content.trim();
   }
 
   isValidModel(model: string): boolean {
@@ -68,5 +64,4 @@ export class GroqAPI implements ModelAPIInterface {
     return this.models;
   }
 }
-
 export default GroqAPI;

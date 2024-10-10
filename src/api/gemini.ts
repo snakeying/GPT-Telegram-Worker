@@ -33,11 +33,10 @@ export class GeminiAPI implements ModelAPIInterface {
 
   async generateResponse(messages: Message[], model?: string): Promise<string> {
     const useModel = model || this.defaultModel;
-    console.log(`Generating response with Gemini model: ${useModel}`);
     const url = `${this.baseUrl}/models/${useModel}:generateContent?key=${this.apiKey}`;
 
     const geminiMessages: GeminiMessage[] = messages
-      .filter(msg => msg.role !== 'system') // 过滤掉 system 消息
+      .filter(msg => msg.role !== 'system')
       .map(msg => ({
         role: msg.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: msg.content }]
@@ -52,8 +51,6 @@ export class GeminiAPI implements ModelAPIInterface {
         maxOutputTokens: 2048,
       },
     };
-
-    console.log('Request body:', JSON.stringify(requestBody, null, 2));
 
     const response = await fetch(url, {
       method: 'POST',
@@ -70,13 +67,10 @@ export class GeminiAPI implements ModelAPIInterface {
     }
 
     const data: GeminiResponse = await response.json();
-    console.log('Gemini API response received');
     if (!data.candidates || data.candidates.length === 0) {
       throw new Error('No response generated from Gemini API');
     }
-    const generatedText = data.candidates[0].content.parts[0].text.trim();
-    console.log(`Generated text length: ${generatedText.length}`);
-    return generatedText;
+    return data.candidates[0].content.parts[0].text.trim();
   }
 
   isValidModel(model: string): boolean {
@@ -91,5 +85,4 @@ export class GeminiAPI implements ModelAPIInterface {
     return this.models;
   }
 }
-
 export default GeminiAPI;

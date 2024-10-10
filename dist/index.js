@@ -147,7 +147,7 @@ var translations = {
     new_description: "Start a new conversation",
     history_description: "Summarize conversation history",
     switchmodel_description: "Switch the current model",
-    help_description: "Show available commands and their descriptions",
+    help_description: "Show available commands",
     choose_language: "Please choose your preferred language:",
     choose_model: "Please choose a model:",
     language_en: "English",
@@ -155,7 +155,7 @@ var translations = {
     language_es: "Spanish",
     image_prompt_required: "Please provide a description for the image you want to generate.",
     image_generation_error: "Sorry, there was an error generating the image. Please try again later.",
-    img_description: "Generate an image using DALL\xB7E. Format: /img <description> [size]",
+    img_description: "Generate an image using DALL\xB7E",
     invalid_size: "Invalid image size. Please use one of the following sizes: ",
     flux_description: "Generate an image using Flux",
     flux_usage: "Usage: /flux <description> [aspect ratio]. Valid aspect ratios are: 1:1 (default), 1:2, 3:2, 3:4, 16:9, 9:16",
@@ -184,7 +184,7 @@ var translations = {
     new_description: "\u5F00\u59CB\u65B0\u7684\u5BF9\u8BDD",
     history_description: "\u603B\u7ED3\u5BF9\u8BDD\u5386\u53F2",
     switchmodel_description: "\u5207\u6362\u5F53\u524D\u6A21\u578B",
-    help_description: "\u663E\u793A\u53EF\u7528\u547D\u4EE4\u53CA\u5176\u63CF\u8FF0",
+    help_description: "\u663E\u793A\u53EF\u7528\u547D\u4EE4",
     choose_language: "\u8BF7\u9009\u62E9\u60A8\u504F\u597D\u7684\u8BED\u8A00\uFF1A",
     choose_model: "\u8BF7\u9009\u62E9\u4E00\u4E2A\u6A21\u578B\uFF1A",
     language_en: "\u82F1\u8BED",
@@ -192,9 +192,9 @@ var translations = {
     language_es: "\u897F\u73ED\u7259\u8BED",
     image_prompt_required: "\u8BF7\u63D0\u4F9B\u60A8\u60F3\u8981\u751F\u6210\u7684\u56FE\u50CF\u63CF\u8FF0\u3002",
     image_generation_error: "\u62B1\u6B49\uFF0C\u751F\u6210\u56FE\u50CF\u65F6\u51FA\u9519\u3002\u8BF7\u7A0D\u540E\u518D\u8BD5\u3002",
-    img_description: "\u4F7F\u7528 DALL\xB7E \u751F\u6210\u56FE\u50CF\u3002\u683C\u5F0F\uFF1A/img <\u63CF\u8FF0> [\u5C3A\u5BF8]",
+    img_description: "\u4F7F\u7528DALL\xB7E\u751F\u6210\u56FE\u50CF",
     invalid_size: "\u65E0\u6548\u7684\u56FE\u7247\u5C3A\u5BF8\u3002\u8BF7\u4F7F\u7528\u4EE5\u4E0B\u5C3A\u5BF8\u4E4B\u4E00\uFF1A",
-    flux_description: "\u4F7F\u7528 Flux \u751F\u6210\u56FE\u50CF",
+    flux_description: "\u4F7F\u7528Flux\u751F\u6210\u56FE\u50CF",
     flux_usage: "\u7528\u6CD5\uFF1A/flux <\u63CF\u8FF0> [\u5BBD\u9AD8\u6BD4]\u3002\u6709\u6548\u7684\u5BBD\u9AD8\u6BD4\u6709\uFF1A1:1\uFF08\u9ED8\u8BA4\uFF09, 1:2, 3:2, 3:4, 16:9, 9:16",
     invalid_aspect_ratio: "\u65E0\u6548\u7684\u5BBD\u9AD8\u6BD4\u3002\u6709\u6548\u9009\u9879\u4E3A\uFF1A",
     original_prompt: "\u{1F3A8} \u539F\u59CB\u63D0\u793A\u8BCD",
@@ -221,7 +221,7 @@ var translations = {
     new_description: "Iniciar una nueva conversaci\xF3n",
     history_description: "Resumir el historial de conversaci\xF3n",
     switchmodel_description: "Cambiar el modelo actual",
-    help_description: "Mostrar comandos disponibles y sus descripciones",
+    help_description: "Mostrar comandos disponibles",
     choose_language: "Por favor, elige tu idioma preferido:",
     choose_model: "Por favor, elige un modelo:",
     language_en: "Ingl\xE9s",
@@ -229,7 +229,7 @@ var translations = {
     language_es: "Espa\xF1ol",
     image_prompt_required: "Por favor, proporcione una descripci\xF3n para la imagen que desea generar.",
     image_generation_error: "Lo siento, hubo un error al generar la imagen. Por favor, int\xE9ntelo de nuevo m\xE1s tarde.",
-    img_description: "Generar una imagen usando DALL\xB7E. Formato: /img <descripci\xF3n> [tama\xF1o]",
+    img_description: "Generar una imagen usando DALL\xB7E",
     invalid_size: "Tama\xF1o de imagen no v\xE1lido. Por favor, use uno de los siguientes tama\xF1os: ",
     flux_description: "Generar una imagen usando Flux",
     flux_usage: "Uso: /flux <descripci\xF3n> [relaci\xF3n de aspecto]. Las relaciones de aspecto v\xE1lidas son: 1:1 (predeterminado), 1:2, 3:2, 3:4, 16:9, 9:16",
@@ -351,7 +351,6 @@ var FluxAPI = class {
       throw new Error(`Flux API error: ${errorMessage}`);
     }
     if (!data.result || !data.result.image) {
-      console.error("Flux API returned no image");
       throw new Error("Flux API returned no image");
     }
     const binaryString = atob(data.result.image);
@@ -448,7 +447,7 @@ var FluxAPI = class {
 var commands = [
   {
     name: "start",
-    description: "Start the bot",
+    description: "start_description",
     action: async (chatId, bot, args) => {
       const userId = chatId.toString();
       const language = await bot.getUserLanguage(userId);
@@ -459,7 +458,7 @@ var commands = [
   },
   {
     name: "language",
-    description: "Set your preferred language",
+    description: "language_description",
     action: async (chatId, bot, args) => {
       const userId = chatId.toString();
       const currentLanguage = await bot.getUserLanguage(userId);
@@ -477,7 +476,7 @@ var commands = [
   },
   {
     name: "switchmodel",
-    description: "Switch the current model",
+    description: "switchmodel_description",
     action: async (chatId, bot, args) => {
       const userId = chatId.toString();
       const language = await bot.getUserLanguage(userId);
@@ -498,7 +497,7 @@ var commands = [
   },
   {
     name: "new",
-    description: "Start a new conversation",
+    description: "new_description",
     action: async (chatId, bot, args) => {
       const userId = chatId.toString();
       await bot.clearContext(userId);
@@ -506,7 +505,7 @@ var commands = [
   },
   {
     name: "history",
-    description: "Summarize conversation history",
+    description: "history_description",
     action: async (chatId, bot, args) => {
       const userId = chatId.toString();
       const language = await bot.getUserLanguage(userId);
@@ -516,7 +515,7 @@ var commands = [
   },
   {
     name: "help",
-    description: "Show available commands and their descriptions",
+    description: "help_description",
     action: async (chatId, bot, args) => {
       const userId = chatId.toString();
       const language = await bot.getUserLanguage(userId);
@@ -531,7 +530,7 @@ var commands = [
   },
   {
     name: "img",
-    description: "Generate an image using DALL\xB7E",
+    description: "img_description",
     action: async (chatId, bot, args) => {
       const userId = chatId.toString();
       const language = await bot.getUserLanguage(userId);
@@ -568,7 +567,7 @@ var commands = [
   },
   {
     name: "flux",
-    description: "Generate an image using Flux",
+    description: "flux_description",
     action: async (chatId, bot, args) => {
       const userId = chatId.toString();
       const language = await bot.getUserLanguage(userId);
@@ -670,6 +669,30 @@ var RedisClient = class {
 ${newContext}` : newContext;
     await this.set(key, updatedContext, this.config.contextTTL);
   }
+  async getAllUserLanguages() {
+    const keys = await this.keys("language:*");
+    const userLanguages = {};
+    for (const key of keys) {
+      const userId = key.split(":")[1];
+      const language = await this.get(key);
+      if (language) {
+        userLanguages[userId] = language;
+      }
+    }
+    return userLanguages;
+  }
+  async keys(pattern) {
+    const response = await fetch(`${this.url}/keys/${pattern}`, {
+      headers: {
+        Authorization: `Bearer ${this.token}`
+      }
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data.result;
+  }
 };
 
 // src/api/gemini.ts
@@ -687,7 +710,6 @@ var GeminiAPI = class {
   }
   async generateResponse(messages, model) {
     const useModel = model || this.defaultModel;
-    console.log(`Generating response with Gemini model: ${useModel}`);
     const url = `${this.baseUrl}/models/${useModel}:generateContent?key=${this.apiKey}`;
     const geminiMessages = messages.filter((msg) => msg.role !== "system").map((msg) => ({
       role: msg.role === "assistant" ? "model" : "user",
@@ -702,7 +724,6 @@ var GeminiAPI = class {
         maxOutputTokens: 2048
       }
     };
-    console.log("Request body:", JSON.stringify(requestBody, null, 2));
     const response = await fetch(url, {
       method: "POST",
       headers: {
@@ -717,13 +738,10 @@ var GeminiAPI = class {
 ${errorText}`);
     }
     const data = await response.json();
-    console.log("Gemini API response received");
     if (!data.candidates || data.candidates.length === 0) {
       throw new Error("No response generated from Gemini API");
     }
-    const generatedText = data.candidates[0].content.parts[0].text.trim();
-    console.log(`Generated text length: ${generatedText.length}`);
-    return generatedText;
+    return data.candidates[0].content.parts[0].text.trim();
   }
   isValidModel(model) {
     return this.models.includes(model);
@@ -751,7 +769,6 @@ var GroqAPI = class {
   }
   async generateResponse(messages, model) {
     const useModel = model || this.defaultModel;
-    console.log(`Generating response with Groq model: ${useModel}`);
     const url = `${this.baseUrl}/chat/completions`;
     const response = await fetch(url, {
       method: "POST",
@@ -771,13 +788,10 @@ var GroqAPI = class {
 ${errorText}`);
     }
     const data = await response.json();
-    console.log("Groq API response received");
     if (!data.choices || data.choices.length === 0) {
       throw new Error("No response generated from Groq API");
     }
-    const generatedText = data.choices[0].message.content.trim();
-    console.log(`Generated text length: ${generatedText.length}`);
-    return generatedText;
+    return data.choices[0].message.content.trim();
   }
   isValidModel(model) {
     return this.models.includes(model);
@@ -806,7 +820,6 @@ var ClaudeAPI = class {
   }
   async generateResponse(messages, model) {
     const useModel = model || this.defaultModel;
-    console.log(`Generating response with Claude model: ${useModel}`);
     const url = `${this.baseUrl}/messages`;
     const response = await fetch(url, {
       method: "POST",
@@ -831,12 +844,10 @@ var ClaudeAPI = class {
 ${errorText}`);
     }
     const data = await response.json();
-    console.log("Claude API response received");
     if (!data.content || data.content.length === 0) {
       throw new Error("No response generated from Claude API");
     }
     const generatedText = data.content[0].text.trim();
-    console.log(`Generated text length: ${generatedText.length}`);
     return generatedText;
   }
   isValidModel(model) {
@@ -921,6 +932,7 @@ var TelegramBot = class {
     this.commands = commands;
     this.redis = new RedisClient(env);
     this.modelAPI = new openai_api_default(env);
+    this.setMenuButton().catch(console.error);
   }
   async initializeModelAPI(userId) {
     const currentModel = await this.getCurrentModel(userId);
@@ -1020,12 +1032,8 @@ ${errorText}`);
                 { role: "user", content: text }
               ];
             }
-            console.log(`Current modelAPI type: ${this.modelAPI.constructor.name}`);
-            console.log(`Generating response with model: ${currentModel}`);
             const response = await this.modelAPI.generateResponse(messages, currentModel);
-            console.log(`Generated response length: ${response.length}`);
             const formattedResponse = this.formatResponse(response);
-            console.log(`Formatted response length: ${formattedResponse.length}`);
             await this.sendMessageWithFallback(chatId, formattedResponse);
             await this.storeContext(userId, `User: ${text}
 Assistant: ${response}`);
@@ -1050,6 +1058,7 @@ Assistant: ${response}`);
       const newLanguage = data.split("_")[1];
       await this.setUserLanguage(userId, newLanguage);
       await this.sendMessageWithFallback(chatId, translate("language_changed", newLanguage) + translate(`language_${newLanguage}`, newLanguage));
+      await this.setMenuButton();
     } else if (data.startsWith("model_")) {
       const newModel = data.split("_")[1];
       await this.setCurrentModel(userId, newModel);
@@ -1078,7 +1087,6 @@ Assistant: ${response}`);
     await this.redis.set(`model:${userId}`, model);
     console.log(`Switching to model: ${model}`);
     this.modelAPI = await this.initializeModelAPI(userId);
-    console.log(`Current modelAPI type: ${this.modelAPI.constructor.name}`);
   }
   getAvailableModels() {
     return this.modelAPI.getAvailableModels();
@@ -1204,6 +1212,59 @@ ${summary}`;
     }
     return results;
   }
+  // 添加新方法来设置菜单按钮
+  async setMenuButton() {
+    const url = `${this.apiUrl}/setMyCommands`;
+    const userLanguages = await this.redis.getAllUserLanguages();
+    for (const [userId, lang] of Object.entries(userLanguages)) {
+      const commands2 = this.commands.map((cmd) => ({
+        command: cmd.name,
+        description: translate(cmd.description, lang)
+      }));
+      try {
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            commands: commands2,
+            scope: {
+              type: "chat",
+              chat_id: parseInt(userId)
+            }
+          })
+        });
+        if (!response.ok) {
+          throw new Error(`Failed to set menu button for user ${userId}: ${response.statusText}`);
+        }
+        console.log(`Menu button set successfully for user ${userId} with language: ${lang}`);
+      } catch (error) {
+        console.error(`Error setting menu button for user ${userId}:`, error);
+      }
+    }
+    const defaultCommands = this.commands.map((cmd) => ({
+      command: cmd.name,
+      description: translate(cmd.description, "en")
+    }));
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          commands: defaultCommands
+        })
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to set default menu button: ${response.statusText}`);
+      }
+      console.log("Default menu button set successfully");
+    } catch (error) {
+      console.error("Error setting default menu button:", error);
+    }
+  }
 };
 var telegram_default = TelegramBot;
 
@@ -1212,20 +1273,16 @@ var src_default = {
   async fetch(request, env, ctx) {
     const bot = new telegram_default(env);
     const url = new URL(request.url);
-    console.log(`Received request for path: ${url.pathname}`);
     try {
       if (url.pathname === "/webhook") {
-        console.log("Processing webhook request");
         return await bot.handleWebhook(request);
       }
       if (url.pathname === "/" || url.pathname === "") {
-        console.log("Serving root path");
         return new Response("Hello! This is your Telegram bot worker.", {
           status: 200,
           headers: { "Content-Type": "text/plain" }
         });
       }
-      console.log("Path not found");
       return new Response("Not Found", {
         status: 404,
         headers: { "Content-Type": "text/plain" }

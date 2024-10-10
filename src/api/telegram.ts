@@ -9,7 +9,7 @@ import { ModelAPIInterface } from './model_api_interface';
 import GeminiAPI from './gemini';
 import GroqAPI from './groq';
 import ClaudeAPI from './claude';
-import AzureAPI from './azure'; // 新增 AzureAPI 导入
+import AzureAPI from './azure';
 
 export class TelegramBot {
   private token: string;
@@ -31,6 +31,7 @@ export class TelegramBot {
     this.commands = commands;
     this.redis = new RedisClient(env);
     this.modelAPI = new OpenAIAPI(env); // 初始化为 OpenAIAPI，稍后会根据需要更新
+    this.setMenuButton().catch(console.error);
   }
 
   private async initializeModelAPI(userId: string): Promise<ModelAPIInterface> {
@@ -144,26 +145,19 @@ export class TelegramBot {
               ];
             }
 
-            console.log(`Current modelAPI type: ${this.modelAPI.constructor.name}`);
-            console.log(`Generating response with model: ${currentModel}`);
             const response = await this.modelAPI.generateResponse(messages, currentModel);
-            console.log(`Generated response length: ${response.length}`);
             const formattedResponse = this.formatResponse(response);
 
-            console.log(`Formatted response length: ${formattedResponse.length}`);
-            // 使用 sendMessageWithFallback 方法发送模型生成的响应
             await this.sendMessageWithFallback(chatId, formattedResponse);
 
             await this.storeContext(userId, `User: ${text}\nAssistant: ${response}`);
           } catch (error) {
             console.error('Error in handleUpdate:', error);
             const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-            // 错误消息使用普通的 sendMessage 方法
             await this.sendMessage(chatId, translate('error', language) + ': ' + errorMessage);
           }
         }
       } else {
-        // 未授权消息使用 sendMessageWithFallback 方法
         await this.sendMessageWithFallback(chatId, translate('unauthorized', language));
       }
     }
@@ -180,6 +174,9 @@ export class TelegramBot {
       const newLanguage = data.split('_')[1] as SupportedLanguages;
       await this.setUserLanguage(userId, newLanguage);
       await this.sendMessageWithFallback(chatId, translate('language_changed', newLanguage) + translate(`language_${newLanguage}`, newLanguage));
+      
+      // 重新设置菜单按钮
+      await this.setMenuButton();
     } else if (data.startsWith('model_')) {
       const newModel = data.split('_')[1];
       await this.setCurrentModel(userId, newModel);
@@ -213,9 +210,7 @@ export class TelegramBot {
   async setCurrentModel(userId: string, model: string): Promise<void> {
     await this.redis.set(`model:${userId}`, model);
     console.log(`Switching to model: ${model}`);
-    // 在这里重新初始化 modelAPI，使用用户ID
     this.modelAPI = await this.initializeModelAPI(userId);
-    console.log(`Current modelAPI type: ${this.modelAPI.constructor.name}`);
   }
 
   getAvailableModels(): string[] {
@@ -353,18 +348,82 @@ export class TelegramBot {
 
     for (const message of messages) {
       try {
-        // 首先尝试使用 Markdown
         const result = await this.sendMessage(chatId, message, { parse_mode: 'Markdown' });
-        results.push(...result);  // 使用展开运算符来添加结果
+        results.push(...result);
       } catch (error) {
         console.error('Error sending message with Markdown, falling back to plain text:', error);
-        // 如果 Markdown 失败，退回到纯文本
         const plainTextResult = await this.sendMessage(chatId, message);
-        results.push(...plainTextResult);  // 使用展开运算符来添加结果
+        results.push(...plainTextResult);
       }
     }
 
     return results;
+  }
+
+  // 添加新方法来设置菜单按钮
+  private async setMenuButton(): Promise<void> {
+    const url = `${this.apiUrl}/setMyCommands`;
+    
+    // 获取所有用户的语言设置
+    const userLanguages = await this.redis.getAllUserLanguages();
+    
+    // 为每个用户设置自定义命令
+    for (const [userId, lang] of Object.entries(userLanguages)) {
+      const commands = this.commands.map(cmd => ({
+        command: cmd.name,
+        description: translate(cmd.description, lang as SupportedLanguages)
+      }));
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            commands: commands,
+            scope: {
+              type: 'chat',
+              chat_id: parseInt(userId)
+            }
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to set menu button for user ${userId}: ${response.statusText}`);
+        }
+
+        console.log(`Menu button set successfully for user ${userId} with language: ${lang}`);
+      } catch (error) {
+        console.error(`Error setting menu button for user ${userId}:`, error);
+      }
+    }
+
+    // 设置默认命令（英语）
+    const defaultCommands = this.commands.map(cmd => ({
+      command: cmd.name,
+      description: translate(cmd.description, 'en')
+    }));
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          commands: defaultCommands
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to set default menu button: ${response.statusText}`);
+      }
+
+      console.log('Default menu button set successfully');
+    } catch (error) {
+      console.error('Error setting default menu button:', error);
+    }
   }
 }
 

@@ -80,7 +80,6 @@ export class FluxAPI implements ModelAPIInterface {
     }
 
     if (!data.result || !data.result.image) {
-      console.error('Flux API returned no image');
       throw new Error('Flux API returned no image');
     }
     
