@@ -212,15 +212,6 @@ Allows users to upload images and receive AI analysis results. Here's how to use
 
 Note: Make sure the AI model you're using supports image analysis. If the current model doesn't support it, the bot will prompt you to switch to a multimodal-supporting model.
 
-## ⚠️ Important Notes
-
-1. 🚦 **Use API Quotas Responsibly**: Be mindful of usage limits, especially for image generation and analysis services.
-2. 🔐 **Protect Sensitive Information**: Safeguard your environment variables and API keys.
-3. 🧠 **Understand Model Characteristics**: Choose the AI model that best fits your application scenario.
-4. 🔄 **Stay Updated**: Regularly update code and features for optimal performance.
-5. 🛡️ **Security First**: Update API keys periodically and follow the principle of least privilege.
-6. 🎨 **Flux Prompt Optimization**: When enabling PROMPT_OPTIMIZATION, ensure correct configuration of EXTERNAL_API_BASE, EXTERNAL_MODEL, and EXTERNAL_API_KEY.
-
 ## 🚀 Flux Prompt Optimization
 
 When the PROMPT_OPTIMIZATION environment variable is set to true, the Flux image generation feature uses an external API to optimize prompts. This feature works through the following steps:
@@ -230,6 +221,15 @@ When the PROMPT_OPTIMIZATION environment variable is set to true, the Flux image
 3. The optimized prompt is used by the Flux model to generate the image.
 
 This feature can help generate more precise images that better align with Flux model characteristics. To use this feature, make sure all relevant environment variables are correctly configured.
+
+## ⚠️ Important Notes
+
+1. 🚦 **Use API Quotas Responsibly**: Be mindful of usage limits, especially for image generation and analysis services.
+2. 🔐 **Protect Sensitive Information**: Safeguard your environment variables and API keys.
+3. 🧠 **Understand Model Characteristics**: Choose the AI model that best fits your application scenario.
+4. 🔄 **Stay Updated**: Regularly update code and features for optimal performance.
+5. 🛡️ **Security First**: Update API keys periodically and follow the principle of least privilege.
+6. 🎨 **Flux Prompt Optimization**: When enabling PROMPT_OPTIMIZATION, ensure correct configuration of EXTERNAL_API_BASE, EXTERNAL_MODEL, and EXTERNAL_API_KEY.
 
 ## 🔧 Troubleshooting
 
