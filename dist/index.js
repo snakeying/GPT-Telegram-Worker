@@ -1211,6 +1211,7 @@ var ImageAnalysisAPI = class {
   }
   async analyzeImageWithOpenAI(imageUrl, prompt, model) {
     const url = `${this.openaiBaseUrl}/chat/completions`;
+    console.log(`Analyzing image with OpenAI. Model: ${model}, URL: ${imageUrl}`);
     const response = await fetch(url, {
       method: "POST",
       headers: {
@@ -1232,13 +1233,25 @@ var ImageAnalysisAPI = class {
       })
     });
     if (!response.ok) {
-      throw new Error(`OpenAI image analysis API error: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error(`OpenAI API error: ${response.statusText}`, errorText);
+      throw new Error(`OpenAI image analysis API error: ${response.statusText}
+${errorText}`);
     }
     const data = await response.json();
-    return data.candidates[0].content.parts[0].text.trim();
+    console.log("OpenAI API response:", JSON.stringify(data, null, 2));
+    if (!data.choices || data.choices.length === 0) {
+      throw new Error("No response generated from OpenAI API");
+    }
+    const content = data.choices[0].message?.content;
+    if (!content) {
+      throw new Error("No content in OpenAI API response");
+    }
+    return content.trim();
   }
   async analyzeImageWithGemini(imageUrl, prompt, model) {
     const url = `${this.googleBaseUrl}/models/${model}:generateContent?key=${this.googleApiKey}`;
+    console.log(`Analyzing image with Gemini. Model: ${model}, URL: ${imageUrl}`);
     const response = await fetch(url, {
       method: "POST",
       headers: {
@@ -1254,10 +1267,21 @@ var ImageAnalysisAPI = class {
       })
     });
     if (!response.ok) {
-      throw new Error(`Gemini image analysis API error: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error(`Gemini API error: ${response.statusText}`, errorText);
+      throw new Error(`Gemini image analysis API error: ${response.statusText}
+${errorText}`);
     }
     const data = await response.json();
-    return data.candidates[0].content.parts[0].text.trim();
+    console.log("Gemini API response:", JSON.stringify(data, null, 2));
+    if (!data.candidates || data.candidates.length === 0) {
+      throw new Error("No response generated from Gemini API");
+    }
+    const content = data.candidates[0].content.parts[0].text;
+    if (!content) {
+      throw new Error("No content in Gemini API response");
+    }
+    return content.trim();
   }
   async getBase64Image(imageUrl) {
     const response = await fetch(imageUrl);

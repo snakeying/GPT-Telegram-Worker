@@ -2,7 +2,15 @@ import { Env, getConfig } from '../env';
 import { ModelAPIInterface } from './model_api_interface';
 import { Message } from './openai_api';
 
-interface ImageAnalysisResponse {
+interface OpenAIImageAnalysisResponse {
+  choices: Array<{
+    message: {
+      content: string;
+    };
+  }>;
+}
+
+interface GeminiImageAnalysisResponse {
   candidates: Array<{
     content: {
       parts: Array<{
@@ -11,6 +19,8 @@ interface ImageAnalysisResponse {
     };
   }>;
 }
+
+type ImageAnalysisResponse = OpenAIImageAnalysisResponse | GeminiImageAnalysisResponse;
 
 export class ImageAnalysisAPI implements ModelAPIInterface {
   private openaiApiKey: string;
@@ -42,6 +52,8 @@ export class ImageAnalysisAPI implements ModelAPIInterface {
 
   private async analyzeImageWithOpenAI(imageUrl: string, prompt: string, model: string): Promise<string> {
     const url = `${this.openaiBaseUrl}/chat/completions`;
+    console.log(`Analyzing image with OpenAI. Model: ${model}, URL: ${imageUrl}`);
+    
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -64,15 +76,30 @@ export class ImageAnalysisAPI implements ModelAPIInterface {
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI image analysis API error: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error(`OpenAI API error: ${response.statusText}`, errorText);
+      throw new Error(`OpenAI image analysis API error: ${response.statusText}\n${errorText}`);
     }
 
-    const data: ImageAnalysisResponse = await response.json();
-    return data.candidates[0].content.parts[0].text.trim();
+    const data = await response.json() as OpenAIImageAnalysisResponse;
+    console.log('OpenAI API response:', JSON.stringify(data, null, 2));
+
+    if (!data.choices || data.choices.length === 0) {
+      throw new Error('No response generated from OpenAI API');
+    }
+
+    const content = data.choices[0].message?.content;
+    if (!content) {
+      throw new Error('No content in OpenAI API response');
+    }
+
+    return content.trim();
   }
 
   private async analyzeImageWithGemini(imageUrl: string, prompt: string, model: string): Promise<string> {
     const url = `${this.googleBaseUrl}/models/${model}:generateContent?key=${this.googleApiKey}`;
+    console.log(`Analyzing image with Gemini. Model: ${model}, URL: ${imageUrl}`);
+
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -89,11 +116,24 @@ export class ImageAnalysisAPI implements ModelAPIInterface {
     });
 
     if (!response.ok) {
-      throw new Error(`Gemini image analysis API error: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error(`Gemini API error: ${response.statusText}`, errorText);
+      throw new Error(`Gemini image analysis API error: ${response.statusText}\n${errorText}`);
     }
 
-    const data: ImageAnalysisResponse = await response.json();
-    return data.candidates[0].content.parts[0].text.trim();
+    const data = await response.json() as GeminiImageAnalysisResponse;
+    console.log('Gemini API response:', JSON.stringify(data, null, 2));
+
+    if (!data.candidates || data.candidates.length === 0) {
+      throw new Error('No response generated from Gemini API');
+    }
+
+    const content = data.candidates[0].content.parts[0].text;
+    if (!content) {
+      throw new Error('No content in Gemini API response');
+    }
+
+    return content.trim();
   }
 
   private async getBase64Image(imageUrl: string): Promise<string> {
