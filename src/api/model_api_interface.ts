@@ -1,8 +1,4 @@
-export interface Message {
-  role: 'system' | 'user' | 'assistant';
-  content: string | Array<{type: string, [key: string]: any}>;
-  images?: string[];
-}
+import { Message } from './openai_api';
 
 export interface ModelAPIInterface {
   generateResponse(messages: Message[], model?: string): Promise<string>;

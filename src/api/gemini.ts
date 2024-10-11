@@ -1,5 +1,6 @@
 import { Env, getConfig } from '../env';
-import { ModelAPIInterface, Message } from './model_api_interface';
+import { ModelAPIInterface } from './model_api_interface';
+import { Message } from './openai_api';
 
 interface GeminiResponse {
   candidates: Array<{
@@ -9,6 +10,11 @@ interface GeminiResponse {
       }>;
     };
   }>;
+}
+
+interface GeminiMessage {
+  role: 'user' | 'model';
+  parts: Array<{ text: string }>;
 }
 
 export class GeminiAPI implements ModelAPIInterface {
@@ -29,30 +35,12 @@ export class GeminiAPI implements ModelAPIInterface {
     const useModel = model || this.defaultModel;
     const url = `${this.baseUrl}/models/${useModel}:generateContent?key=${this.apiKey}`;
 
-    const geminiMessages = await Promise.all(messages.map(async (msg) => {
-      const parts = [];
-      if (typeof msg.content === 'string') {
-        parts.push({ text: msg.content });
-      } else if (Array.isArray(msg.content)) {
-        for (const part of msg.content) {
-          if (part.type === 'text') {
-            parts.push({ text: part.text });
-          } else if (part.type === 'image_url') {
-            const base64Image = part.image_url.url.split(',')[1]; // 获取 base64 数据
-            parts.push({
-              inline_data: {
-                mime_type: 'image/jpeg',
-                data: base64Image
-              }
-            });
-          }
-        }
-      }
-      return {
+    const geminiMessages: GeminiMessage[] = messages
+      .filter(msg => msg.role !== 'system')
+      .map(msg => ({
         role: msg.role === 'assistant' ? 'model' : 'user',
-        parts: parts
-      };
-    }));
+        parts: [{ text: msg.content }]
+      }));
 
     const requestBody = {
       contents: geminiMessages,
@@ -74,6 +62,7 @@ export class GeminiAPI implements ModelAPIInterface {
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error(`Gemini API error: ${response.statusText}`, errorText);
       throw new Error(`Gemini API error: ${response.statusText}\n${errorText}`);
     }
 
@@ -96,5 +85,4 @@ export class GeminiAPI implements ModelAPIInterface {
     return this.models;
   }
 }
-
 export default GeminiAPI;

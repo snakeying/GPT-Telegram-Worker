@@ -1,12 +1,26 @@
 import { Env, getConfig } from '../env';
-import { ModelAPIInterface, Message } from './model_api_interface';
+import { ModelAPIInterface } from './model_api_interface';
+
+export interface Message {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
 
 interface ChatCompletionResponse {
-  choices: Array<{
-    message: {
-      content: string;
-    };
-  }>;
+  id: string;
+  object: string;
+  created: number;
+  model: string;
+  choices: {
+    index: number;
+    message: Message;
+    finish_reason: string;
+  }[];
+  usage: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
 }
 
 export class OpenAIAPI implements ModelAPIInterface {
@@ -33,17 +47,12 @@ export class OpenAIAPI implements ModelAPIInterface {
       },
       body: JSON.stringify({
         model: model || this.defaultModel,
-        messages: messages.map(msg => ({
-          role: msg.role,
-          content: Array.isArray(msg.content) ? msg.content : [{ type: 'text', text: msg.content }]
-        })),
-        max_tokens: 300,
+        messages: messages,
       }),
     });
 
     if (!response.ok) {
-      const errorData = await response.json() as { error: { message: string } };
-      throw new Error(`OpenAI API error: ${errorData.error.message}`);
+      throw new Error(`OpenAI API error: ${response.statusText}`);
     }
 
     const data: ChatCompletionResponse = await response.json();

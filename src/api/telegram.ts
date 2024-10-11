@@ -1,16 +1,16 @@
 import { Env, getConfig } from '../env';
 import { TelegramTypes } from '../../types/telegram';
-import { Message, ModelAPIInterface } from './model_api_interface';
+import OpenAIAPI, { Message } from './openai_api';
 import { formatCodeBlock, escapeMarkdown, sendChatAction, splitMessage } from '../utils/helpers';
 import { translate, SupportedLanguages, Translations } from '../utils/i18n';
 import { commands, Command } from '../config/commands';
 import { RedisClient } from '../utils/redis';
-import OpenAIAPI from './openai_api';
+import { ModelAPIInterface } from './model_api_interface';
 import GeminiAPI from './gemini';
 import GroqAPI from './groq';
 import ClaudeAPI from './claude';
 import AzureAPI from './azure';
-import { analyzeImage } from '../utils/image_analyze';
+import ImageAnalysisAPI from './image_analyze';
 
 export class TelegramBot {
   private token: string;
@@ -31,7 +31,7 @@ export class TelegramBot {
     this.env = env;
     this.commands = commands;
     this.redis = new RedisClient(env);
-    this.modelAPI = new OpenAIAPI(env); // 初始化为 OpenAIAPI，稍后会根据需要更新
+    this.modelAPI = new OpenAIAPI(env);
     this.setMenuButton().catch(console.error);
   }
 
@@ -49,23 +49,21 @@ export class TelegramBot {
       return new GroqAPI(this.env);
     } else if (config.claudeModels.includes(currentModel)) {
       return new ClaudeAPI(this.env);
-    } else if (config.azureModels.includes(currentModel)) { // 新增 Azure 模型检查
+    } else if (config.azureModels.includes(currentModel)) {
       return new AzureAPI(this.env);
     }
     
-    // 如果没有匹配的模型,使用默认的 OpenAI API
     console.warn(`Unknown model: ${currentModel}. Falling back to OpenAI API.`);
     return new OpenAIAPI(this.env);
   }
 
   public async executeCommand(commandName: string, chatId: number, args: string[]): Promise<void> {
-    const command = this.commands.find(cmd => cmd.name === commandName) as Command | undefined;
+    const command = this.commands.find(cmd => cmd.name === commandName);
     if (command) {
       await command.action(chatId, this, args);
     } else {
       console.log(`Unknown command: ${commandName}`);
       const language = await this.getUserLanguage(chatId.toString());
-      // 使用 'command_not_found' 作为翻译键
       await this.sendMessage(chatId, translate('command_not_found', language));
     }
   }
@@ -86,10 +84,11 @@ export class TelegramBot {
           body: JSON.stringify({
             chat_id: chatId,
             text: message,
-            parse_mode: options.parse_mode, // 只有在明确指定时才使用 parse_mode
+            parse_mode: options.parse_mode,
             reply_markup: options.reply_markup,
           }),
         });
+
 
         if (!response.ok) {
           const errorText = await response.text();
@@ -121,13 +120,11 @@ export class TelegramBot {
       const language = await this.getUserLanguage(userId);
 
       if (this.isUserWhitelisted(userId)) {
-        if (update.message.photo && update.message.photo.length > 0 && update.message.caption) {
-          // 处理图片上传和分析
-          await this.handleImageAnalysis(chatId, userId, update.message);
+        if ('photo' in update.message && Array.isArray(update.message.photo) && update.message.photo.length > 0) {
+          await this.handleImageAnalysis(chatId, update.message as TelegramTypes.Message & { photo: TelegramTypes.PhotoSize[] }, language);
         } else if (update.message.text) {
-          const text = update.message.text;
-          if (text.startsWith('/')) {
-            const [commandName, ...args] = text.slice(1).split(' ');
+          if (update.message.text.startsWith('/')) {
+            const [commandName, ...args] = update.message.text.slice(1).split(' ');
             await this.executeCommand(commandName, chatId, args);
           } else {
             try {
@@ -140,13 +137,13 @@ export class TelegramBot {
               if (currentModel.startsWith('gemini-')) {
                 messages = [
                   ...(context ? [{ role: 'user' as const, content: context }] : []),
-                  { role: 'user' as const, content: text }
+                  { role: 'user' as const, content: update.message.text }
                 ];
               } else {
                 messages = [
                   { role: 'system' as const, content: this.systemMessage },
                   ...(context ? [{ role: 'user' as const, content: context }] : []),
-                  { role: 'user' as const, content: text }
+                  { role: 'user' as const, content: update.message.text }
                 ];
               }
 
@@ -155,11 +152,10 @@ export class TelegramBot {
 
               await this.sendMessageWithFallback(chatId, formattedResponse);
 
-              await this.storeContext(userId, `User: ${text}\nAssistant: ${response}`);
+              await this.storeContext(userId, `User: ${update.message.text}\nAssistant: ${response}`);
             } catch (error) {
               console.error('Error in handleUpdate:', error);
-              const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-              await this.sendMessage(chatId, translate('error', language) + ': ' + errorMessage);
+              // 不向用户发送错误消息，只记录日志
             }
           }
         }
@@ -169,80 +165,90 @@ export class TelegramBot {
     }
   }
 
-  async handleImageAnalysis(chatId: number, userId: string, message: TelegramTypes.Message): Promise<void> {
-    if (!message.photo || message.photo.length === 0 || !message.caption) {
+  private async handleCallbackQuery(query: TelegramTypes.CallbackQuery): Promise<void> {
+    if (!query.message || !query.data) {
+      console.log('Invalid callback query');
+      return;
+    }
+
+    const chatId = query.message.chat.id;
+    const userId = query.from.id.toString();
+    const language = await this.getUserLanguage(userId);
+
+    console.log('Handling callback query:', query.data);
+
+    if (query.data.startsWith('lang_')) {
+      const newLanguage = query.data.split('_')[1] as SupportedLanguages;
+      await this.setUserLanguage(userId, newLanguage);
+      await this.sendMessageWithFallback(chatId, translate('language_changed', newLanguage) + translate(`language_${newLanguage}` as keyof Translations, newLanguage));
+    } else if (query.data.startsWith('model_')) {
+      const newModel = query.data.split('_')[1];
+      console.log('Switching to model:', newModel);
+      try {
+        await this.setCurrentModel(userId, newModel);
+        await this.sendMessageWithFallback(chatId, translate('model_changed', language) + newModel);
+        await this.clearContext(userId);
+      } catch (error) {
+        console.error('Error switching model:', error);
+        await this.sendMessageWithFallback(chatId, translate('error', language) + ': ' + (error instanceof Error ? error.message : 'Unknown error'));
+      }
+    }
+
+    // Answer the callback query to remove the loading state
+    try {
+      await fetch(`${this.apiUrl}/answerCallbackQuery`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ callback_query_id: query.id })
+      });
+      console.log('Callback query answered');
+    } catch (error) {
+      console.error('Error answering callback query:', error);
+    }
+  }
+
+  private async handleImageAnalysis(chatId: number, message: TelegramTypes.Message & { photo: TelegramTypes.PhotoSize[] }, language: SupportedLanguages): Promise<void> {
+    if (!message.photo || message.photo.length === 0) {
+      await this.sendMessageWithFallback(chatId, translate('image_analysis_error', language));
       return;
     }
 
     const fileId = message.photo[message.photo.length - 1].file_id;
-    const caption = message.caption;
-    const language = await this.getUserLanguage(userId);
+    const caption = 'caption' in message ? message.caption || '' : '';
 
     try {
       await sendChatAction(chatId, 'typing', this.env);
 
-      // 获取图片URL
       const fileUrl = await this.getFileUrl(fileId);
 
-      // 获取当前模型
-      const currentModel = await this.getCurrentModel(userId);
+      const currentModel = await this.getCurrentModel(chatId.toString());
+      const config = getConfig(this.env);
 
-      // 分析图片
-      const analysis = await analyzeImage(fileUrl, caption, this.env, currentModel);
-
-      // 发送分析结果
-      await this.sendMessageWithFallback(chatId, analysis);
-    } catch (error) {
-      console.error('Error in handleImageAnalysis:', error);
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-      
-      if (errorMessage.includes('does not support image analysis')) {
-        await this.sendMessage(chatId, translate('model_not_support_multimodal', language));
-      } else {
-        await this.sendMessage(chatId, translate('image_analysis_error', language) + ': ' + errorMessage);
+      if (!config.openaiModels.includes(currentModel)) {
+        await this.sendMessageWithFallback(chatId, translate('image_analysis_not_supported', language));
+        return;
       }
+
+      const imageAnalysisAPI = new ImageAnalysisAPI(this.env);
+      const analysisResult = await imageAnalysisAPI.analyzeImage(fileUrl, caption, currentModel);
+
+      await this.sendMessageWithFallback(chatId, analysisResult);
+    } catch (error) {
+      console.error('Error in image analysis:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      await this.sendMessage(chatId, translate('image_analysis_error', language) + ': ' + errorMessage);
     }
   }
 
-  async getFileUrl(fileId: string): Promise<string> {
-    const getFileUrl = `https://api.telegram.org/bot${this.token}/getFile?file_id=${fileId}`;
-    const response = await fetch(getFileUrl);
-    const data = await response.json() as { ok: boolean; result: { file_path: string } };
+  private async getFileUrl(fileId: string): Promise<string> {
+    const response = await fetch(`https://api.telegram.org/bot${this.token}/getFile?file_id=${fileId}`);
+    const data: { ok: boolean; result: { file_path: string } } = await response.json();
     if (data.ok) {
       return `https://api.telegram.org/file/bot${this.token}/${data.result.file_path}`;
     }
     throw new Error('Failed to get file URL');
   }
 
-  async handleCallbackQuery(callbackQuery: TelegramTypes.CallbackQuery): Promise<void> {
-    const chatId = callbackQuery.message?.chat.id;
-    const userId = callbackQuery.from.id.toString();
-    const data = callbackQuery.data;
-
-    if (!chatId || !data) return;
-
-    if (data.startsWith('lang_')) {
-      const newLanguage = data.split('_')[1] as SupportedLanguages;
-      await this.setUserLanguage(userId, newLanguage);
-      await this.sendMessageWithFallback(chatId, translate('language_changed', newLanguage) + translate(`language_${newLanguage}` as keyof Translations, newLanguage));
-      
-      // 重新设置菜单按钮
-      await this.setMenuButton();
-    } else if (data.startsWith('model_')) {
-      const newModel = data.split('_')[1];
-      await this.setCurrentModel(userId, newModel);
-      const language = await this.getUserLanguage(userId);
-      await this.sendMessageWithFallback(chatId, translate('model_changed', language) + newModel);
-      await this.clearContext(userId);
-    }
-
-    // Answer the callback query to remove the loading state
-    await fetch(`${this.apiUrl}/answerCallbackQuery`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ callback_query_id: callbackQuery.id })
-    });
-  }
 
   async getUserLanguage(userId: string): Promise<SupportedLanguages> {
     const language = await this.redis.get(`language:${userId}`);
@@ -287,7 +293,6 @@ export class TelegramBot {
   }
 
   async summarizeHistory(userId: string): Promise<string> {
-    // 确保使用最新的模型
     this.modelAPI = await this.initializeModelAPI(userId);
 
     const context = await this.getContext(userId);
@@ -299,7 +304,7 @@ export class TelegramBot {
       'en': 'English',
       'zh': 'Chinese',
       'es': 'Spanish',
-      'zh-TW': 'Traditional Chinese', // 修改这里
+      'zh-TW': 'Traditional Chinese',
       'ja': 'Japanese',
       'de': 'German',
       'fr': 'French',
@@ -310,12 +315,10 @@ export class TelegramBot {
 
     let messages: Message[];
     if (currentModel.startsWith('gemini-')) {
-      // 为 Gemini API 创建特定的消息格式
       messages = [
         { role: 'user', content: `Please summarize the following conversation in ${languageNames[language]}:\n\n${context}` }
       ];
     } else {
-      // 为 OpenAI API 保持原有的消息格式
       messages = [
         { role: 'system', content: `Summarize the following conversation in ${languageNames[language]}:` },
         { role: 'user', content: context }
@@ -373,6 +376,7 @@ export class TelegramBot {
       body: formData,
     });
 
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -401,29 +405,52 @@ export class TelegramBot {
   async sendMessageWithFallback(chatId: number, text: string): Promise<TelegramTypes.SendMessageResult[]> {
     const messages = splitMessage(text);
     const results: TelegramTypes.SendMessageResult[] = [];
+    const currentModel = await this.getCurrentModel(chatId.toString());
 
     for (const message of messages) {
       try {
-        const result = await this.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+        let processedMessage = message;
+        if (currentModel.startsWith('gemini-')) {
+          // 对 Gemini 模型的输出进行特殊处理
+          processedMessage = this.processGeminiMarkdown(message);
+        }
+        const result = await this.sendMessage(chatId, processedMessage, { parse_mode: 'Markdown' });
         results.push(...result);
       } catch (error) {
         console.error('Error sending message with Markdown, falling back to plain text:', error);
-        const plainTextResult = await this.sendMessage(chatId, message);
-        results.push(...plainTextResult);
+        try {
+          // 如果 Markdown 发送失败，尝试发送纯文本
+          const plainTextResult = await this.sendMessage(chatId, message);
+          results.push(...plainTextResult);
+        } catch (fallbackError) {
+          console.error('Error sending plain text message:', fallbackError);
+          // 如果连纯文本消息也发送失败，我们只记录错误，不再尝试发送
+        }
       }
     }
 
     return results;
   }
 
-  // 添加新方法来设置菜单按钮
+  private processGeminiMarkdown(text: string): string {
+    // 修复可能导致问题的 Markdown 语法
+    return text
+      // 确保代码块正确关闭
+      .replace(/```(\w+)?([^`]+)$/gm, (match, lang, code) => `${match}\n\`\`\``)
+      // 修复可能未正确配对的内联代码块
+      .replace(/(?<!`)`(?!`)(.*?)(?<!`)`(?!`)/g, '`$1`')
+      // 修复可能未正确配对的粗体和斜体标记
+      .replace(/(\*\*|__)(.*?)(\*\*|__)/g, '**$2**')
+      .replace(/(\*|_)(.*?)(\*|_)/g, '*$2*')
+      // 移除可能导致问题的 HTML 标签
+      .replace(/<[^>]+>/g, '');
+  }
+
   private async setMenuButton(): Promise<void> {
     const url = `${this.apiUrl}/setMyCommands`;
     
-    // 获取所有用户的语言设置
     const userLanguages = await this.redis.getAllUserLanguages();
     
-    // 为每个用户设置自定义命令
     for (const [userId, lang] of Object.entries(userLanguages)) {
       const commands = this.commands.map(cmd => ({
         command: cmd.name,
@@ -455,7 +482,6 @@ export class TelegramBot {
       }
     }
 
-    // 设置默认命令（英语）
     const defaultCommands = this.commands.map(cmd => ({
       command: cmd.name,
       description: translate(cmd.description, 'en')

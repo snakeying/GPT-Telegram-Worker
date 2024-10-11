@@ -1,5 +1,6 @@
 import { Env, getConfig } from '../env';
-import { ModelAPIInterface, Message } from './model_api_interface';
+import { ModelAPIInterface } from './model_api_interface';
+import { Message } from './openai_api';
 
 interface ClaudeResponse {
   content: Array<{

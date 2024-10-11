@@ -1,5 +1,5 @@
 import { Env, getConfig } from '../env';
-import { ModelAPIInterface, Message } from './model_api_interface';
+import { ModelAPIInterface } from './model_api_interface';
 
 interface FluxResponse {
   result: {
@@ -137,8 +137,8 @@ export class FluxAPI implements ModelAPIInterface {
     }
   }
 
-  async generateResponse(messages: Message[], model?: string): Promise<string> {
-    throw new Error('Flux API does not support text generation. Use generateImage for image generation.');
+  async generateResponse(messages: { role: string; content: string; }[]): Promise<string> {
+    throw new Error('Method not implemented for image generation.');
   }
 
   isValidModel(model: string): boolean {

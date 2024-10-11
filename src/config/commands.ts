@@ -58,17 +58,26 @@ export const commands: Command[] = [
       const userId = chatId.toString();
       const language = await bot.getUserLanguage(userId);
       const config = getConfig(bot['env']);
-      const availableModels = [
-        ...config.openaiModels,
-        ...config.googleModels,
-        ...config.groqModels,
-        ...config.claudeModels,
-        ...config.azureModels, // 新增 Azure 模型
-      ];
-      const keyboard = {
-        inline_keyboard: availableModels.map(model => [{text: model, callback_data: `model_${model}`}])
-      };
-      await bot.sendMessage(chatId, translate('choose_model', language), { reply_markup: JSON.stringify(keyboard) });
+      try {
+        console.log('Executing switchmodel command');
+        const availableModels = [
+          ...config.openaiModels,
+          ...config.googleModels,
+          ...config.groqModels,
+          ...config.claudeModels,
+          ...config.azureModels,
+        ];
+        console.log('Available models:', availableModels);
+        const keyboard = {
+          inline_keyboard: availableModels.map(model => [{text: model, callback_data: `model_${model}`}])
+        };
+        console.log('Sending message with model selection keyboard');
+        await bot.sendMessage(chatId, translate('choose_model', language), { reply_markup: JSON.stringify(keyboard) });
+        console.log('Message sent successfully');
+      } catch (error) {
+        console.error('Error in switchmodel command:', error);
+        await bot.sendMessage(chatId, translate('error', language) + ': ' + (error instanceof Error ? error.message : 'Unknown error'));
+      }
     },
   },
   {
@@ -99,12 +108,11 @@ export const commands: Command[] = [
       
       for (const command of commands) {
         const descriptionKey = `${command.name}_description` as TranslationKey;
+        // 使用普通文本，不添加任何格式化
         helpMessage += `/${command.name} - ${translate(descriptionKey, language)}\n`;
       }
       
-      // 添加图片分析功能的说明
-      helpMessage += '\n' + translate('image_analysis_description', language);
-      
+      // 使用普通的 sendMessage 方法，不指定 parse_mode
       await bot.sendMessage(chatId, helpMessage);
     },
   },
