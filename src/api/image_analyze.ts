@@ -3,36 +3,50 @@ import { ModelAPIInterface } from './model_api_interface';
 import { Message } from './openai_api';
 
 interface ImageAnalysisResponse {
-  choices: Array<{
-    message: {
-      content: string;
+  candidates: Array<{
+    content: {
+      parts: Array<{
+        text: string;
+      }>;
     };
   }>;
 }
 
 export class ImageAnalysisAPI implements ModelAPIInterface {
-  private apiKey: string;
-  private baseUrl: string;
-  private models: string[];
+  private openaiApiKey: string;
+  private openaiBaseUrl: string;
+  private openaiModels: string[];
+  private googleApiKey: string;
+  private googleBaseUrl: string;
+  private googleModels: string[];
 
   constructor(env: Env) {
     const config = getConfig(env);
-    this.apiKey = config.openaiApiKey;
-    this.baseUrl = config.openaiBaseUrl;
-    this.models = config.openaiModels;
+    this.openaiApiKey = config.openaiApiKey;
+    this.openaiBaseUrl = config.openaiBaseUrl;
+    this.openaiModels = config.openaiModels;
+    this.googleApiKey = config.googleModelKey;
+    this.googleBaseUrl = config.googleModelBaseUrl;
+    this.googleModels = config.googleModels;
   }
 
   async analyzeImage(imageUrl: string, prompt: string, model: string): Promise<string> {
-    if (!this.isValidModel(model)) {
+    if (this.openaiModels.includes(model)) {
+      return this.analyzeImageWithOpenAI(imageUrl, prompt, model);
+    } else if (this.googleModels.includes(model)) {
+      return this.analyzeImageWithGemini(imageUrl, prompt, model);
+    } else {
       throw new Error(`Invalid model for image analysis: ${model}`);
     }
+  }
 
-    const url = `${this.baseUrl}/chat/completions`;
+  private async analyzeImageWithOpenAI(imageUrl: string, prompt: string, model: string): Promise<string> {
+    const url = `${this.openaiBaseUrl}/chat/completions`;
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`,
+        'Authorization': `Bearer ${this.openaiApiKey}`,
       },
       body: JSON.stringify({
         model: model,
@@ -50,11 +64,43 @@ export class ImageAnalysisAPI implements ModelAPIInterface {
     });
 
     if (!response.ok) {
-      throw new Error(`Image analysis API error: ${response.statusText}`);
+      throw new Error(`OpenAI image analysis API error: ${response.statusText}`);
     }
 
     const data: ImageAnalysisResponse = await response.json();
-    return data.choices[0].message.content.trim();
+    return data.candidates[0].content.parts[0].text.trim();
+  }
+
+  private async analyzeImageWithGemini(imageUrl: string, prompt: string, model: string): Promise<string> {
+    const url = `${this.googleBaseUrl}/models/${model}:generateContent?key=${this.googleApiKey}`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [
+            { text: prompt },
+            { inlineData: { mimeType: 'image/jpeg', data: await this.getBase64Image(imageUrl) } }
+          ]
+        }]
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Gemini image analysis API error: ${response.statusText}`);
+    }
+
+    const data: ImageAnalysisResponse = await response.json();
+    return data.candidates[0].content.parts[0].text.trim();
+  }
+
+  private async getBase64Image(imageUrl: string): Promise<string> {
+    const response = await fetch(imageUrl);
+    const arrayBuffer = await response.arrayBuffer();
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    return base64;
   }
 
   async generateResponse(messages: Message[], model?: string): Promise<string> {
@@ -62,15 +108,15 @@ export class ImageAnalysisAPI implements ModelAPIInterface {
   }
 
   isValidModel(model: string): boolean {
-    return this.models.includes(model);
+    return this.openaiModels.includes(model) || this.googleModels.includes(model);
   }
 
   getDefaultModel(): string {
-    return this.models[0];
+    return this.openaiModels[0] || this.googleModels[0];
   }
 
   getAvailableModels(): string[] {
-    return this.models;
+    return [...this.openaiModels, ...this.googleModels];
   }
 }
 

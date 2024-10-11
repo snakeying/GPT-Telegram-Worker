@@ -224,7 +224,7 @@ export class TelegramBot {
       const currentModel = await this.getCurrentModel(chatId.toString());
       const config = getConfig(this.env);
 
-      if (!config.openaiModels.includes(currentModel)) {
+      if (!config.openaiModels.includes(currentModel) && !config.googleModels.includes(currentModel)) {
         await this.sendMessageWithFallback(chatId, translate('image_analysis_not_supported', language));
         return;
       }

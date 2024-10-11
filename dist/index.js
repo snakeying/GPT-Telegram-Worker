@@ -171,8 +171,9 @@ var translations = {
     optimized_prompt: "\u{1F310} Enhanced Description",
     image_specs: "\u{1F4D0} Image Details",
     command_not_found: "\u2753 Hmm, I don't know that command. Type /help to see what I can do!",
-    image_analysis_not_supported: "The current model does not support image analysis. Please switch to a model that supports multi-modal input.",
-    image_analysis_error: "An error occurred during image analysis"
+    image_analysis_not_supported: "\u{1F6AB} The current model does not support image analysis. Please switch to a model that supports multi-modal input.",
+    image_analysis_error: "\u274C Oops! An error occurred during image analysis. Please try again later.",
+    image_analysis_description: "\u{1F4F8} Analyze images: Send a photo with a caption like 'Please analyze this image'. The bot will use the current AI model (OpenAI or Google Gemini) to analyze it and reply with the results."
   },
   zh: {
     welcome: "\u{1F44B} \u563F\uFF0C\u6B22\u8FCE\u4F7F\u7528\u4F60\u7684\u4E13\u5C5E\u52A9\u624B\u673A\u5668\u4EBA\uFF01",
@@ -204,20 +205,21 @@ var translations = {
     language_de: "\u{1F1E9}\u{1F1EA} German",
     language_fr: "\u{1F1EB}\u{1F1F7} French",
     language_ru: "\u{1F1F7}\u{1F1FA} Russian",
-    image_prompt_required: "\u{1F5BC}\uFE0F To create an image, tell me what you'd like to see!",
-    image_generation_error: "\u{1F61E} Uh-oh, there was a hiccup creating the image. Mind trying again?",
-    img_description: "\u{1F3A8} Create amazing images with DALL\xB7E",
-    invalid_size: "\u{1F4CF} Oops, that size doesn't work. How about trying one of these: ",
-    flux_description: "\u{1F5BC}\uFE0F Create beautiful images using Flux",
-    flux_usage: "\u{1F4DD} Here's how to use it: /flux <description> [aspect ratio]. You can choose from these ratios: 1:1 (default), 1:2, 3:2, 3:4, 16:9, 9:16",
-    invalid_aspect_ratio: "\u{1F522} That aspect ratio isn't quite right. You can pick from these: ",
-    original_prompt: "\u{1F3A8} Original Description",
-    prompt_generation_model: "\u{1F4AC} Prompt Generation Model",
-    optimized_prompt: "\u{1F310} Enhanced Description",
-    image_specs: "\u{1F4D0} Image Details",
-    command_not_found: "\u2753 Hmm, I don't know that command. Type /help to see what I can do!",
-    image_analysis_not_supported: "\u5F53\u524D\u6A21\u578B\u4E0D\u652F\u6301\u56FE\u50CF\u5206\u6790\u3002\u8BF7\u5207\u6362\u5230\u652F\u6301\u591A\u6A21\u6001\u8F93\u5165\u7684\u6A21\u578B\u3002",
-    image_analysis_error: "\u56FE\u50CF\u5206\u6790\u8FC7\u7A0B\u4E2D\u53D1\u751F\u9519\u8BEF"
+    image_prompt_required: "\u{1F5BC}\uFE0F \u8981\u521B\u5EFA\u56FE\u50CF\uFF0C\u8BF7\u544A\u8BC9\u6211\u4F60\u60F3\u770B\u5230\u4EC0\u4E48~",
+    image_generation_error: "\u{1F61E} \u54CE\u5440\uFF0C\u521B\u5EFA\u56FE\u50CF\u65F6\u51FA\u73B0\u4E86\u95EE\u9898\u3002\u8981\u4E0D\u8981\u518D\u8BD5\u4E00\u6B21\uFF1F",
+    img_description: "\u{1F3A8} \u4F7F\u7528 DALL\xB7E \u521B\u5EFA\u60CA\u4EBA\u7684\u56FE\u50CF",
+    invalid_size: "\u{1F4CF} \u54CE\u5440\uFF0C\u8FD9\u4E2A\u5C3A\u5BF8\u4E0D\u884C\u3002\u4E0D\u5982\u8BD5\u8BD5\u8FD9\u4E9B\uFF1A",
+    flux_description: "\u{1F5BC}\uFE0F \u4F7F\u7528 Flux \u521B\u5EFA\u7F8E\u4E3D\u7684\u56FE\u50CF",
+    flux_usage: "\u{1F4DD} \u4EE5\u4E0B\u662F\u4F7F\u7528\u65B9\u6CD5\uFF1A/flux <\u63CF\u8FF0> [\u957F\u5BBD\u6BD4]\u3002\u4F60\u53EF\u4EE5\u4ECE\u8FD9\u4E9B\u6BD4\u4F8B\u4E2D\u9009\u62E9\uFF1A1:1\uFF08\u9ED8\u8BA4\uFF09\u30011:2\u30013:2\u30013:4\u300116:9\u30019:16",
+    invalid_aspect_ratio: "\u{1F522} \u8FD9\u4E2A\u957F\u5BBD\u6BD4\u4E0D\u592A\u5BF9\u3002\u4F60\u53EF\u4EE5\u4ECE\u8FD9\u4E9B\u4E2D\u9009\u62E9\uFF1A",
+    original_prompt: "\u{1F3A8} \u539F\u59CB\u63CF\u8FF0",
+    prompt_generation_model: "\u{1F4AC} \u63D0\u793A\u751F\u6210\u6A21\u578B",
+    optimized_prompt: "\u{1F310} \u4F18\u5316\u540E\u7684\u63CF\u8FF0",
+    image_specs: "\u{1F4D0} \u56FE\u50CF\u8BE6\u60C5",
+    command_not_found: "\u2753 \u55EF\uFF0C\u6211\u4E0D\u8BA4\u8BC6\u8FD9\u4E2A\u547D\u4EE4\u3002\u8F93\u5165 /help \u770B\u770B\u6211\u80FD\u505A\u4EC0\u4E48\uFF01",
+    image_analysis_not_supported: "\u{1F6AB} \u5F53\u524D\u6A21\u578B\u4E0D\u652F\u6301\u56FE\u50CF\u5206\u6790\u3002\u8BF7\u5207\u6362\u5230\u652F\u6301\u591A\u6A21\u6001\u8F93\u5165\u7684\u6A21\u578B\u3002",
+    image_analysis_error: "\u274C \u7CDF\u7CD5\uFF01\u56FE\u50CF\u5206\u6790\u8FC7\u7A0B\u4E2D\u53D1\u751F\u9519\u8BEF\u3002\u8BF7\u7A0D\u540E\u518D\u8BD5\u3002",
+    image_analysis_description: "\u{1F4F8} \u56FE\u7247\u5206\u6790\uFF1A\u53D1\u9001\u4E00\u5F20\u7167\u7247\uFF0C\u5E76\u5728\u8BF4\u660E\u4E2D\u6DFB\u52A0\u7C7B\u4F3C\u300C\u8BF7\u5206\u6790\u8FD9\u5F20\u56FE\u7247\u300D\u7684\u63D0\u793A\u3002\u673A\u5668\u4EBA\u5C06\u4F7F\u7528\u5F53\u524D\u9009\u62E9\u7684 AI \u6A21\u578B\uFF08OpenAI \u6216 Google Gemini\uFF09\u8FDB\u884C\u5206\u6790\uFF0C\u5E76\u56DE\u590D\u5206\u6790\u7ED3\u679C\u3002"
   },
   es: {
     welcome: "\u{1F44B} \xA1Hola! \xA1Bienvenido a tu bot asistente personal con IA!",
@@ -261,11 +263,12 @@ var translations = {
     optimized_prompt: "\u{1F310} Descripci\xF3n Mejorada",
     image_specs: "\u{1F4D0} Detalles de la Imagen",
     command_not_found: "\u2753 Mmm, no conozco ese comando. \xA1Escribe /help para ver lo que puedo hacer!",
-    image_analysis_not_supported: "The current model does not support image analysis. Please switch to a model that supports multi-modal input.",
-    image_analysis_error: "An error occurred during image analysis"
+    image_analysis_not_supported: "\u{1F6AB} El modelo actual no admite an\xE1lisis de im\xE1genes. Por favor, cambie a un modelo que admita entrada multimodal.",
+    image_analysis_error: "\u274C \xA1Ups! Ocurri\xF3 un error durante el an\xE1lisis de la imagen. Por favor, int\xE9ntelo de nuevo m\xE1s tarde.",
+    image_analysis_description: "\u{1F4F8} Analizar im\xE1genes: Env\xEDa una foto con un pie de foto como 'Por favor, analiza esta imagen'. El bot utilizar\xE1 el modelo de IA actual (OpenAI o Google Gemini) para analizarla y responder\xE1 con los resultados."
   },
   "zh-TW": {
-    welcome: "\u{1F44B} \u563F\uFF0C\u6B61\u8FCE\u4F7F\u7528\u4F60\u7684\u5C08\u5C6C\u52A9\u624B\u6A5F\u5668\u4EBA\uFF01",
+    welcome: "\u{1F44B} \u55E8\uFF0C\u6B61\u8FCE\u4F7F\u7528\u4F60\u7684\u5C08\u5C6C\u52A9\u624B\u6A5F\u5668\u4EBA\uFF01",
     unauthorized: "\u{1F6AB} \u62B1\u6B49\uFF0C\u60A8\u9084\u6C92\u6709\u6B0A\u9650\u4F7F\u7528\u9019\u500B\u6A5F\u5668\u4EBA\u5594\u3002",
     error: "\u{1F605} \u54CE\u5440\uFF0C\u51FA\u4E86\u9EDE\u5C0F\u554F\u984C\u3002\u8981\u4E0D\u8981\u518D\u8A66\u4E00\u6B21\uFF1F",
     current_language: "\u{1F30D} \u60A8\u7576\u524D\u7684\u8A9E\u8A00\u8A2D\u7F6E\u662F\uFF1A\u7E41\u9AD4\u4E2D\u6587",
@@ -305,8 +308,9 @@ var translations = {
     optimized_prompt: "\u{1F310} \u512A\u5316\u5F8C\u7684\u63CF\u8FF0",
     image_specs: "\u{1F4D0} \u5716\u50CF\u8A73\u60C5",
     command_not_found: "\u2753 \u55EF\uFF0C\u6211\u4E0D\u8A8D\u8B58\u9019\u500B\u547D\u4EE4\u3002\u8F38\u5165 /help \u770B\u770B\u6211\u80FD\u505A\u4EC0\u9EBC\uFF01",
-    image_analysis_not_supported: "The current model does not support image analysis. Please switch to a model that supports multi-modal input.",
-    image_analysis_error: "An error occurred during image analysis"
+    image_analysis_not_supported: "\u{1F6AB} \u7576\u524D\u6A21\u578B\u4E0D\u652F\u6301\u5716\u50CF\u5206\u6790\u3002\u8ACB\u5207\u63DB\u5230\u652F\u6301\u591A\u6A21\u614B\u8F38\u5165\u7684\u6A21\u578B\u3002",
+    image_analysis_error: "\u274C \u7CDF\u7CD5\uFF01\u5716\u50CF\u5206\u6790\u904E\u7A0B\u4E2D\u767C\u751F\u932F\u8AA4\u3002\u8ACB\u7A0D\u5F8C\u518D\u8A66\u3002",
+    image_analysis_description: "\u{1F4F8} \u5716\u7247\u5206\u6790\uFF1A\u767C\u9001\u4E00\u5F35\u7167\u7247\uFF0C\u4E26\u5728\u8AAA\u660E\u4E2D\u6DFB\u52A0\u985E\u4F3C\u300C\u8ACB\u5206\u6790\u9019\u5F35\u5716\u7247\u300D\u7684\u63D0\u793A\u3002\u6A5F\u5668\u4EBA\u5C07\u4F7F\u7528\u7576\u524D\u9078\u64C7\u7684 AI \u6A21\u578B\uFF08OpenAI \u6216 Google Gemini\uFF09\u9032\u884C\u5206\u6790\uFF0C\u4E26\u56DE\u8986\u5206\u6790\u7D50\u679C\u3002"
   },
   ja: {
     welcome: "\u{1F44B} \u3053\u3093\u306B\u3061\u306F\uFF01\u3042\u306A\u305F\u5C02\u7528\u306EAI\u30A2\u30B7\u30B9\u30BF\u30F3\u30C8\u30DC\u30C3\u30C8\u3078\u3088\u3046\u3053\u305D\uFF01",
@@ -349,8 +353,9 @@ var translations = {
     optimized_prompt: "\u{1F310} \u6700\u9069\u5316\u3055\u308C\u305F\u8AAC\u660E",
     image_specs: "\u{1F4D0} \u753B\u50CF\u306E\u8A73\u7D30",
     command_not_found: "\u2753 \u3059\u307F\u307E\u305B\u3093\u3001\u305D\u306E\u30B3\u30DE\u30F3\u30C9\u306F\u5206\u304B\u308A\u307E\u305B\u3093\u3002/help \u3068\u5165\u529B\u3057\u3066\u3001\u79C1\u306B\u3067\u304D\u308B\u3053\u3068\u3092\u78BA\u8A8D\u3057\u3066\u304F\u3060\u3055\u3044\uFF01",
-    image_analysis_not_supported: "The current model does not support image analysis. Please switch to a model that supports multi-modal input.",
-    image_analysis_error: "An error occurred during image analysis"
+    image_analysis_not_supported: "\u{1F6AB} \u73FE\u5728\u306E\u30E2\u30C7\u30EB\u306F\u753B\u50CF\u5206\u6790\u3092\u30B5\u30DD\u30FC\u30C8\u3057\u3066\u3044\u307E\u305B\u3093\u3002\u30DE\u30EB\u30C1\u30E2\u30FC\u30C0\u30EB\u5165\u529B\u3092\u30B5\u30DD\u30FC\u30C8\u3059\u308B\u30E2\u30C7\u30EB\u306B\u5207\u308A\u66FF\u3048\u3066\u304F\u3060\u3055\u3044\u3002",
+    image_analysis_error: "\u274C \u304A\u3063\u3068\uFF01\u753B\u50CF\u5206\u6790\u4E2D\u306B\u30A8\u30E9\u30FC\u304C\u767A\u751F\u3057\u307E\u3057\u305F\u3002\u5F8C\u3067\u3082\u3046\u4E00\u5EA6\u304A\u8A66\u3057\u304F\u3060\u3055\u3044\u3002",
+    image_analysis_description: "\u{1F4F8} \u753B\u50CF\u5206\u6790\uFF1A\u300C\u3053\u306E\u753B\u50CF\u3092\u5206\u6790\u3057\u3066\u304F\u3060\u3055\u3044\u300D\u306A\u3069\u306E\u30AD\u30E3\u30D7\u30B7\u30E7\u30F3\u3092\u4ED8\u3051\u3066\u5199\u771F\u3092\u9001\u4FE1\u3057\u3066\u304F\u3060\u3055\u3044\u3002\u30DC\u30C3\u30C8\u306F\u73FE\u5728\u9078\u629E\u3055\u308C\u3066\u3044\u308BAI\u30E2\u30C7\u30EB\uFF08OpenAI\u307E\u305F\u306FGoogle Gemini\uFF09\u3092\u4F7F\u7528\u3057\u3066\u5206\u6790\u3057\u3001\u7D50\u679C\u3092\u8FD4\u4FE1\u3057\u307E\u3059\u3002"
   },
   de: {
     welcome: "\u{1F44B} Hallo! Willkommen bei deinem pers\xF6nlichen KI-Assistenten-Bot!",
@@ -393,8 +398,9 @@ var translations = {
     optimized_prompt: "\u{1F310} Verbesserte Beschreibung",
     image_specs: "\u{1F4D0} Bilddetails",
     command_not_found: "\u2753 Hmm, ich kenne diesen Befehl nicht. Gib /help ein, um zu sehen, was ich kann!",
-    image_analysis_not_supported: "The current model does not support image analysis. Please switch to a model that supports multi-modal input.",
-    image_analysis_error: "An error occurred during image analysis"
+    image_analysis_not_supported: "\u{1F6AB} Das aktuelle Modell unterst\xFCtzt keine Bildanalyse. Bitte wechseln Sie zu einem Modell, das multimodale Eingaben unterst\xFCtzt.",
+    image_analysis_error: "\u274C Hoppla! Bei der Bildanalyse ist ein Fehler aufgetreten. Bitte versuchen Sie es sp\xE4ter erneut.",
+    image_analysis_description: "\u{1F4F8} Bildanalyse: Senden Sie ein Foto mit einer Beschreibung wie 'Bitte analysiere dieses Bild'. Der Bot verwendet das aktuelle KI-Modell (OpenAI oder Google Gemini), um es zu analysieren und antwortet mit den Ergebnissen."
   },
   fr: {
     welcome: "\u{1F44B} Salut ! Bienvenue sur votre assistant IA personnel !",
@@ -437,8 +443,9 @@ var translations = {
     optimized_prompt: "\u{1F310} Description am\xE9lior\xE9e",
     image_specs: "\u{1F4D0} D\xE9tails de l'image",
     command_not_found: "\u2753 Hmm, je ne connais pas cette commande. Tapez /help pour voir ce que je peux faire !",
-    image_analysis_not_supported: "The current model does not support image analysis. Please switch to a model that supports multi-modal input.",
-    image_analysis_error: "An error occurred during image analysis"
+    image_analysis_not_supported: "\u{1F6AB} Le mod\xE8le actuel ne prend pas en charge l'analyse d'images. Veuillez passer \xE0 un mod\xE8le qui prend en charge les entr\xE9es multimodales.",
+    image_analysis_error: "\u274C Oups ! Une erreur s'est produite lors de l'analyse de l'image. Veuillez r\xE9essayer plus tard.",
+    image_analysis_description: "\u{1F4F8} Analyse d'images : Envoyez une photo avec une l\xE9gende comme 'Veuillez analyser cette image'. Le bot utilisera le mod\xE8le d'IA actuel (OpenAI ou Google Gemini) pour l'analyser et r\xE9pondra avec les r\xE9sultats."
   },
   ru: {
     welcome: "\u{1F44B} \u041F\u0440\u0438\u0432\u0435\u0442! \u0414\u043E\u0431\u0440\u043E \u043F\u043E\u0436\u0430\u043B\u043E\u0432\u0430\u0442\u044C \u0432 \u0432\u0430\u0448\u0435\u0433\u043E \u043F\u0435\u0440\u0441\u043E\u043D\u0430\u043B\u044C\u043D\u043E\u0433\u043E \u0418\u0418-\u0430\u0441\u0441\u0438\u0441\u0442\u0435\u043D\u0442\u0430!",
@@ -481,8 +488,9 @@ var translations = {
     optimized_prompt: "\u{1F310} \u0423\u043B\u0443\u0447\u0448\u0435\u043D\u043D\u043E\u0435 \u043E\u043F\u0438\u0441\u0430\u043D\u0438\u0435",
     image_specs: "\u{1F4D0} \u0414\u0435\u0442\u0430\u043B\u0438 \u0438\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F",
     command_not_found: "\u2753 \u0425\u043C\u043C, \u044F \u043D\u0435 \u0437\u043D\u0430\u044E \u044D\u0442\u0443 \u043A\u043E\u043C\u0430\u043D\u0434\u0443. \u0412\u0432\u0435\u0434\u0438\u0442\u0435 /help, \u0447\u0442\u043E\u0431\u044B \u0443\u0432\u0438\u0434\u0435\u0442\u044C, \u0447\u0442\u043E \u044F \u043C\u043E\u0433\u0443 \u0441\u0434\u0435\u043B\u0430\u0442\u044C!",
-    image_analysis_not_supported: "The current model does not support image analysis. Please switch to a model that supports multi-modal input.",
-    image_analysis_error: "An error occurred during image analysis"
+    image_analysis_not_supported: "\u{1F6AB} \u0422\u0435\u043A\u0443\u0449\u0430\u044F \u043C\u043E\u0434\u0435\u043B\u044C \u043D\u0435 \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u0435\u0442 \u0430\u043D\u0430\u043B\u0438\u0437 \u0438\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u0439. \u041F\u043E\u0436\u0430\u043B\u0443\u0439\u0441\u0442\u0430, \u043F\u0435\u0440\u0435\u043A\u043B\u044E\u0447\u0438\u0442\u0435\u0441\u044C \u043D\u0430 \u043C\u043E\u0434\u0435\u043B\u044C, \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u044E\u0449\u0443\u044E \u043C\u0443\u043B\u044C\u0442\u0438\u043C\u043E\u0434\u0430\u043B\u044C\u043D\u044B\u0439 \u0432\u0432\u043E\u0434.",
+    image_analysis_error: "\u274C \u041E\u0439! \u041F\u0440\u043E\u0438\u0437\u043E\u0448\u043B\u0430 \u043E\u0448\u0438\u0431\u043A\u0430 \u043F\u0440\u0438 \u0430\u043D\u0430\u043B\u0438\u0437\u0435 \u0438\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F. \u041F\u043E\u0436\u0430\u043B\u0443\u0439\u0441\u0442\u0430, \u043F\u043E\u043F\u0440\u043E\u0431\u0443\u0439\u0442\u0435 \u043F\u043E\u0437\u0436\u0435.",
+    image_analysis_description: "\u{1F4F8} \u0410\u043D\u0430\u043B\u0438\u0437 \u0438\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u0439: \u041E\u0442\u043F\u0440\u0430\u0432\u044C\u0442\u0435 \u0444\u043E\u0442\u043E\u0433\u0440\u0430\u0444\u0438\u044E \u0441 \u043F\u043E\u0434\u043F\u0438\u0441\u044C\u044E, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440, '\u041F\u043E\u0436\u0430\u043B\u0443\u0439\u0441\u0442\u0430, \u043F\u0440\u043E\u0430\u043D\u0430\u043B\u0438\u0437\u0438\u0440\u0443\u0439\u0442\u0435 \u044D\u0442\u043E \u0438\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u0435'. \u0411\u043E\u0442 \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0435\u0442 \u0442\u0435\u043A\u0443\u0449\u0443\u044E \u043C\u043E\u0434\u0435\u043B\u044C \u0418\u0418 (OpenAI \u0438\u043B\u0438 Google Gemini) \u0434\u043B\u044F \u0430\u043D\u0430\u043B\u0438\u0437\u0430 \u0438 \u043E\u0442\u0432\u0435\u0442\u0438\u0442 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442\u0430\u043C\u0438."
   }
 };
 function translate(key, language = "en") {
@@ -787,6 +795,7 @@ var commands = [
         helpMessage += `/${command.name} - ${translate(descriptionKey, language)}
 `;
       }
+      helpMessage += "\n" + translate("image_analysis_description", language);
       await bot.sendMessage(chatId, helpMessage);
     }
   },
@@ -1176,25 +1185,37 @@ var azure_default = AzureAPI;
 
 // src/api/image_analyze.ts
 var ImageAnalysisAPI = class {
-  apiKey;
-  baseUrl;
-  models;
+  openaiApiKey;
+  openaiBaseUrl;
+  openaiModels;
+  googleApiKey;
+  googleBaseUrl;
+  googleModels;
   constructor(env) {
     const config = getConfig(env);
-    this.apiKey = config.openaiApiKey;
-    this.baseUrl = config.openaiBaseUrl;
-    this.models = config.openaiModels;
+    this.openaiApiKey = config.openaiApiKey;
+    this.openaiBaseUrl = config.openaiBaseUrl;
+    this.openaiModels = config.openaiModels;
+    this.googleApiKey = config.googleModelKey;
+    this.googleBaseUrl = config.googleModelBaseUrl;
+    this.googleModels = config.googleModels;
   }
   async analyzeImage(imageUrl, prompt, model) {
-    if (!this.isValidModel(model)) {
+    if (this.openaiModels.includes(model)) {
+      return this.analyzeImageWithOpenAI(imageUrl, prompt, model);
+    } else if (this.googleModels.includes(model)) {
+      return this.analyzeImageWithGemini(imageUrl, prompt, model);
+    } else {
       throw new Error(`Invalid model for image analysis: ${model}`);
     }
-    const url = `${this.baseUrl}/chat/completions`;
+  }
+  async analyzeImageWithOpenAI(imageUrl, prompt, model) {
+    const url = `${this.openaiBaseUrl}/chat/completions`;
     const response = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${this.apiKey}`
+        "Authorization": `Bearer ${this.openaiApiKey}`
       },
       body: JSON.stringify({
         model,
@@ -1211,22 +1232,50 @@ var ImageAnalysisAPI = class {
       })
     });
     if (!response.ok) {
-      throw new Error(`Image analysis API error: ${response.statusText}`);
+      throw new Error(`OpenAI image analysis API error: ${response.statusText}`);
     }
     const data = await response.json();
-    return data.choices[0].message.content.trim();
+    return data.candidates[0].content.parts[0].text.trim();
+  }
+  async analyzeImageWithGemini(imageUrl, prompt, model) {
+    const url = `${this.googleBaseUrl}/models/${model}:generateContent?key=${this.googleApiKey}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [
+            { text: prompt },
+            { inlineData: { mimeType: "image/jpeg", data: await this.getBase64Image(imageUrl) } }
+          ]
+        }]
+      })
+    });
+    if (!response.ok) {
+      throw new Error(`Gemini image analysis API error: ${response.statusText}`);
+    }
+    const data = await response.json();
+    return data.candidates[0].content.parts[0].text.trim();
+  }
+  async getBase64Image(imageUrl) {
+    const response = await fetch(imageUrl);
+    const arrayBuffer = await response.arrayBuffer();
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    return base64;
   }
   async generateResponse(messages, model) {
     throw new Error("Method not implemented for image analysis.");
   }
   isValidModel(model) {
-    return this.models.includes(model);
+    return this.openaiModels.includes(model) || this.googleModels.includes(model);
   }
   getDefaultModel() {
-    return this.models[0];
+    return this.openaiModels[0] || this.googleModels[0];
   }
   getAvailableModels() {
-    return this.models;
+    return [...this.openaiModels, ...this.googleModels];
   }
 };
 var image_analyze_default = ImageAnalysisAPI;
@@ -1415,7 +1464,7 @@ Assistant: ${response}`);
       const fileUrl = await this.getFileUrl(fileId);
       const currentModel = await this.getCurrentModel(chatId.toString());
       const config = getConfig(this.env);
-      if (!config.openaiModels.includes(currentModel)) {
+      if (!config.openaiModels.includes(currentModel) && !config.googleModels.includes(currentModel)) {
         await this.sendMessageWithFallback(chatId, translate("image_analysis_not_supported", language));
         return;
       }
