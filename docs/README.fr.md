@@ -135,7 +135,11 @@ Pour des instructions détaillées, consultez le tutoriel ci-dessous.
 Utilisez l'API Telegram Bot pour configurer le Webhook, exemple d'URL :
 
 ```bash
-https://api.telegram.org/bot<VOTRE_TOKEN_BOT>/setWebhook?url=https://votre-worker.votre-sous-domaine.workers.dev
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://your-worker.your-subdomain.workers.dev/webhook
+```
+
+```bash
+https://api.telegram.org/bot123456789:abcdefghijklmn/setWebhook?url=https://gpt-telegram-worker.abcdefg.workers.dev/webhook
 ```
 
 ### Développement Local
