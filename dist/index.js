@@ -1568,22 +1568,23 @@ ${summary}`;
   }
   async sendMessageWithFallback(chatId, text) {
     const currentModel = await this.getCurrentModel(chatId.toString());
-    const messages = splitMessage(text, 4e3);
+    const messages = this.splitMessage(text, 4e3);
     const results = [];
     for (const message of messages) {
       try {
         let result;
         if (currentModel.startsWith("gemini-")) {
-          result = await this.sendMessage(chatId, message);
+          const htmlMessage = this.convertToHtml(message);
+          result = await this.sendMessage(chatId, htmlMessage, { parse_mode: "HTML" });
         } else {
           result = await this.sendMessage(chatId, message, { parse_mode: "Markdown" });
         }
         results.push(...result);
         console.log(`Successfully sent message part (length: ${message.length})`);
       } catch (error) {
-        console.error("Error sending message:", error);
+        console.error("Error sending formatted message:", error);
         try {
-          const plainTextResult = await this.sendMessage(chatId, this.stripMarkdown(message));
+          const plainTextResult = await this.sendMessage(chatId, this.stripFormatting(message));
           results.push(...plainTextResult);
           console.log(`Sent plain text message part (length: ${message.length})`);
         } catch (fallbackError) {
@@ -1593,7 +1594,12 @@ ${summary}`;
     }
     return results;
   }
-  // 修改 splitMessage 函数以确保每个部分都不超过最大长度
+  convertToHtml(text) {
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\*\*(.*?)\*\*/g, "<b>$1</b>").replace(/\*(.*?)\*/g, "<i>$1</i>").replace(/`(.*?)`/g, "<code>$1</code>").replace(/```([\s\S]*?)```/g, "<pre>$1</pre>").replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2">$1</a>');
+  }
+  stripFormatting(text) {
+    return text.replace(/\*\*(.*?)\*\*/g, "$1").replace(/\*(.*?)\*/g, "$1").replace(/`(.*?)`/g, "$1").replace(/```[\s\S]*?```/g, "").replace(/\[([^\]]+)\]\(([^\)]+)\)/g, "$1 ($2)").replace(/<[^>]+>/g, "");
+  }
   splitMessage(text, maxLength = 4e3) {
     const messages = [];
     let currentMessage = "";
@@ -1618,9 +1624,6 @@ ${summary}`;
       messages.push(currentMessage.trim());
     }
     return messages;
-  }
-  stripMarkdown(text) {
-    return text.replace(/\*\*(.*?)\*\*/g, "$1").replace(/\*(.*?)\*/g, "$1").replace(/`(.*?)`/g, "$1").replace(/```[\s\S]*?```/g, "").replace(/\[(.*?)\]\(.*?\)/g, "$1").replace(/<[^>]+>/g, "");
   }
   async setMenuButton() {
     const url = `${this.apiUrl}/setMyCommands`;

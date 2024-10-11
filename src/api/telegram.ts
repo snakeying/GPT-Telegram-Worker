@@ -404,15 +404,16 @@ export class TelegramBot {
 
   async sendMessageWithFallback(chatId: number, text: string): Promise<TelegramTypes.SendMessageResult[]> {
     const currentModel = await this.getCurrentModel(chatId.toString());
-    const messages = splitMessage(text, 4000); // 使用更小的最大长度
+    const messages = this.splitMessage(text, 4000);
     const results: TelegramTypes.SendMessageResult[] = [];
 
     for (const message of messages) {
       try {
         let result;
         if (currentModel.startsWith('gemini-')) {
-          // 对于 Gemini 模型，直接发送纯文本
-          result = await this.sendMessage(chatId, message);
+          // 对于 Gemini 模型，尝试使用 HTML 格式
+          const htmlMessage = this.convertToHtml(message);
+          result = await this.sendMessage(chatId, htmlMessage, { parse_mode: 'HTML' });
         } else {
           // 对于其他模型，尝试使用 Markdown
           result = await this.sendMessage(chatId, message, { parse_mode: 'Markdown' });
@@ -420,10 +421,10 @@ export class TelegramBot {
         results.push(...result);
         console.log(`Successfully sent message part (length: ${message.length})`);
       } catch (error) {
-        console.error('Error sending message:', error);
+        console.error('Error sending formatted message:', error);
         try {
           // 如果发送失败，尝试发送纯文本
-          const plainTextResult = await this.sendMessage(chatId, this.stripMarkdown(message));
+          const plainTextResult = await this.sendMessage(chatId, this.stripFormatting(message));
           results.push(...plainTextResult);
           console.log(`Sent plain text message part (length: ${message.length})`);
         } catch (fallbackError) {
@@ -435,7 +436,28 @@ export class TelegramBot {
     return results;
   }
 
-  // 修改 splitMessage 函数以确保每个部分都不超过最大长度
+  private convertToHtml(text: string): string {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+      .replace(/\*(.*?)\*/g, '<i>$1</i>')
+      .replace(/`(.*?)`/g, '<code>$1</code>')
+      .replace(/```([\s\S]*?)```/g, '<pre>$1</pre>')
+      .replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2">$1</a>');
+  }
+
+  private stripFormatting(text: string): string {
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/\*(.*?)\*/g, '$1')
+      .replace(/`(.*?)`/g, '$1')
+      .replace(/```[\s\S]*?```/g, '')
+      .replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '$1 ($2)')
+      .replace(/<[^>]+>/g, '');
+  }
+
   private splitMessage(text: string, maxLength: number = 4000): string[] {
     const messages: string[] = [];
     let currentMessage = '';
@@ -447,7 +469,6 @@ export class TelegramBot {
           messages.push(currentMessage.trim());
           currentMessage = '';
         }
-        // 如果单行超过最大长度，则进行拆分
         if (line.length > maxLength) {
           const chunks = line.match(new RegExp(`.{1,${maxLength}}`, 'g')) || [];
           messages.push(...chunks);
@@ -464,16 +485,6 @@ export class TelegramBot {
     }
 
     return messages;
-  }
-
-  private stripMarkdown(text: string): string {
-    return text
-      .replace(/\*\*(.*?)\*\*/g, '$1')
-      .replace(/\*(.*?)\*/g, '$1')
-      .replace(/`(.*?)`/g, '$1')
-      .replace(/```[\s\S]*?```/g, '')
-      .replace(/\[(.*?)\]\(.*?\)/g, '$1')
-      .replace(/<[^>]+>/g, '');
   }
 
   private async setMenuButton(): Promise<void> {

@@ -1,1 +1,1 @@
-This folder contains the built output assets for the worker "gpt-telegram-worker" generated at 2024-10-11T16:29:16.053Z.
+This folder contains the built output assets for the worker "gpt-telegram-worker" generated at 2024-10-11T16:44:08.372Z.
