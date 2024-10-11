@@ -1567,22 +1567,25 @@ ${summary}`;
     }
   }
   async sendMessageWithFallback(chatId, text) {
-    const messages = splitMessage(text);
-    const results = [];
     const currentModel = await this.getCurrentModel(chatId.toString());
+    const messages = splitMessage(text, 4e3);
+    const results = [];
     for (const message of messages) {
       try {
-        let processedMessage = message;
+        let result;
         if (currentModel.startsWith("gemini-")) {
-          processedMessage = this.processGeminiMarkdown(message);
+          result = await this.sendMessage(chatId, message);
+        } else {
+          result = await this.sendMessage(chatId, message, { parse_mode: "Markdown" });
         }
-        const result = await this.sendMessage(chatId, processedMessage, { parse_mode: "Markdown" });
         results.push(...result);
+        console.log(`Successfully sent message part (length: ${message.length})`);
       } catch (error) {
-        console.error("Error sending message with Markdown, falling back to plain text:", error);
+        console.error("Error sending message:", error);
         try {
-          const plainTextResult = await this.sendMessage(chatId, message);
+          const plainTextResult = await this.sendMessage(chatId, this.stripMarkdown(message));
           results.push(...plainTextResult);
+          console.log(`Sent plain text message part (length: ${message.length})`);
         } catch (fallbackError) {
           console.error("Error sending plain text message:", fallbackError);
         }
@@ -1590,9 +1593,34 @@ ${summary}`;
     }
     return results;
   }
-  processGeminiMarkdown(text) {
-    return text.replace(/```(\w+)?([^`]+)$/gm, (match, lang, code) => `${match}
-\`\`\``).replace(/(?<!`)`(?!`)(.*?)(?<!`)`(?!`)/g, "`$1`").replace(/(\*\*|__)(.*?)(\*\*|__)/g, "**$2**").replace(/(\*|_)(.*?)(\*|_)/g, "*$2*").replace(/<[^>]+>/g, "");
+  // 修改 splitMessage 函数以确保每个部分都不超过最大长度
+  splitMessage(text, maxLength = 4e3) {
+    const messages = [];
+    let currentMessage = "";
+    const lines = text.split("\n");
+    for (const line of lines) {
+      if (currentMessage.length + line.length + 1 > maxLength) {
+        if (currentMessage) {
+          messages.push(currentMessage.trim());
+          currentMessage = "";
+        }
+        if (line.length > maxLength) {
+          const chunks = line.match(new RegExp(`.{1,${maxLength}}`, "g")) || [];
+          messages.push(...chunks);
+        } else {
+          currentMessage = line;
+        }
+      } else {
+        currentMessage += (currentMessage ? "\n" : "") + line;
+      }
+    }
+    if (currentMessage) {
+      messages.push(currentMessage.trim());
+    }
+    return messages;
+  }
+  stripMarkdown(text) {
+    return text.replace(/\*\*(.*?)\*\*/g, "$1").replace(/\*(.*?)\*/g, "$1").replace(/`(.*?)`/g, "$1").replace(/```[\s\S]*?```/g, "").replace(/\[(.*?)\]\(.*?\)/g, "$1").replace(/<[^>]+>/g, "");
   }
   async setMenuButton() {
     const url = `${this.apiUrl}/setMyCommands`;

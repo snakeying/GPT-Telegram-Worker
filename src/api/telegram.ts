@@ -403,28 +403,31 @@ export class TelegramBot {
   }
 
   async sendMessageWithFallback(chatId: number, text: string): Promise<TelegramTypes.SendMessageResult[]> {
-    const messages = splitMessage(text);
-    const results: TelegramTypes.SendMessageResult[] = [];
     const currentModel = await this.getCurrentModel(chatId.toString());
+    const messages = splitMessage(text, 4000); // 使用更小的最大长度
+    const results: TelegramTypes.SendMessageResult[] = [];
 
     for (const message of messages) {
       try {
-        let processedMessage = message;
+        let result;
         if (currentModel.startsWith('gemini-')) {
-          // 对 Gemini 模型的输出进行特殊处理
-          processedMessage = this.processGeminiMarkdown(message);
+          // 对于 Gemini 模型，直接发送纯文本
+          result = await this.sendMessage(chatId, message);
+        } else {
+          // 对于其他模型，尝试使用 Markdown
+          result = await this.sendMessage(chatId, message, { parse_mode: 'Markdown' });
         }
-        const result = await this.sendMessage(chatId, processedMessage, { parse_mode: 'Markdown' });
         results.push(...result);
+        console.log(`Successfully sent message part (length: ${message.length})`);
       } catch (error) {
-        console.error('Error sending message with Markdown, falling back to plain text:', error);
+        console.error('Error sending message:', error);
         try {
-          // 如果 Markdown 发送失败，尝试发送纯文本
-          const plainTextResult = await this.sendMessage(chatId, message);
+          // 如果发送失败，尝试发送纯文本
+          const plainTextResult = await this.sendMessage(chatId, this.stripMarkdown(message));
           results.push(...plainTextResult);
+          console.log(`Sent plain text message part (length: ${message.length})`);
         } catch (fallbackError) {
           console.error('Error sending plain text message:', fallbackError);
-          // 如果连纯文本消息也发送失败，我们只记录错误，不再尝试发送
         }
       }
     }
@@ -432,17 +435,44 @@ export class TelegramBot {
     return results;
   }
 
-  private processGeminiMarkdown(text: string): string {
-    // 修复可能导致问题的 Markdown 语法
+  // 修改 splitMessage 函数以确保每个部分都不超过最大长度
+  private splitMessage(text: string, maxLength: number = 4000): string[] {
+    const messages: string[] = [];
+    let currentMessage = '';
+
+    const lines = text.split('\n');
+    for (const line of lines) {
+      if (currentMessage.length + line.length + 1 > maxLength) {
+        if (currentMessage) {
+          messages.push(currentMessage.trim());
+          currentMessage = '';
+        }
+        // 如果单行超过最大长度，则进行拆分
+        if (line.length > maxLength) {
+          const chunks = line.match(new RegExp(`.{1,${maxLength}}`, 'g')) || [];
+          messages.push(...chunks);
+        } else {
+          currentMessage = line;
+        }
+      } else {
+        currentMessage += (currentMessage ? '\n' : '') + line;
+      }
+    }
+
+    if (currentMessage) {
+      messages.push(currentMessage.trim());
+    }
+
+    return messages;
+  }
+
+  private stripMarkdown(text: string): string {
     return text
-      // 确保代码块正确关闭
-      .replace(/```(\w+)?([^`]+)$/gm, (match, lang, code) => `${match}\n\`\`\``)
-      // 修复可能未正确配对的内联代码块
-      .replace(/(?<!`)`(?!`)(.*?)(?<!`)`(?!`)/g, '`$1`')
-      // 修复可能未正确配对的粗体和斜体标记
-      .replace(/(\*\*|__)(.*?)(\*\*|__)/g, '**$2**')
-      .replace(/(\*|_)(.*?)(\*|_)/g, '*$2*')
-      // 移除可能导致问题的 HTML 标签
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/\*(.*?)\*/g, '$1')
+      .replace(/`(.*?)`/g, '$1')
+      .replace(/```[\s\S]*?```/g, '')
+      .replace(/\[(.*?)\]\(.*?\)/g, '$1')
       .replace(/<[^>]+>/g, '');
   }
 
