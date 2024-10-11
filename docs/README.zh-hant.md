@@ -212,15 +212,6 @@ https://api.telegram.org/bot123456789:abcdefghijklmn/setWebhook?url=https://gpt-
 
 注意:確保您使用的 AI 模型支援圖像分析功能。如果當前模型不支援,機器人會提示您切換到支援多模態的模型。
 
-## ⚠️ 注意事項
-
-1. 🚦 **合理使用 API 配額**: 特別是圖像生成和分析服務,請注意使用限制。
-2. 🔐 **保護敏感資訊**: 妥善保管環境變數和 API 金鑰。
-3. 🧠 **了解模型特性**: 選擇最適合您應用場景的 AI 模型。
-4. 🔄 **保持更新**: 定期更新程式碼和功能以獲得最佳效能。
-5. 🛡️ **安全第一**: 定期更新 API 金鑰,遵循最小權限原則。
-6. 🎨 **Flux 提示詞優化**: 啟用 PROMPT_OPTIMIZATION 時,請確保正確配置 EXTERNAL_API_BASE、EXTERNAL_MODEL 和 EXTERNAL_API_KEY。
-
 ## 🚀 Flux 提示詞優化
 
 當 PROMPT_OPTIMIZATION 環境變數設定為 true 時,Flux 圖像生成功能會使用外部 API 來優化提示詞。這個功能透過以下步驟工作:
@@ -230,6 +221,15 @@ https://api.telegram.org/bot123456789:abcdefghijklmn/setWebhook?url=https://gpt-
 3. 優化後的提示詞被用於 Flux 模型生成圖像。
 
 這個功能可以幫助生成更精確、更符合 Flux 模型特性的圖像。要使用此功能,請確保正確配置了所有相關的環境變數。
+
+## ⚠️ 注意事項
+
+1. 🚦 **合理使用 API 配額**: 特別是圖像生成和分析服務,請注意使用限制。
+2. 🔐 **保護敏感資訊**: 妥善保管環境變數和 API 金鑰。
+3. 🧠 **了解模型特性**: 選擇最適合您應用場景的 AI 模型。
+4. 🔄 **保持更新**: 定期更新程式碼和功能以獲得最佳效能。
+5. 🛡️ **安全第一**: 定期更新 API 金鑰,遵循最小權限原則。
+6. 🎨 **Flux 提示詞優化**: 啟用 PROMPT_OPTIMIZATION 時,請確保正確配置 EXTERNAL_API_BASE、EXTERNAL_MODEL 和 EXTERNAL_API_KEY。
 
 ## 🔧 故障排除
 
