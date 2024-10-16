@@ -8,8 +8,9 @@ var getConfig = (env) => {
   const hasGroq = !!env.GROQ_API_KEY;
   const hasClaude = !!env.CLAUDE_API_KEY;
   const hasAzure = !!env.AZURE_API_KEY;
-  if (!hasOpenAI && !hasGoogle && !hasGroq && !hasClaude && !hasAzure) {
-    throw new Error("At least one model API key must be set (OpenAI, Google, Groq, Claude, or Azure)");
+  const hasOpenAICompatible = !!env.OPENAI_COMPATIBLE_KEY && !!env.OPENAI_COMPATIBLE_URL;
+  if (!hasOpenAI && !hasGoogle && !hasGroq && !hasClaude && !hasAzure && !hasOpenAICompatible) {
+    throw new Error("At least one model API key must be set (OpenAI, Google, Groq, Claude, Azure, or OpenAI Compatible)");
   }
   return {
     openaiApiKey: env.OPENAI_API_KEY,
@@ -42,7 +43,10 @@ var getConfig = (env) => {
     claudeEndpoint: getEnvOrDefault(env, "CLAUDE_ENDPOINT", "https://api.anthropic.com/v1"),
     azureApiKey: env.AZURE_API_KEY,
     azureModels: env.AZURE_MODELS ? env.AZURE_MODELS.split(",").map((model) => model.trim()) : [],
-    azureEndpoint: env.AZURE_ENDPOINT
+    azureEndpoint: env.AZURE_ENDPOINT,
+    openaiCompatibleKey: env.OPENAI_COMPATIBLE_KEY,
+    openaiCompatibleUrl: env.OPENAI_COMPATIBLE_URL,
+    openaiCompatibleModels: env.OPENAI_COMPATIBLE_MODELS ? env.OPENAI_COMPATIBLE_MODELS.split(",").map((model) => model.trim()) : []
   };
 };
 
@@ -695,6 +699,137 @@ var FluxAPI = class {
   }
 };
 
+// src/api/openai_compatible.ts
+var OpenAICompatibleAPI = class {
+  apiKey;
+  baseUrl;
+  models = [];
+  defaultModel = "";
+  constructor(env) {
+    const config = getConfig(env);
+    this.apiKey = config.openaiCompatibleKey || "";
+    this.baseUrl = config.openaiCompatibleUrl || "";
+    this.fetchModels().catch((error) => console.error("Failed to fetch models:", error));
+  }
+  async generateResponse(messages, model) {
+    if (!this.apiKey || !this.baseUrl) {
+      throw new Error("OpenAI Compatible API is not configured");
+    }
+    if (this.models.length === 0) {
+      await this.fetchModels();
+    }
+    const useModel = model || this.defaultModel;
+    if (!useModel) {
+      throw new Error("No model specified and no default model available");
+    }
+    const url = `${this.baseUrl}/v1/chat/completions`;
+    console.log(`OpenAI Compatible API request URL: ${url}`);
+    const requestBody = {
+      model: useModel,
+      messages
+    };
+    console.log("OpenAI Compatible API request body:", JSON.stringify(requestBody, null, 2));
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${this.apiKey}`
+      },
+      body: JSON.stringify(requestBody)
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`OpenAI Compatible API error: ${response.statusText}`, errorText);
+      throw new Error(`OpenAI Compatible API error: ${response.statusText}
+${errorText}`);
+    }
+    const data = await response.json();
+    console.log("OpenAI Compatible API response:", JSON.stringify(data, null, 2));
+    if (!data.choices || data.choices.length === 0) {
+      throw new Error("No response generated from OpenAI Compatible API");
+    }
+    return data.choices[0].message.content.trim();
+  }
+  async fetchModels() {
+    const url = `${this.baseUrl}/v1/models`;
+    console.log(`Fetching models from: ${url}`);
+    const response = await fetch(url, {
+      headers: {
+        "Authorization": `Bearer ${this.apiKey}`
+      }
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Failed to fetch models: ${response.statusText}`, errorText);
+      throw new Error(`Failed to fetch models: ${response.statusText}
+${errorText}`);
+    }
+    const data = await response.json();
+    console.log("Available models:", JSON.stringify(data, null, 2));
+    this.models = data.data.map((model) => model.id);
+    this.defaultModel = this.models[0] || "";
+  }
+  async getModels() {
+    if (this.models.length === 0) {
+      await this.fetchModels();
+    }
+    return this.models;
+  }
+  isValidModel(model) {
+    return this.models.includes(model);
+  }
+  getDefaultModel() {
+    return this.defaultModel || "default_model";
+  }
+  getAvailableModels() {
+    return this.models;
+  }
+  async analyzeImage(imageUrl, prompt, model) {
+    if (!this.apiKey || !this.baseUrl) {
+      throw new Error("OpenAI Compatible API is not configured");
+    }
+    const url = `${this.baseUrl}/v1/chat/completions`;
+    console.log(`Analyzing image with OpenAI Compatible API. Model: ${model}, URL: ${imageUrl}`);
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${this.apiKey}`
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: prompt },
+              { type: "image_url", image_url: { url: imageUrl } }
+            ]
+          }
+        ],
+        max_tokens: 300
+      })
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`OpenAI Compatible API error: ${response.statusText}`, errorText);
+      throw new Error(`OpenAI Compatible image analysis API error: ${response.statusText}
+${errorText}`);
+    }
+    const data = await response.json();
+    console.log("OpenAI Compatible API response:", JSON.stringify(data, null, 2));
+    if (!data.choices || data.choices.length === 0) {
+      throw new Error("No response generated from OpenAI Compatible API");
+    }
+    const content = data.choices[0].message?.content;
+    if (!content) {
+      throw new Error("No content in OpenAI Compatible API response");
+    }
+    return content.trim();
+  }
+};
+var openai_compatible_default = OpenAICompatibleAPI;
+
 // src/config/commands.ts
 var commands = [
   {
@@ -745,13 +880,18 @@ var commands = [
       const config = getConfig(bot["env"]);
       try {
         console.log("Executing switchmodel command");
-        const availableModels = [
+        let availableModels = [
           ...config.openaiModels,
           ...config.googleModels,
           ...config.groqModels,
           ...config.claudeModels,
           ...config.azureModels
         ];
+        if (config.openaiCompatibleUrl) {
+          const compatibleApi = new openai_compatible_default(bot["env"]);
+          const compatibleModels = await compatibleApi.getModels();
+          availableModels = [...availableModels, ...compatibleModels];
+        }
         console.log("Available models:", availableModels);
         const keyboard = {
           inline_keyboard: availableModels.map((model) => [{ text: model, callback_data: `model_${model}` }])
@@ -1191,6 +1331,7 @@ var ImageAnalysisAPI = class {
   googleApiKey;
   googleBaseUrl;
   googleModels;
+  openaiCompatibleApi;
   constructor(env) {
     const config = getConfig(env);
     this.openaiApiKey = config.openaiApiKey;
@@ -1199,6 +1340,7 @@ var ImageAnalysisAPI = class {
     this.googleApiKey = config.googleModelKey;
     this.googleBaseUrl = config.googleModelBaseUrl;
     this.googleModels = config.googleModels;
+    this.openaiCompatibleApi = new openai_compatible_default(env);
   }
   async analyzeImage(imageUrl, prompt, model) {
     if (this.openaiModels.includes(model)) {
@@ -1206,6 +1348,10 @@ var ImageAnalysisAPI = class {
     } else if (this.googleModels.includes(model)) {
       return this.analyzeImageWithGemini(imageUrl, prompt, model);
     } else {
+      const compatibleModels = await this.openaiCompatibleApi.getModels();
+      if (compatibleModels.includes(model) || compatibleModels.length > 0) {
+        return this.openaiCompatibleApi.analyzeImage(imageUrl, prompt, model);
+      }
       throw new Error(`Invalid model for image analysis: ${model}`);
     }
   }
@@ -1293,13 +1439,13 @@ ${errorText}`);
     throw new Error("Method not implemented for image analysis.");
   }
   isValidModel(model) {
-    return this.openaiModels.includes(model) || this.googleModels.includes(model);
+    return this.openaiModels.includes(model) || this.googleModels.includes(model) || this.openaiCompatibleApi.isValidModel(model);
   }
   getDefaultModel() {
-    return this.openaiModels[0] || this.googleModels[0];
+    return this.openaiModels[0] || this.googleModels[0] || this.openaiCompatibleApi.getDefaultModel();
   }
   getAvailableModels() {
-    return [...this.openaiModels, ...this.googleModels];
+    return [...this.openaiModels, ...this.googleModels, ...this.openaiCompatibleApi.getAvailableModels()];
   }
 };
 var image_analyze_default = ImageAnalysisAPI;
@@ -1330,19 +1476,31 @@ var TelegramBot = class {
     const currentModel = await this.getCurrentModel(userId);
     console.log(`Initializing API for model: ${currentModel}`);
     const config = getConfig(this.env);
-    if (config.openaiModels.includes(currentModel)) {
+    if (config.openaiApiKey && config.openaiModels.includes(currentModel)) {
+      console.log("Using OpenAIAPI");
       return new openai_api_default(this.env);
-    } else if (config.googleModels.includes(currentModel)) {
+    } else if (config.googleModelKey && config.googleModels.includes(currentModel)) {
+      console.log("Using GeminiAPI");
       return new gemini_default(this.env);
-    } else if (config.groqModels.includes(currentModel)) {
+    } else if (config.groqApiKey && config.groqModels.includes(currentModel)) {
+      console.log("Using GroqAPI");
       return new groq_default(this.env);
-    } else if (config.claudeModels.includes(currentModel)) {
+    } else if (config.claudeApiKey && config.claudeModels.includes(currentModel)) {
+      console.log("Using ClaudeAPI");
       return new claude_default(this.env);
-    } else if (config.azureModels.includes(currentModel)) {
+    } else if (config.azureApiKey && config.azureModels.includes(currentModel)) {
+      console.log("Using AzureAPI");
       return new azure_default(this.env);
     }
-    console.warn(`Unknown model: ${currentModel}. Falling back to OpenAI API.`);
-    return new openai_api_default(this.env);
+    if (config.openaiCompatibleUrl) {
+      const compatibleApi = new openai_compatible_default(this.env);
+      const compatibleModels = await compatibleApi.getModels();
+      if (compatibleModels.includes(currentModel) || compatibleModels.length > 0) {
+        console.log("Using OpenAICompatibleAPI");
+        return compatibleApi;
+      }
+    }
+    throw new Error(`No valid API configuration found for model: ${currentModel}`);
   }
   async executeCommand(commandName, chatId, args) {
     const command = this.commands.find((cmd) => cmd.name === commandName);
@@ -1488,11 +1646,25 @@ Assistant: ${response}`);
       const fileUrl = await this.getFileUrl(fileId);
       const currentModel = await this.getCurrentModel(chatId.toString());
       const config = getConfig(this.env);
-      if (!config.openaiModels.includes(currentModel) && !config.googleModels.includes(currentModel)) {
+      let imageAnalysisAPI;
+      if (config.openaiModels.includes(currentModel)) {
+        imageAnalysisAPI = new image_analyze_default(this.env);
+      } else if (config.googleModels.includes(currentModel)) {
+        imageAnalysisAPI = new image_analyze_default(this.env);
+      } else {
+        const openaiCompatibleAPI = new openai_compatible_default(this.env);
+        const compatibleModels = await openaiCompatibleAPI.getModels();
+        if (compatibleModels.includes(currentModel)) {
+          imageAnalysisAPI = openaiCompatibleAPI;
+        } else {
+          await this.sendMessageWithFallback(chatId, translate("image_analysis_not_supported", language));
+          return;
+        }
+      }
+      if (!imageAnalysisAPI.analyzeImage) {
         await this.sendMessageWithFallback(chatId, translate("image_analysis_not_supported", language));
         return;
       }
-      const imageAnalysisAPI = new image_analyze_default(this.env);
       const analysisResult = await imageAnalysisAPI.analyzeImage(fileUrl, caption, currentModel);
       await this.sendMessageWithFallback(chatId, analysisResult);
     } catch (error) {
@@ -1518,7 +1690,25 @@ Assistant: ${response}`);
   }
   async getCurrentModel(userId) {
     const model = await this.redis.get(`model:${userId}`);
-    return model || this.modelAPI.getDefaultModel();
+    if (model) {
+      return model;
+    }
+    const config = getConfig(this.env);
+    if (config.openaiModels.length > 0)
+      return config.openaiModels[0];
+    if (config.googleModels.length > 0)
+      return config.googleModels[0];
+    if (config.groqModels.length > 0)
+      return config.groqModels[0];
+    if (config.claudeModels.length > 0)
+      return config.claudeModels[0];
+    if (config.azureModels.length > 0)
+      return config.azureModels[0];
+    if (config.openaiCompatibleUrl) {
+      const compatibleApi = new openai_compatible_default(this.env);
+      return compatibleApi.getDefaultModel();
+    }
+    throw new Error("No valid model configuration found");
   }
   async setCurrentModel(userId, model) {
     await this.redis.set(`model:${userId}`, model);

@@ -4,6 +4,7 @@ import { ImageGenerationAPI } from '../api/image_generation';
 import { sendChatAction } from '../utils/helpers';
 import { FluxAPI } from '../api/flux-cf';
 import { getConfig } from '../env';
+import OpenAICompatibleAPI from '../api/openai_compatible';
 
 export interface Command {
   name: string;
@@ -60,13 +61,20 @@ export const commands: Command[] = [
       const config = getConfig(bot['env']);
       try {
         console.log('Executing switchmodel command');
-        const availableModels = [
+        let availableModels = [
           ...config.openaiModels,
           ...config.googleModels,
           ...config.groqModels,
           ...config.claudeModels,
           ...config.azureModels,
         ];
+
+        if (config.openaiCompatibleUrl) {
+          const compatibleApi = new OpenAICompatibleAPI(bot['env']);
+          const compatibleModels = await compatibleApi.getModels();
+          availableModels = [...availableModels, ...compatibleModels];
+        }
+
         console.log('Available models:', availableModels);
         const keyboard = {
           inline_keyboard: availableModels.map(model => [{text: model, callback_data: `model_${model}`}])

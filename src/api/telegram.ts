@@ -11,6 +11,7 @@ import GroqAPI from './groq';
 import ClaudeAPI from './claude';
 import AzureAPI from './azure';
 import ImageAnalysisAPI from './image_analyze';
+import OpenAICompatibleAPI from './openai_compatible';
 
 export class TelegramBot {
   private token: string;
@@ -41,20 +42,36 @@ export class TelegramBot {
     
     const config = getConfig(this.env);
     
-    if (config.openaiModels.includes(currentModel)) {
+    // 检查其他 API
+    if (config.openaiApiKey && config.openaiModels.includes(currentModel)) {
+      console.log('Using OpenAIAPI');
       return new OpenAIAPI(this.env);
-    } else if (config.googleModels.includes(currentModel)) {
+    } else if (config.googleModelKey && config.googleModels.includes(currentModel)) {
+      console.log('Using GeminiAPI');
       return new GeminiAPI(this.env);
-    } else if (config.groqModels.includes(currentModel)) {
+    } else if (config.groqApiKey && config.groqModels.includes(currentModel)) {
+      console.log('Using GroqAPI');
       return new GroqAPI(this.env);
-    } else if (config.claudeModels.includes(currentModel)) {
+    } else if (config.claudeApiKey && config.claudeModels.includes(currentModel)) {
+      console.log('Using ClaudeAPI');
       return new ClaudeAPI(this.env);
-    } else if (config.azureModels.includes(currentModel)) {
+    } else if (config.azureApiKey && config.azureModels.includes(currentModel)) {
+      console.log('Using AzureAPI');
       return new AzureAPI(this.env);
     }
     
-    console.warn(`Unknown model: ${currentModel}. Falling back to OpenAI API.`);
-    return new OpenAIAPI(this.env);
+    // 如果其他 API 都不匹配，尝试使用 OpenAI Compatible API
+    if (config.openaiCompatibleUrl) {
+      const compatibleApi = new OpenAICompatibleAPI(this.env);
+      const compatibleModels = await compatibleApi.getModels();
+      if (compatibleModels.includes(currentModel) || compatibleModels.length > 0) {
+        console.log('Using OpenAICompatibleAPI');
+        return compatibleApi;
+      }
+    }
+    
+    // 如果所有 API 都不匹配，抛出错误
+    throw new Error(`No valid API configuration found for model: ${currentModel}`);
   }
 
   public async executeCommand(commandName: string, chatId: number, args: string[]): Promise<void> {
@@ -224,12 +241,28 @@ export class TelegramBot {
       const currentModel = await this.getCurrentModel(chatId.toString());
       const config = getConfig(this.env);
 
-      if (!config.openaiModels.includes(currentModel) && !config.googleModels.includes(currentModel)) {
+      let imageAnalysisAPI: ModelAPIInterface & { analyzeImage: (imageUrl: string, prompt: string, model: string) => Promise<string> };
+
+      if (config.openaiModels.includes(currentModel)) {
+        imageAnalysisAPI = new ImageAnalysisAPI(this.env) as any;
+      } else if (config.googleModels.includes(currentModel)) {
+        imageAnalysisAPI = new ImageAnalysisAPI(this.env) as any;
+      } else {
+        const openaiCompatibleAPI = new OpenAICompatibleAPI(this.env);
+        const compatibleModels = await openaiCompatibleAPI.getModels();
+        if (compatibleModels.includes(currentModel)) {
+          imageAnalysisAPI = openaiCompatibleAPI as any;
+        } else {
+          await this.sendMessageWithFallback(chatId, translate('image_analysis_not_supported', language));
+          return;
+        }
+      }
+
+      if (!imageAnalysisAPI.analyzeImage) {
         await this.sendMessageWithFallback(chatId, translate('image_analysis_not_supported', language));
         return;
       }
 
-      const imageAnalysisAPI = new ImageAnalysisAPI(this.env);
       const analysisResult = await imageAnalysisAPI.analyzeImage(fileUrl, caption, currentModel);
 
       await this.sendMessageWithFallback(chatId, analysisResult);
@@ -261,7 +294,26 @@ export class TelegramBot {
 
   async getCurrentModel(userId: string): Promise<string> {
     const model = await this.redis.get(`model:${userId}`);
-    return model || this.modelAPI.getDefaultModel();
+    if (model) {
+      return model;
+    }
+    
+    const config = getConfig(this.env);
+    
+    // 按优先级返回默认模型
+    if (config.openaiModels.length > 0) return config.openaiModels[0];
+    if (config.googleModels.length > 0) return config.googleModels[0];
+    if (config.groqModels.length > 0) return config.groqModels[0];
+    if (config.claudeModels.length > 0) return config.claudeModels[0];
+    if (config.azureModels.length > 0) return config.azureModels[0];
+    
+    // 如果其他 API 都没有配置，尝试使用 OpenAI Compatible API
+    if (config.openaiCompatibleUrl) {
+      const compatibleApi = new OpenAICompatibleAPI(this.env);
+      return compatibleApi.getDefaultModel();
+    }
+    
+    throw new Error('No valid model configuration found');
   }
 
   async setCurrentModel(userId: string, model: string): Promise<void> {

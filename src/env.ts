@@ -28,6 +28,9 @@ export interface Env {
   AZURE_API_KEY: string;       // Azure API 密钥
   AZURE_MODELS: string;        // 逗号分隔的 Azure 模型列表
   AZURE_ENDPOINT: string;      // Azure API 端点
+  OPENAI_COMPATIBLE_KEY?: string;
+  OPENAI_COMPATIBLE_URL?: string;
+  OPENAI_COMPATIBLE_MODELS?: string;
 }
 
 const getEnvOrDefault = (env: Env, key: keyof Env, defaultValue: string): string => {
@@ -41,9 +44,10 @@ export const getConfig = (env: Env) => {
   const hasGroq = !!env.GROQ_API_KEY;
   const hasClaude = !!env.CLAUDE_API_KEY;
   const hasAzure = !!env.AZURE_API_KEY;
+  const hasOpenAICompatible = !!env.OPENAI_COMPATIBLE_KEY && !!env.OPENAI_COMPATIBLE_URL;
 
-  if (!hasOpenAI && !hasGoogle && !hasGroq && !hasClaude && !hasAzure) {
-    throw new Error('At least one model API key must be set (OpenAI, Google, Groq, Claude, or Azure)');
+  if (!hasOpenAI && !hasGoogle && !hasGroq && !hasClaude && !hasAzure && !hasOpenAICompatible) {
+    throw new Error('At least one model API key must be set (OpenAI, Google, Groq, Claude, Azure, or OpenAI Compatible)');
   }
 
   return {
@@ -78,5 +82,8 @@ export const getConfig = (env: Env) => {
     azureApiKey: env.AZURE_API_KEY,
     azureModels: env.AZURE_MODELS ? env.AZURE_MODELS.split(',').map(model => model.trim()) : [],
     azureEndpoint: env.AZURE_ENDPOINT,
+    openaiCompatibleKey: env.OPENAI_COMPATIBLE_KEY,
+    openaiCompatibleUrl: env.OPENAI_COMPATIBLE_URL,
+    openaiCompatibleModels: env.OPENAI_COMPATIBLE_MODELS ? env.OPENAI_COMPATIBLE_MODELS.split(',').map(model => model.trim()) : [],
   };
 };

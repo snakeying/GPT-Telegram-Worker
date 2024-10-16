@@ -1,6 +1,7 @@
 import { Env, getConfig } from '../env';
 import { ModelAPIInterface } from './model_api_interface';
 import { Message } from './openai_api';
+import OpenAICompatibleAPI from './openai_compatible';
 
 interface OpenAIImageAnalysisResponse {
   choices: Array<{
@@ -29,6 +30,7 @@ export class ImageAnalysisAPI implements ModelAPIInterface {
   private googleApiKey: string;
   private googleBaseUrl: string;
   private googleModels: string[];
+  private openaiCompatibleApi: OpenAICompatibleAPI;
 
   constructor(env: Env) {
     const config = getConfig(env);
@@ -38,6 +40,7 @@ export class ImageAnalysisAPI implements ModelAPIInterface {
     this.googleApiKey = config.googleModelKey;
     this.googleBaseUrl = config.googleModelBaseUrl;
     this.googleModels = config.googleModels;
+    this.openaiCompatibleApi = new OpenAICompatibleAPI(env);
   }
 
   async analyzeImage(imageUrl: string, prompt: string, model: string): Promise<string> {
@@ -46,6 +49,11 @@ export class ImageAnalysisAPI implements ModelAPIInterface {
     } else if (this.googleModels.includes(model)) {
       return this.analyzeImageWithGemini(imageUrl, prompt, model);
     } else {
+      // 尝试使用 OpenAI Compatible API
+      const compatibleModels = await this.openaiCompatibleApi.getModels();
+      if (compatibleModels.includes(model) || compatibleModels.length > 0) {
+        return this.openaiCompatibleApi.analyzeImage(imageUrl, prompt, model);
+      }
       throw new Error(`Invalid model for image analysis: ${model}`);
     }
   }
@@ -148,15 +156,17 @@ export class ImageAnalysisAPI implements ModelAPIInterface {
   }
 
   isValidModel(model: string): boolean {
-    return this.openaiModels.includes(model) || this.googleModels.includes(model);
+    return this.openaiModels.includes(model) || 
+           this.googleModels.includes(model) || 
+           this.openaiCompatibleApi.isValidModel(model);
   }
 
   getDefaultModel(): string {
-    return this.openaiModels[0] || this.googleModels[0];
+    return this.openaiModels[0] || this.googleModels[0] || this.openaiCompatibleApi.getDefaultModel();
   }
 
   getAvailableModels(): string[] {
-    return [...this.openaiModels, ...this.googleModels];
+    return [...this.openaiModels, ...this.googleModels, ...this.openaiCompatibleApi.getAvailableModels()];
   }
 }
 
