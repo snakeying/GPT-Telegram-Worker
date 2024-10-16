@@ -9,14 +9,15 @@ Welcome to Telegram GPT Worker! 👋 This is an efficient Telegram bot developed
 ## 🌟 Key Features
 
 1. 🧠 **Multi-model Support**: Integrates multiple AI models including OpenAI, Google Gemini, Anthropic Claude, Groq, and Azure OpenAI.
-2. 💬 **Intelligent Conversation**: Equipped with context memory capability, ensuring smooth and natural dialogues.
-3. 🎨 **Image Generation**: Supports text-to-image generation using DALL·E and Cloudflare Flux technologies.
-4. 🖼️ **Image Analysis**: Allows users to upload images for intelligent analysis, using either OpenAI or Google Gemini models.
-5. 🌍 **Multilingual Support**: Built-in i18n functionality, supporting 8 languages to meet diverse needs.
-6. 🔒 **User Permission Management**: Controls access through whitelist functionality, enhancing security.
-7. ☁️ **High-performance Deployment**: Utilizes Cloudflare Workers' edge computing capabilities for rapid response.
-8. 🗄️ **Efficient Data Management**: Uses Redis for data caching and management, ensuring efficient processing.
-9. 🔧 **Flux Prompt Optimization**: Optional feature that optimizes image generation prompts for Flux model through an external API.
+2. 🔗 **OpenAI Compatible Model Support**: Designed specifically for AI model interface management and distribution systems such as One API and New API, supporting automatic model list retrieval.
+3. 💬 **Intelligent Conversation**: Equipped with context memory capability, ensuring smooth and natural dialogues.
+4. 🎨 **Image Generation**: Supports text-to-image generation using DALL·E and Cloudflare Flux technologies.
+5. 🖼️ **Image Analysis**: Allows users to upload images for intelligent analysis, using either OpenAI or Google Gemini models.
+6. 🌍 **Multilingual Support**: Built-in i18n functionality, supporting 8 languages to meet diverse needs.
+7. 🔒 **User Permission Management**: Controls access through whitelist functionality, enhancing security.
+8. ☁️ **High-performance Deployment**: Utilizes Cloudflare Workers' edge computing capabilities for rapid response.
+9. 🗄️ **Efficient Data Management**: Uses Redis for data caching and management, ensuring efficient processing.
+10. 🔧 **Flux Prompt Optimization**: Optional feature that optimizes image generation prompts for Flux model through an external API.
 
 ## 📋 System Requirements
 
