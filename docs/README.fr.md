@@ -135,7 +135,11 @@ Pour des instructions détaillées, consultez le tutoriel ci-dessous.
 Utilisez l'API Telegram Bot pour configurer le Webhook, exemple d'URL :
 
 ```bash
-https://api.telegram.org/bot<VOTRE_TOKEN_BOT>/setWebhook?url=https://votre-worker.votre-sous-domaine.workers.dev
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://your-worker.your-subdomain.workers.dev/webhook
+```
+
+```bash
+https://api.telegram.org/bot123456789:abcdefghijklmn/setWebhook?url=https://gpt-telegram-worker.abcdefg.workers.dev/webhook
 ```
 
 ### Développement Local
@@ -208,15 +212,6 @@ Permet aux utilisateurs de télécharger des images et d'obtenir une analyse IA.
 
 Note : Assurez-vous que le modèle IA que vous utilisez prend en charge l'analyse d'images. Si le modèle actuel ne le supporte pas, le bot vous invitera à passer à un modèle multimodal.
 
-## ⚠️ Points d'Attention
-
-1. 🚦 **Utilisation Raisonnable des Quotas API** : Soyez particulièrement attentif aux limites d'utilisation, surtout pour les services de génération et d'analyse d'images.
-2. 🔐 **Protection des Informations Sensibles** : Gardez vos variables d'environnement et clés API en sécurité.
-3. 🧠 **Compréhension des Spécificités des Modèles** : Choisissez le modèle IA le plus adapté à votre scénario d'utilisation.
-4. 🔄 **Mises à Jour Régulières** : Actualisez régulièrement le code et les fonctionnalités pour des performances optimales.
-5. 🛡️ **Priorité à la Sécurité** : Mettez à jour régulièrement vos clés API et suivez le principe du moindre privilège.
-6. 🎨 **Optimisation des Prompts Flux** : Lors de l'activation de PROMPT_OPTIMIZATION, assurez-vous de configurer correctement EXTERNAL_API_BASE, EXTERNAL_MODEL et EXTERNAL_API_KEY.
-
 ## 🚀 Optimisation des Prompts Flux
 
 Lorsque la variable d'environnement PROMPT_OPTIMIZATION est définie sur true, la fonctionnalité de génération d'images Flux utilise une API externe pour optimiser les prompts. Cette fonctionnalité fonctionne comme suit :
@@ -226,6 +221,15 @@ Lorsque la variable d'environnement PROMPT_OPTIMIZATION est définie sur true, l
 3. Le prompt optimisé est utilisé par le modèle Flux pour générer l'image.
 
 Cette fonctionnalité peut aider à générer des images plus précises et mieux adaptées aux spécificités du modèle Flux. Pour l'utiliser, assurez-vous d'avoir correctement configuré toutes les variables d'environnement associées.
+
+## ⚠️ Points d'Attention
+
+1. 🚦 **Utilisation Raisonnable des Quotas API** : Soyez particulièrement attentif aux limites d'utilisation, surtout pour les services de génération et d'analyse d'images.
+2. 🔐 **Protection des Informations Sensibles** : Gardez vos variables d'environnement et clés API en sécurité.
+3. 🧠 **Compréhension des Spécificités des Modèles** : Choisissez le modèle IA le plus adapté à votre scénario d'utilisation.
+4. 🔄 **Mises à Jour Régulières** : Actualisez régulièrement le code et les fonctionnalités pour des performances optimales.
+5. 🛡️ **Priorité à la Sécurité** : Mettez à jour régulièrement vos clés API et suivez le principe du moindre privilège.
+6. 🎨 **Optimisation des Prompts Flux** : Lors de l'activation de PROMPT_OPTIMIZATION, assurez-vous de configurer correctement EXTERNAL_API_BASE, EXTERNAL_MODEL et EXTERNAL_API_KEY.
 
 ## 🔧 Dépannage
 
