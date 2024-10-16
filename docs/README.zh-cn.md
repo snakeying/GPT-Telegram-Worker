@@ -62,6 +62,7 @@
 │   │   ├── image_generation.ts    # 处理DALL·E 绘画接口
 │   │   ├── model_api_interface.ts # 通用接口，定义模型API标准结构
 │   │   ├── openai_api.ts          # 处理OpenAI API交互
+│   │   ├── openai_compatible.ts   # 处理OpenAI compatible API交互
 │   │   └── telegram.ts            # 处理 Telegram bot 的逻辑
 │   ├── /config                    # 配置文件
 │   │   └── commands.ts            # Telegram bot 命令
@@ -198,6 +199,8 @@ https://api.telegram.org/bot123456789:abcdefghijklmn/setWebhook?url=https://gpt-
 | GROQ_API_KEY | Groq API 密钥 | - | your-groq-api-key |
 | ANTHROPIC_API_KEY | Anthropic API 密钥 | - | your-anthropic-api-key |
 | ANTHROPIC_BASE_URL | Anthropic API 基础 URL | https://api.anthropic.com | https://your-custom-anthropic-endpoint.com |
+| OPENAI_COMPATIBLE_KEY | OpenAI Compatible API 密钥 | - | sk-abcdefghijklmnopqrstuvwxyz123456 |
+| OPENAI_COMPATIBLE_URL | OpenAI Compatible API 基础 URL | - | https://your-custom-endpoint.com/v1 |
 
 注意：部分变量需要手动配置，无默认值。
 
@@ -230,6 +233,7 @@ https://api.telegram.org/bot123456789:abcdefghijklmn/setWebhook?url=https://gpt-
 4. 🔄 **保持更新**: 定期更新代码和功能以获得最佳性能。
 5. 🛡️ **安全第一**: 定期更新 API 密钥，遵循最小权限原则。
 6. 🎨 **Flux 提示词优化**: 启用 PROMPT_OPTIMIZATION 时，请确保正确配置 EXTERNAL_API_BASE、EXTERNAL_MODEL 和 EXTERNAL_API_KEY。
+7. ⛔ **重要提示**：为避免潜在冲突，不建议在 OpenAI Compatible 中添加与其他 API 重复的模型。例如，如果您已设置 Gemini API 并选择调用 gemini-1.5-flash 模型，则不应在 OpenAI Compatible 中添加相同的模型。
 
 ## 🔧 故障排除
 
