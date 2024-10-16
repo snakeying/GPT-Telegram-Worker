@@ -135,7 +135,11 @@ Las instrucciones detalladas se proporcionan a continuación.
 Usar la API de Bot de Telegram para configurar el Webhook, ejemplo de URL:
 
 ```bash
-https://api.telegram.org/bot<TU_TOKEN_DE_BOT>/setWebhook?url=https://tu-worker.tu-subdominio.workers.dev
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://your-worker.your-subdomain.workers.dev/webhook
+```
+
+```bash
+https://api.telegram.org/bot123456789:abcdefghijklmn/setWebhook?url=https://gpt-telegram-worker.abcdefg.workers.dev/webhook
 ```
 
 ### Desarrollo Local
@@ -208,15 +212,6 @@ Permite a los usuarios subir y analizar imágenes:
 
 Nota: Asegúrate de que el modelo de IA elegido admita el análisis de imágenes.
 
-## ⚠️ Puntos Importantes
-
-1. 🚦 **Cuotas de API**: Ten en cuenta los límites de uso, especialmente para servicios de imágenes.
-2. 🔐 **Seguridad de Datos**: Protege cuidadosamente las variables de entorno y las claves API.
-3. 🧠 **Conocimiento de Modelos**: Elige el modelo más adecuado para tu caso de uso.
-4. 🔄 **Actualizaciones**: Actualiza regularmente el código y las funcionalidades.
-5. 🛡️ **Seguridad Primero**: Renueva regularmente las claves API, sigue el principio de mínimo privilegio.
-6. 🎨 **Optimización de Prompts Flux**: Configura correctamente todas las variables requeridas si PROMPT_OPTIMIZATION está activado.
-
 ## 🚀 Optimización de Prompts Flux
 
 Cuando PROMPT_OPTIMIZATION está activado (variable de entorno = true), se utiliza una API externa para optimizar la generación de imágenes:
@@ -226,6 +221,15 @@ Cuando PROMPT_OPTIMIZATION está activado (variable de entorno = true), se utili
 3. El prompt optimizado se utiliza para la generación de imágenes Flux.
 
 Esta función mejora la calidad y precisión de las imágenes generadas. Asegúrate de configurar correctamente todas las variables de entorno necesarias.
+
+## ⚠️ Puntos Importantes
+
+1. 🚦 **Cuotas de API**: Ten en cuenta los límites de uso, especialmente para servicios de imágenes.
+2. 🔐 **Seguridad de Datos**: Protege cuidadosamente las variables de entorno y las claves API.
+3. 🧠 **Conocimiento de Modelos**: Elige el modelo más adecuado para tu caso de uso.
+4. 🔄 **Actualizaciones**: Actualiza regularmente el código y las funcionalidades.
+5. 🛡️ **Seguridad Primero**: Renueva regularmente las claves API, sigue el principio de mínimo privilegio.
+6. 🎨 **Optimización de Prompts Flux**: Configura correctamente todas las variables requeridas si PROMPT_OPTIMIZATION está activado.
 
 ## 🔧 Solución de Problemas
 
