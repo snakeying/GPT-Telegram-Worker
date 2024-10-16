@@ -1,7 +1,13 @@
 import { Env, getConfig } from '../env';
-import { ModelAPIInterface, Message } from '../api/model_api_interface';
+import { ModelAPIInterface } from '../api/model_api_interface';
 import OpenAIAPI from '../api/openai_api';
 import GeminiAPI from '../api/gemini';
+
+// 定义一个新的消息类型，适用于图像分析
+interface ImageAnalysisMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string | Array<{type: string; text?: string; image_url?: {url: string}}>;
+}
 
 export async function analyzeImage(imageUrl: string, prompt: string, env: Env, currentModel: string): Promise<string> {
   const config = getConfig(env);
@@ -20,7 +26,7 @@ export async function analyzeImage(imageUrl: string, prompt: string, env: Env, c
 
 async function analyzeWithOpenAI(api: OpenAIAPI, imageUrl: string, prompt: string, model: string): Promise<string> {
   const base64Image = await fetchImageAsBase64(imageUrl);
-  const messages: Message[] = [
+  const messages: ImageAnalysisMessage[] = [
     {
       role: 'user',
       content: [
@@ -38,12 +44,12 @@ async function analyzeWithOpenAI(api: OpenAIAPI, imageUrl: string, prompt: strin
     }
   ];
 
-  return await api.generateResponse(messages, model);
+  return await api.generateResponse(messages as any, model);
 }
 
 async function analyzeWithGemini(api: GeminiAPI, imageUrl: string, prompt: string, model: string): Promise<string> {
   const base64Image = await fetchImageAsBase64(imageUrl);
-  const messages: Message[] = [
+  const messages: ImageAnalysisMessage[] = [
     {
       role: 'user',
       content: [
@@ -61,7 +67,7 @@ async function analyzeWithGemini(api: GeminiAPI, imageUrl: string, prompt: strin
     }
   ];
 
-  return await api.generateResponse(messages, model);
+  return await api.generateResponse(messages as any, model);
 }
 
 async function fetchImageAsBase64(url: string): Promise<string> {

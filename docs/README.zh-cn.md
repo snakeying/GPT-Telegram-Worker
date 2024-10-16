@@ -135,11 +135,7 @@
 使用 Telegram Bot API 设置 Webhook，URL 示例：
 
 ```bash
-https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://your-worker.your-subdomain.workers.dev/webhook
-```
-
-```bash
-https://api.telegram.org/bot123456789:abcdefghijklmn/setWebhook?url=https://gpt-telegram-worker.abcdefg.workers.dev/webhook
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://your-worker.your-subdomain.workers.dev
 ```
 
 ### 本地开发
@@ -212,6 +208,15 @@ https://api.telegram.org/bot123456789:abcdefghijklmn/setWebhook?url=https://gpt-
 
 注意：确保您使用的 AI 模型支持图像分析功能。如果当前模型不支持，机器人会提示您切换到支持多模态的模型。
 
+## ⚠️ 注意事项
+
+1. 🚦 **合理使用 API 配额**: 特别是图像生成和分析服务，请注意使用限制。
+2. 🔐 **保护敏感信息**: 妥善保管环境变量和 API 密钥。
+3. 🧠 **了解模型特性**: 选择最适合您应用场景的 AI 模型。
+4. 🔄 **保持更新**: 定期更新代码和功能以获得最佳性能。
+5. 🛡️ **安全第一**: 定期更新 API 密钥，遵循最小权限原则。
+6. 🎨 **Flux 提示词优化**: 启用 PROMPT_OPTIMIZATION 时，请确保正确配置 EXTERNAL_API_BASE、EXTERNAL_MODEL 和 EXTERNAL_API_KEY。
+
 ## 🚀 Flux 提示词优化
 
 当 PROMPT_OPTIMIZATION 环境变量设置为 true 时，Flux 图像生成功能会使用外部 API 来优化提示词。这个功能通过以下步骤工作：
@@ -221,15 +226,6 @@ https://api.telegram.org/bot123456789:abcdefghijklmn/setWebhook?url=https://gpt-
 3. 优化后的提示词被用于 Flux 模型生成图像。
 
 这个功能可以帮助生成更精确、更符合 Flux 模型特性的图像。要使用此功能，请确保正确配置了所有相关的环境变量。
-
-## ⚠️ 注意事项
-
-1. 🚦 **合理使用 API 配额**: 特别是图像生成和分析服务，请注意使用限制。
-2. 🔐 **保护敏感信息**: 妥善保管环境变量和 API 密钥。
-3. 🧠 **了解模型特性**: 选择最适合您应用场景的 AI 模型。
-4. 🔄 **保持更新**: 定期更新代码和功能以获得最佳性能。
-5. 🛡️ **安全第一**: 定期更新 API 密钥，遵循最小权限原则。
-6. 🎨 **Flux 提示词优化**: 启用 PROMPT_OPTIMIZATION 时，请确保正确配置 EXTERNAL_API_BASE、EXTERNAL_MODEL 和 EXTERNAL_API_KEY。
 
 ## 🔧 故障排除
 
