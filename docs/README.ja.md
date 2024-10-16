@@ -9,14 +9,15 @@ Telegram GPT Worker へようこそ！👋 これは TypeScript で開発され�
 ## 🌟 主な機能
 
 1. 🧠 **複数モデル対応**: OpenAI、Google Gemini、Anthropic Claude、Groq、Azure OpenAI など、複数の AI モデルを統合。
-2. 💬 **インテリジェントな対話**: コンテキスト記憶機能を備え、自然な会話を実現。
-3. 🎨 **画像生成**: テキスト描写から画像を生成。DALL·E と Cloudflare Flux 技術を使用。
-4. 🖼️ **画像分析**: ユーザーがアップロードした画像をインテリジェントに分析。OpenAI または Google Gemini モデルを使用可能。
-5. 🌍 **多言語サポート**: 内蔵の i18n 機能により、8 言語をサポート。
-6. 🔒 **ユーザー権限管理**: ホワイトリスト機能によるアクセス制御でセキュリティを強化。
-7. ☁️ **高性能デプロイ**: Cloudflare Workers のエッジコンピューティング能力を活用し、高速レスポンスを実現。
-8. 🗄️ **効率的なデータ管理**: Redis を使用してデータのキャッシュと管理を効率化。
-9. 🔧 **Flux プロンプト最適化**: オプション機能として、外部 API を通じて Flux モデルの画像生成プロンプトを最適化。
+2. 🔗 **OpenAI互換モデルのサポート**：One APIやNew APIなどのAIモデルインターフェース管理および配信システム向けに設計されており、モデルリストの自動取得をサポートします。
+3. 💬 **インテリジェントな対話**: コンテキスト記憶機能を備え、自然な会話を実現。
+4. 🎨 **画像生成**: テキスト描写から画像を生成。DALL·E と Cloudflare Flux 技術を使用。
+5. 🖼️ **画像分析**: ユーザーがアップロードした画像をインテリジェントに分析。OpenAI または Google Gemini モデルを使用可能。
+6. 🌍 **多言語サポート**: 内蔵の i18n 機能により、8 言語をサポート。
+7. 🔒 **ユーザー権限管理**: ホワイトリスト機能によるアクセス制御でセキュリティを強化。
+8. ☁️ **高性能デプロイ**: Cloudflare Workers のエッジコンピューティング能力を活用し、高速レスポンスを実現。
+9. 🗄️ **効率的なデータ管理**: Redis を使用してデータのキャッシュと管理を効率化。
+10. 🔧 **Flux プロンプト最適化**: オプション機能として、外部 API を通じて Flux モデルの画像生成プロンプトを最適化。
 
 ## 📋 システム要件
 
@@ -62,6 +63,7 @@ Telegram GPT Worker へようこそ！👋 これは TypeScript で開発され�
 │   │   ├── image_generation.ts    # DALL·E 描画インターフェースを処理
 │   │   ├── model_api_interface.ts # モデル API の標準構造を定義する共通インターフェース
 │   │   ├── openai_api.ts          # OpenAI API との対話を処理
+│   │   ├── openai_compatible.ts   # OpenAI互換APIのインタラクションを処理します
 │   │   └── telegram.ts            # Telegram ボットのロジックを処理
 │   ├── /config                    # 設定ファイル
 │   │   └── commands.ts            # Telegram ボットのコマンド
@@ -198,6 +200,8 @@ https://api.telegram.org/bot123456789:abcdefghijklmn/setWebhook?url=https://gpt-
 | GROQ_API_KEY | Groq API キー | - | your-groq-api-key |
 | ANTHROPIC_API_KEY | Anthropic API キー | - | your-anthropic-api-key |
 | ANTHROPIC_BASE_URL | Anthropic API ベース URL | https://api.anthropic.com | https://your-custom-anthropic-endpoint.com |
+| OPENAI_COMPATIBLE_KEY | OpenAI互換APIキー | - | sk-abcdefghijklmnopqrstuvwxyz123456 |
+| OPENAI_COMPATIBLE_URL | OpenAI互換APIベースURL | - | https://your-custom-endpoint.com/v1 |
 
 注意：一部の変数は手動で設定する必要があり、デフォルト値はありません。
 
@@ -230,6 +234,7 @@ PROMPT_OPTIMIZATION 環境変数が true に設定されている場合、Flux �
 4. 🔄 **最新の状態を維持**: 最高のパフォーマンスを得るために、定期的にコードと機能を更新してください。
 5. 🛡️ **セキュリティ第一**: API キーを定期的に更新し、最小権限の原則に従ってください。
 6. 🎨 **Flux プロンプト最適化**: PROMPT_OPTIMIZATION を有効にする場合、EXTERNAL_API_BASE、EXTERNAL_MODEL、EXTERNAL_API_KEY が正しく設定されていることを確認してください。
+7. ⛔ **重要なお知らせ**：潜在的な競合を避けるため、OpenAI互換に他のAPIで使用されているモデルを追加しないことをお勧めします。たとえば、Gemini APIを設定してgemini-1.5-flashモデルを選択した場合、同じモデルをOpenAI互換に追加しないでください。
 
 ## 🔧 トラブルシューティング
 
