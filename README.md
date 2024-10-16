@@ -62,6 +62,7 @@ For detailed deployment steps, please refer to the tutorial below.
 │   │   ├── image_generation.ts    # Handle DALL·E drawing interface
 │   │   ├── model_api_interface.ts # Common interface defining model API standard structure
 │   │   ├── openai_api.ts          # Handle OpenAI API interactions
+│   │   ├── openai_compatible.ts   # Handles OpenAI compatible API interactions
 │   │   └── telegram.ts            # Handle Telegram bot logic
 │   ├── /config                    # Configuration files
 │   │   └── commands.ts            # Telegram bot commands
@@ -198,6 +199,8 @@ https://api.telegram.org/bot123456789:abcdefghijklmn/setWebhook?url=https://gpt-
 | GROQ_API_KEY | Groq API key | - | your-groq-api-key |
 | ANTHROPIC_API_KEY | Anthropic API key | - | your-anthropic-api-key |
 | ANTHROPIC_BASE_URL | Anthropic API base URL | https://api.anthropic.com | https://your-custom-anthropic-endpoint.com |
+| OPENAI_COMPATIBLE_KEY | OpenAI Compatible API Key | - | sk-abcdefghijklmnopqrstuvwxyz123456 |
+| OPENAI_COMPATIBLE_URL | OpenAI Compatible API Base URL | - | https://your-custom-endpoint.com/v1 |
 
 Note: Some variables need to be manually configured and have no default values.
 
@@ -230,6 +233,7 @@ This feature can help generate more precise images that better align with Flux m
 4. 🔄 **Stay Updated**: Regularly update code and features for optimal performance.
 5. 🛡️ **Security First**: Update API keys periodically and follow the principle of least privilege.
 6. 🎨 **Flux Prompt Optimization**: When enabling PROMPT_OPTIMIZATION, ensure correct configuration of EXTERNAL_API_BASE, EXTERNAL_MODEL, and EXTERNAL_API_KEY.
+7. ⛔ **Important Notice**: To avoid potential conflicts, it is not recommended to add models already used by other APIs in OpenAI Compatible. For instance, if you have configured the Gemini API and selected the gemini-1.5-flash model, you should not add the same model in OpenAI Compatible.
 
 ## 🔧 Troubleshooting
 
