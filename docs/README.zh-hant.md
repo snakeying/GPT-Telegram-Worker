@@ -145,7 +145,7 @@ https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://your-worker.
 1. 複製專案:
 
    ```bash
-   git clone https://github.com/your-username/telegram-bot.git
+   git clone https://github.com/snakeying/telegram-bot.git
    ```
 
 2. 安裝依賴:
