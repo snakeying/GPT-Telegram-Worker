@@ -9,14 +9,15 @@
 ## 🌟 Características Principales
 
 1. 🧠 **Soporte Multi-Modelo**: Integración con OpenAI, Google Gemini, Anthropic Claude, Groq y Azure OpenAI.
-2. 💬 **Conversaciones Inteligentes**: Capacidad de memoria contextual para diálogos naturales.
-3. 🎨 **Generación de Imágenes**: Creación de imágenes a partir de descripciones textuales usando DALL·E y Cloudflare Flux.
-4. 🖼️ **Análisis de Imágenes**: Análisis inteligente de imágenes subidas mediante OpenAI o Google Gemini.
-5. 🌍 **Multilingüe**: Función i18n integrada, compatible con 8 idiomas.
-6. 🔒 **Gestión de Usuarios**: Control de acceso mediante lista blanca.
-7. ☁️ **Implementación de Alto Rendimiento**: Respuestas rápidas gracias a Cloudflare Workers.
-8. 🗄️ **Gestión Eficiente de Datos**: Almacenamiento en caché mediante Redis.
-9. 🔧 **Optimización de Prompts Flux**: API externa opcional para mejorar la generación de imágenes.
+2. 🔗 **Compatibilidad con modelos de OpenAI**: Diseñado específicamente para sistemas de gestión y distribución de interfaces de modelos de IA como One API y New API, con soporte para la recuperación automática de la lista de modelos.
+3. 💬 **Conversaciones Inteligentes**: Capacidad de memoria contextual para diálogos naturales.
+4. 🎨 **Generación de Imágenes**: Creación de imágenes a partir de descripciones textuales usando DALL·E y Cloudflare Flux.
+5. 🖼️ **Análisis de Imágenes**: Análisis inteligente de imágenes subidas mediante OpenAI o Google Gemini.
+6. 🌍 **Multilingüe**: Función i18n integrada, compatible con 8 idiomas.
+7. 🔒 **Gestión de Usuarios**: Control de acceso mediante lista blanca.
+8. ☁️ **Implementación de Alto Rendimiento**: Respuestas rápidas gracias a Cloudflare Workers.
+9. 🗄️ **Gestión Eficiente de Datos**: Almacenamiento en caché mediante Redis.
+10. 🔧 **Optimización de Prompts Flux**: API externa opcional para mejorar la generación de imágenes.
 
 ## 📋 Requisitos del Sistema
 
@@ -62,6 +63,7 @@ Las instrucciones detalladas se proporcionan a continuación.
 │   │   ├── image_generation.ts    # Interfaz de dibujo DALL·E
 │   │   ├── model_api_interface.ts # Interfaz común para APIs de modelos
 │   │   ├── openai_api.ts          # Interacción con API de OpenAI
+│   │   ├── openai_compatible.ts   # Maneja interacciones de API compatibles con OpenAI
 │   │   └── telegram.ts            # Lógica del bot de Telegram
 │   ├── /config                    # Archivos de configuración
 │   │   └── commands.ts            # Comandos del bot de Telegram
@@ -198,6 +200,8 @@ https://api.telegram.org/bot123456789:abcdefghijklmn/setWebhook?url=https://gpt-
 | GROQ_API_KEY | Clave API de Groq | - | tu-clave-api-groq |
 | ANTHROPIC_API_KEY | Clave API de Anthropic | - | tu-clave-api-anthropic |
 | ANTHROPIC_BASE_URL | URL base de API Anthropic | https://api.anthropic.com | https://tu-endpoint-anthropic.es |
+| OPENAI_COMPATIBLE_KEY | Clave API compatible con OpenAI | - | sk-abcdefghijklmnopqrstuvwxyz123456 |
+| OPENAI_COMPATIBLE_URL | URL base del API compatible con OpenAI | - | https://your-custom-endpoint.com/v1 |
 
 Nota: Algunas variables requieren configuración manual y no tienen valores predeterminados.
 
@@ -230,6 +234,7 @@ Esta función mejora la calidad y precisión de las imágenes generadas. Asegúr
 4. 🔄 **Actualizaciones**: Actualiza regularmente el código y las funcionalidades.
 5. 🛡️ **Seguridad Primero**: Renueva regularmente las claves API, sigue el principio de mínimo privilegio.
 6. 🎨 **Optimización de Prompts Flux**: Configura correctamente todas las variables requeridas si PROMPT_OPTIMIZATION está activado.
+7. ⛔ **Aviso importante**: Para evitar posibles conflictos, no se recomienda agregar modelos que ya estén en uso por otras APIs en OpenAI Compatible. Por ejemplo, si ha configurado la API de Gemini y ha seleccionado el modelo gemini-1.5-flash, no debe agregar el mismo modelo en OpenAI Compatible.
 
 ## 🔧 Solución de Problemas
 
