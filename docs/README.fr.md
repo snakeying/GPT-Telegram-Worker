@@ -9,14 +9,15 @@ Bienvenue dans Telegram GPT Worker ! 👋 C'est un bot Telegram efficace dévelo
 ## 🌟 Fonctionnalités Principales
 
 1. 🧠 **Support Multi-modèles** : Intègre OpenAI, Google Gemini, Anthropic Claude, Groq et Azure OpenAI.
-2. 💬 **Conversation Intelligente** : Capacité de mémoire contextuelle pour des dialogues fluides.
-3. 🎨 **Génération d'Images** : Crée des images à partir de descriptions textuelles avec DALL·E et Cloudflare Flux.
-4. 🖼️ **Analyse d'Images** : Analyse intelligente des images téléchargées par les utilisateurs via OpenAI ou Google Gemini.
-5. 🌍 **Support Multilingue** : Fonctionnalité i18n intégrée, prend en charge 8 langues.
-6. 🔒 **Gestion des Droits d'Utilisateur** : Contrôle d'accès via liste blanche pour une sécurité accrue.
-7. ☁️ **Déploiement Haute Performance** : Utilise l'edge computing de Cloudflare Workers pour des réponses rapides.
-8. 🗄️ **Gestion Efficace des Données** : Utilise Redis pour le cache et la gestion des données.
-9. 🔧 **Optimisation des Prompts Flux** : Fonction optionnelle pour optimiser les prompts de génération d'images via une API externe.
+2. 🔗 **Support des modèles compatibles avec OpenAI** : Conçu spécialement pour les systèmes de gestion et de distribution d'interfaces de modèles d'IA tels que One API et New API, prenant en charge la récupération automatique des listes de modèles.
+3. 💬 **Conversation Intelligente** : Capacité de mémoire contextuelle pour des dialogues fluides.
+4. 🎨 **Génération d'Images** : Crée des images à partir de descriptions textuelles avec DALL·E et Cloudflare Flux.
+5. 🖼️ **Analyse d'Images** : Analyse intelligente des images téléchargées par les utilisateurs via OpenAI ou Google Gemini.
+6. 🌍 **Support Multilingue** : Fonctionnalité i18n intégrée, prend en charge 8 langues.
+7. 🔒 **Gestion des Droits d'Utilisateur** : Contrôle d'accès via liste blanche pour une sécurité accrue.
+8. ☁️ **Déploiement Haute Performance** : Utilise l'edge computing de Cloudflare Workers pour des réponses rapides.
+9. 🗄️ **Gestion Efficace des Données** : Utilise Redis pour le cache et la gestion des données.
+10. 🔧 **Optimisation des Prompts Flux** : Fonction optionnelle pour optimiser les prompts de génération d'images via une API externe.
 
 ## 📋 Prérequis Système
 
@@ -62,6 +63,7 @@ Pour des instructions détaillées, consultez le tutoriel ci-dessous.
 │   │   ├── image_generation.ts    # Gère l'interface de dessin DALL·E
 │   │   ├── model_api_interface.ts # Interface générique définissant la structure standard de l'API du modèle
 │   │   ├── openai_api.ts          # Gère les interactions avec l'API OpenAI
+│   │   ├── openai_compatible.ts   # Gère les interactions d'API compatibles avec OpenAI
 │   │   └── telegram.ts            # Gère la logique du bot Telegram
 │   ├── /config                    # Fichiers de configuration
 │   │   └── commands.ts            # Commandes du bot Telegram
@@ -198,6 +200,8 @@ https://api.telegram.org/bot123456789:abcdefghijklmn/setWebhook?url=https://gpt-
 | GROQ_API_KEY | Clé API Groq | - | votre-cle-api-groq |
 | ANTHROPIC_API_KEY | Clé API Anthropic | - | votre-cle-api-anthropic |
 | ANTHROPIC_BASE_URL | URL de base de l'API Anthropic | https://api.anthropic.com | https://votre-endpoint-anthropic-personnalise.com |
+| OPENAI_COMPATIBLE_KEY | Clé API compatible avec OpenAI | - | sk-abcdefghijklmnopqrstuvwxyz123456 |
+| OPENAI_COMPATIBLE_URL | URL de base de l'API compatible avec OpenAI | - | https://your-custom-endpoint.com/v1 |
 
 Note : Certaines variables nécessitent une configuration manuelle et n'ont pas de valeur par défaut.
 
@@ -230,6 +234,7 @@ Cette fonctionnalité peut aider à générer des images plus précises et mieux
 4. 🔄 **Mises à Jour Régulières** : Actualisez régulièrement le code et les fonctionnalités pour des performances optimales.
 5. 🛡️ **Priorité à la Sécurité** : Mettez à jour régulièrement vos clés API et suivez le principe du moindre privilège.
 6. 🎨 **Optimisation des Prompts Flux** : Lors de l'activation de PROMPT_OPTIMIZATION, assurez-vous de configurer correctement EXTERNAL_API_BASE, EXTERNAL_MODEL et EXTERNAL_API_KEY.
+7. ⛔ **Avis important** : Afin d'éviter d'éventuels conflits, il est déconseillé d'ajouter dans OpenAI Compatible des modèles déjà utilisés par d'autres API. Par exemple, si vous avez configuré l'API Gemini et sélectionné le modèle gemini-1.5-flash, vous ne devriez pas ajouter ce même modèle dans OpenAI Compatible.
 
 ## 🔧 Dépannage
 
