@@ -9,14 +9,15 @@ Willkommen beim Telegram GPT Worker! 👋 Dies ist ein effizienter, in TypeScrip
 ## 🌟 Kernfunktionen
 
 1. 🧠 **Mehrere Modelle**: Integration von OpenAI, Google Gemini, Anthropic Claude, Groq und Azure OpenAI.
-2. 💬 **Intelligente Gespräche**: Kontextbewusstsein für natürliche Konversationen.
-3. 🎨 **Bilderzeugung**: Textbasierte Bilderstellung mit DALL·E und Cloudflare Flux.
-4. 🖼️ **Bildanalyse**: Intelligente Analyse hochgeladener Bilder mittels OpenAI oder Google Gemini.
-5. 🌍 **Mehrsprachigkeit**: Integrierte i18n-Funktion mit 8 Sprachen.
-6. 🔒 **Nutzerverwaltung**: Zugriffskontrolle durch Whitelist-Funktion.
-7. ☁️ **Hochleistungs-Deployment**: Schnelle Antwortzeiten dank Cloudflare Workers.
-8. 🗄️ **Effizientes Datenmanagement**: Redis-Caching für optimale Leistung.
-9. 🔧 **Flux-Prompt-Optimierung**: Optionale API zur Verbesserung der Bildgenerierung.
+2. 🔗 **Unterstützung für OpenAI-kompatible Modelle**: Speziell für die Verwaltung und Verteilung von AI-Modellschnittstellen wie One API und New API entwickelt, unterstützt das automatische Abrufen von Modelllisten.
+3. 💬 **Intelligente Gespräche**: Kontextbewusstsein für natürliche Konversationen.
+4. 🎨 **Bilderzeugung**: Textbasierte Bilderstellung mit DALL·E und Cloudflare Flux.
+5. 🖼️ **Bildanalyse**: Intelligente Analyse hochgeladener Bilder mittels OpenAI oder Google Gemini.
+6. 🌍 **Mehrsprachigkeit**: Integrierte i18n-Funktion mit 8 Sprachen.
+7. 🔒 **Nutzerverwaltung**: Zugriffskontrolle durch Whitelist-Funktion.
+8. ☁️ **Hochleistungs-Deployment**: Schnelle Antwortzeiten dank Cloudflare Workers.
+9. 🗄️ **Effizientes Datenmanagement**: Redis-Caching für optimale Leistung.
+10. 🔧 **Flux-Prompt-Optimierung**: Optionale API zur Verbesserung der Bildgenerierung.
 
 ## 📋 Systemanforderungen
 
@@ -62,6 +63,7 @@ Detaillierte Anleitungen finden Sie weiter unten.
 │   │   ├── image_generation.ts    # DALL·E Bildgenerierung
 │   │   ├── model_api_interface.ts # Gemeinsame Schnittstelle für Modell-APIs
 │   │   ├── openai_api.ts          # OpenAI API-Interaktion
+│   │   ├── openai_compatible.ts   # Verwaltet OpenAI-kompatible API-Interaktionen
 │   │   └── telegram.ts            # Telegram Bot-Logik
 │   ├── /config                    # Konfigurationsdateien
 │   │   └── commands.ts            # Telegram Bot-Befehle
@@ -198,6 +200,8 @@ https://api.telegram.org/bot123456789:abcdefghijklmn/setWebhook?url=https://gpt-
 | GROQ_API_KEY | Groq API-Schlüssel | - | ihr-groq-api-schlüssel |
 | ANTHROPIC_API_KEY | Anthropic API-Schlüssel | - | ihr-anthropic-api-schlüssel |
 | ANTHROPIC_BASE_URL | Anthropic API Basis-URL | https://api.anthropic.com | https://ihre-anthropic-endpoint.de |
+| OPENAI_COMPATIBLE_KEY | OpenAI-kompatibler API-Schlüssel | - | sk-abcdefghijklmnopqrstuvwxyz123456 |
+| OPENAI_COMPATIBLE_URL | OpenAI-kompatible API-Basis-URL | - | https://your-custom-endpoint.com/v1 |
 
 Hinweis: Einige Variablen müssen manuell konfiguriert werden und haben keine Standardwerte.
 
@@ -230,6 +234,7 @@ Diese Funktion verbessert die Bildqualität und Genauigkeit. Stellen Sie die kor
 4. 🔄 **Aktualisierungen**: Regelmäßig Code und Funktionen aktualisieren.
 5. 🛡️ **Sicherheit**: API-Schlüssel regelmäßig erneuern, Prinzip der geringsten Rechte befolgen.
 6. 🎨 **Flux Prompt-Optimierung**: Bei aktiviertem PROMPT_OPTIMIZATION alle erforderlichen Variablen konfigurieren.
+7. ⛔ **Wichtiger Hinweis**: Um potenzielle Konflikte zu vermeiden, wird empfohlen, keine Modelle in OpenAI Compatible hinzuzufügen, die bereits in anderen APIs verwendet werden. Wenn Sie z.B. die Gemini API konfiguriert und das Modell gemini-1.5-flash ausgewählt haben, sollten Sie dasselbe Modell nicht in OpenAI Compatible hinzufügen.
 
 ## 🔧 Fehlerbehebung
 
