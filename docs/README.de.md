@@ -135,7 +135,11 @@ Detaillierte Anleitungen finden Sie weiter unten.
 Webhook-URL mit der Telegram Bot API einrichten:
 
 ```bash
-https://api.telegram.org/bot<IHR_BOT_TOKEN>/setWebhook?url=https://ihr-worker.ihre-subdomain.workers.dev
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://your-worker.your-subdomain.workers.dev/webhook
+```
+
+```bash
+https://api.telegram.org/bot123456789:abcdefghijklmn/setWebhook?url=https://gpt-telegram-worker.abcdefg.workers.dev/webhook
 ```
 
 ### Lokale Entwicklung
@@ -208,15 +212,6 @@ Ermöglicht Nutzern das Hochladen und Analysieren von Bildern:
 
 Hinweis: Stellen Sie sicher, dass das gewählte KI-Modell Bildanalyse unterstützt.
 
-## ⚠️ Wichtige Hinweise
-
-1. 🚦 **API-Kontingente beachten**: Besonders bei Bild-Diensten auf Nutzungslimits achten.
-2. 🔐 **Datensicherheit**: Umgebungsvariablen und API-Schlüssel sorgfältig schützen.
-3. 🧠 **Modellkenntnisse**: Wählen Sie das passende Modell für Ihren Anwendungsfall.
-4. 🔄 **Aktualisierungen**: Regelmäßig Code und Funktionen aktualisieren.
-5. 🛡️ **Sicherheit**: API-Schlüssel regelmäßig erneuern, Prinzip der geringsten Rechte befolgen.
-6. 🎨 **Flux Prompt-Optimierung**: Bei aktiviertem PROMPT_OPTIMIZATION alle erforderlichen Variablen konfigurieren.
-
 ## 🚀 Flux Prompt-Optimierung
 
 Bei aktivierter PROMPT_OPTIMIZATION (Umgebungsvariable = true) wird eine externe API zur Optimierung der Bildgenerierung genutzt:
@@ -226,6 +221,15 @@ Bei aktivierter PROMPT_OPTIMIZATION (Umgebungsvariable = true) wird eine externe
 3. Optimierter Prompt wird für die Flux-Bildgenerierung verwendet.
 
 Diese Funktion verbessert die Bildqualität und Genauigkeit. Stellen Sie die korrekten Umgebungsvariablen sicher.
+
+## ⚠️ Wichtige Hinweise
+
+1. 🚦 **API-Kontingente beachten**: Besonders bei Bild-Diensten auf Nutzungslimits achten.
+2. 🔐 **Datensicherheit**: Umgebungsvariablen und API-Schlüssel sorgfältig schützen.
+3. 🧠 **Modellkenntnisse**: Wählen Sie das passende Modell für Ihren Anwendungsfall.
+4. 🔄 **Aktualisierungen**: Regelmäßig Code und Funktionen aktualisieren.
+5. 🛡️ **Sicherheit**: API-Schlüssel regelmäßig erneuern, Prinzip der geringsten Rechte befolgen.
+6. 🎨 **Flux Prompt-Optimierung**: Bei aktiviertem PROMPT_OPTIMIZATION alle erforderlichen Variablen konfigurieren.
 
 ## 🔧 Fehlerbehebung
 
