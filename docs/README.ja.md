@@ -135,7 +135,11 @@ Telegram GPT Worker へようこそ！👋 これは TypeScript で開発され�
 Telegram Bot API を使用して Webhook を設定します。URL の例:
 
 ```bash
-https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://your-worker.your-subdomain.workers.dev
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://your-worker.your-subdomain.workers.dev/webhook
+```
+
+```bash
+https://api.telegram.org/bot123456789:abcdefghijklmn/setWebhook?url=https://gpt-telegram-worker.abcdefg.workers.dev/webhook
 ```
 
 ### ローカル開発
@@ -208,15 +212,6 @@ https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://your-worker.
 
 注意：使用する AI モデルが画像分析機能をサポートしていることを確認してください。現在のモデルがサポートしていない場合、ボットはマルチモーダル対応のモデルに切り替えるよう促します。
 
-## ⚠️ 注意事項
-
-1. 🚦 **API クォータの適切な利用**: 特に画像生成と分析サービスについて、利用制限に注意してください。
-2. 🔐 **機密情報の保護**: 環境変数と API キーを適切に管理してください。
-3. 🧠 **モデルの特性を理解**: アプリケーションのシナリオに最適な AI モデルを選択してください。
-4. 🔄 **最新の状態を維持**: 最高のパフォーマンスを得るために、定期的にコードと機能を更新してください。
-5. 🛡️ **セキュリティ第一**: API キーを定期的に更新し、最小権限の原則に従ってください。
-6. 🎨 **Flux プロンプト最適化**: PROMPT_OPTIMIZATION を有効にする場合、EXTERNAL_API_BASE、EXTERNAL_MODEL、EXTERNAL_API_KEY が正しく設定されていることを確認してください。
-
 ## 🚀 Flux プロンプト最適化
 
 PROMPT_OPTIMIZATION 環境変数が true に設定されている場合、Flux 画像生成機能は外部 API を使用してプロンプトを最適化します。この機能は以下の手順で動作します：
@@ -226,6 +221,15 @@ PROMPT_OPTIMIZATION 環境変数が true に設定されている場合、Flux �
 3. 最適化されたプロンプトが Flux モデルで画像生成に使用されます。
 
 この機能は、より正確で Flux モデルの特性に適した画像を生成するのに役立ちます。この機能を使用するには、関連するすべての環境変数が正しく設定されていることを確認してください。
+
+## ⚠️ 注意事項
+
+1. 🚦 **API クォータの適切な利用**: 特に画像生成と分析サービスについて、利用制限に注意してください。
+2. 🔐 **機密情報の保護**: 環境変数と API キーを適切に管理してください。
+3. 🧠 **モデルの特性を理解**: アプリケーションのシナリオに最適な AI モデルを選択してください。
+4. 🔄 **最新の状態を維持**: 最高のパフォーマンスを得るために、定期的にコードと機能を更新してください。
+5. 🛡️ **セキュリティ第一**: API キーを定期的に更新し、最小権限の原則に従ってください。
+6. 🎨 **Flux プロンプト最適化**: PROMPT_OPTIMIZATION を有効にする場合、EXTERNAL_API_BASE、EXTERNAL_MODEL、EXTERNAL_API_KEY が正しく設定されていることを確認してください。
 
 ## 🔧 トラブルシューティング
 
