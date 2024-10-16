@@ -9,14 +9,15 @@
 ## 🌟 核心功能
 
 1. 🧠 **多模型支援**: 整合 OpenAI、Google Gemini、Anthropic Claude、Groq 和 Azure OpenAI 等多個 AI 模型。
-2. 💬 **智慧對話**: 具備上下文記憶能力,確保對話流暢自然。
-3. 🎨 **圖像生成**: 支援文字描述生成圖像,採用 DALL·E 和 Cloudflare Flux 技術。
-4. 🖼️ **圖像分析**: 支援使用者上傳圖片並進行智慧分析,可使用 OpenAI 或 Google Gemini 模型。
-5. 🌍 **多語言支援**: 內建 i18n 功能,支援 8 種語言,滿足多樣化需求。
-6. 🔒 **使用者權限管理**: 透過白名單功能控制存取權限,提升安全性。
-7. ☁️ **高性能部署**: 利用 Cloudflare Workers 的邊緣運算能力,實現快速回應。
-8. 🗄️ **高效資料管理**: 使用 Redis 進行資料快取和管理,確保高效處理。
-9. 🔧 **Flux 提示詞優化**: 可選功能,透過外部 API 優化 Flux 模型的圖像生成提示詞。
+2. 🔗 **OpenAI 兼容模型支持**：專為 One API、New API 等 AI 模型接口管理與分發系統設計，支持自動獲取模型列表。
+3. 💬 **智慧對話**: 具備上下文記憶能力,確保對話流暢自然。
+4. 🎨 **圖像生成**: 支援文字描述生成圖像,採用 DALL·E 和 Cloudflare Flux 技術。
+5. 🖼️ **圖像分析**: 支援使用者上傳圖片並進行智慧分析,可使用 OpenAI 或 Google Gemini 模型。
+6. 🌍 **多語言支援**: 內建 i18n 功能,支援 8 種語言,滿足多樣化需求。
+7. 🔒 **使用者權限管理**: 透過白名單功能控制存取權限,提升安全性。
+8. ☁️ **高性能部署**: 利用 Cloudflare Workers 的邊緣運算能力,實現快速回應。
+9. 🗄️ **高效資料管理**: 使用 Redis 進行資料快取和管理,確保高效處理。
+10. 🔧 **Flux 提示詞優化**: 可選功能,透過外部 API 優化 Flux 模型的圖像生成提示詞。
 
 ## 📋 系統要求
 
@@ -62,6 +63,7 @@
 │   │   ├── image_generation.ts    # 處理DALL·E 繪圖介面
 │   │   ├── model_api_interface.ts # 通用介面,定義模型API標準結構
 │   │   ├── openai_api.ts          # 處理OpenAI API交互
+│   │   ├── openai_compatible.ts   # 處理 OpenAI 兼容的 API 交互
 │   │   └── telegram.ts            # 處理 Telegram bot 的邏輯
 │   ├── /config                    # 配置檔案
 │   │   └── commands.ts            # Telegram bot 指令
@@ -194,6 +196,8 @@ https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://your-worker.
 | GROQ_API_KEY | Groq API 金鑰 | - | your-groq-api-key |
 | ANTHROPIC_API_KEY | Anthropic API 金鑰 | - | your-anthropic-api-key |
 | ANTHROPIC_BASE_URL | Anthropic API 基礎 URL | https://api.anthropic.com | https://your-custom-anthropic-endpoint.com |
+| OPENAI_COMPATIBLE_KEY | OpenAI 兼容 API 密鑰 | - | sk-abcdefghijklmnopqrstuvwxyz123456 |
+| OPENAI_COMPATIBLE_URL | OpenAI 兼容 API 基礎 URL | - | https://your-custom-endpoint.com/v1 |
 
 注意:部分變數需要手動配置,無預設值。
 
@@ -216,6 +220,7 @@ https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://your-worker.
 4. 🔄 **保持更新**: 定期更新程式碼和功能以獲得最佳效能。
 5. 🛡️ **安全第一**: 定期更新 API 金鑰,遵循最小權限原則。
 6. 🎨 **Flux 提示詞優化**: 啟用 PROMPT_OPTIMIZATION 時,請確保正確配置 EXTERNAL_API_BASE、EXTERNAL_MODEL 和 EXTERNAL_API_KEY。
+7. ⛔ **重要提示**：為避免潛在衝突，建議不要在 OpenAI 兼容中添加與其他 API 重複的模型。例如，若您已配置了 Gemini API 並選擇了 gemini-1.5-flash 模型，則不應在 OpenAI 兼容中添加相同的模型。
 
 ## 🚀 Flux 提示詞優化
 
