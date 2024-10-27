@@ -1,7 +1,14 @@
 import { Env, getConfig } from '../env';
 import { TelegramTypes } from '../../types/telegram';
 import OpenAIAPI, { Message } from './openai_api';
-import { formatCodeBlock, escapeMarkdown, sendChatAction, splitMessage } from '../utils/helpers';
+import { 
+  formatCodeBlock, 
+  formatHtml, 
+  formatMarkdown, 
+  stripFormatting,
+  sendChatAction, 
+  splitMessage 
+} from '../utils/helpers';
 import { translate, SupportedLanguages, Translations } from '../utils/i18n';
 import { commands, Command } from '../config/commands';
 import { RedisClient } from '../utils/redis';
@@ -167,7 +174,8 @@ export class TelegramBot {
               const response = await this.modelAPI.generateResponse(messages, currentModel);
               const formattedResponse = this.formatResponse(response);
 
-              await this.sendMessageWithFallback(chatId, formattedResponse);
+              // 修改这里：在发送消息时添加模型信息
+              await this.sendMessageWithFallback(chatId, `🤖 ${currentModel}\n${formattedResponse}`);
 
               await this.storeContext(userId, `User: ${update.message.text}\nAssistant: ${response}`);
             } catch (error) {
@@ -455,30 +463,37 @@ export class TelegramBot {
   }
 
   async sendMessageWithFallback(chatId: number, text: string): Promise<TelegramTypes.SendMessageResult[]> {
-    const currentModel = await this.getCurrentModel(chatId.toString());
-    const messages = this.splitMessage(text, 4000);
+    const standardizedText = this.standardizeMarkdown(text);
+    const messages = splitMessage(standardizedText, 4000);
     const results: TelegramTypes.SendMessageResult[] = [];
 
     for (const message of messages) {
       try {
-        let result;
-        if (currentModel.startsWith('gemini-')) {
-          // 对于 Gemini 模型，尝试使用 HTML 格式
-          const htmlMessage = this.convertToHtml(message);
-          result = await this.sendMessage(chatId, htmlMessage, { parse_mode: 'HTML' });
+        // 所有模型统一使用 Markdown
+        const markdownMessage = formatMarkdown(message);
+        // 检查是否包含未闭合的格式标记
+        if (
+          (markdownMessage.match(/```/g) || []).length % 2 !== 0 || 
+          (markdownMessage.match(/\*/g) || []).length % 2 !== 0 ||
+          (markdownMessage.match(/`(?!``)/g) || []).length % 2 !== 0
+        ) {
+          // 如果有未闭合的标记，使用纯文本发送
+          const result = await this.sendMessage(chatId, stripFormatting(message));
+          results.push(...result);
+          console.log(`Sent plain text message due to unclosed tags (length: ${message.length})`);
         } else {
-          // 对于其他模型，尝试使用 Markdown
-          result = await this.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+          const result = await this.sendMessage(chatId, markdownMessage, { parse_mode: 'Markdown' });
+          results.push(...result);
+          console.log(`Successfully sent markdown message (length: ${message.length})`);
         }
-        results.push(...result);
-        console.log(`Successfully sent message part (length: ${message.length})`);
       } catch (error) {
         console.error('Error sending formatted message:', error);
         try {
-          // 如果发送失败，尝试发送纯文本
-          const plainTextResult = await this.sendMessage(chatId, this.stripFormatting(message));
-          results.push(...plainTextResult);
-          console.log(`Sent plain text message part (length: ${message.length})`);
+          // 如果格式化消息发送失败，尝试发送纯文本
+          const plainText = stripFormatting(message);
+          const result = await this.sendMessage(chatId, plainText);
+          results.push(...result);
+          console.log(`Sent plain text message as fallback (length: ${message.length})`);
         } catch (fallbackError) {
           console.error('Error sending plain text message:', fallbackError);
         }
@@ -486,28 +501,6 @@ export class TelegramBot {
     }
 
     return results;
-  }
-
-  private convertToHtml(text: string): string {
-    return text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
-      .replace(/\*(.*?)\*/g, '<i>$1</i>')
-      .replace(/`(.*?)`/g, '<code>$1</code>')
-      .replace(/```([\s\S]*?)```/g, '<pre>$1</pre>')
-      .replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2">$1</a>');
-  }
-
-  private stripFormatting(text: string): string {
-    return text
-      .replace(/\*\*(.*?)\*\*/g, '$1')
-      .replace(/\*(.*?)\*/g, '$1')
-      .replace(/`(.*?)`/g, '$1')
-      .replace(/```[\s\S]*?```/g, '')
-      .replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '$1 ($2)')
-      .replace(/<[^>]+>/g, '');
   }
 
   private splitMessage(text: string, maxLength: number = 4000): string[] {
@@ -599,6 +592,22 @@ export class TelegramBot {
     } catch (error) {
       console.error('Error setting default menu button:', error);
     }
+  }
+
+  private standardizeMarkdown(text: string): string {
+    return text
+      // 确保代码块前后有换行
+      .replace(/([^\n])```/g, '$1\n```')
+      .replace(/```([^\n])/g, '```\n$1')
+      // 修复可能的嵌套星号问题
+      .replace(/\*\*\*/g, '*')
+      .replace(/\*\*\*/g, '*')
+      // 确保链接格式正确
+      .replace(/\[([^\]]+)\]\s*\(([^)]+)\)/g, '[$1]($2)')
+      // 确保行内代码前后有空格
+      .replace(/([^\s`])`([^`]+)`([^\s`])/g, '$1 `$2` $3')
+      // 移除多余的转义字符
+      .replace(/\\([*_`\[\]()#+-=|{}.!])/g, '$1');
   }
 }
 

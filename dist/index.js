@@ -100,18 +100,51 @@ function formatCodeBlock(code, language) {
 ${code}
 \`\`\``;
 }
+function formatMarkdown(text) {
+  text = text.replace(/```(\w*)\n([\s\S]+?)```/g, (_, lang, code) => {
+    const escapedCode = code.replace(/\*/g, "\\*").replace(/_/g, "\\_");
+    return formatCodeBlock(escapedCode.trim(), lang || "");
+  });
+  return text.replace(/([^\n])```/g, "$1\n```").replace(/```([^\n])/g, "```\n$1").replace(/([^\s`])`([^`]+)`([^\s`])/g, "$1 `$2` $3").replace(/\*\*\*([^*]+)\*\*\*/g, "*$1*").replace(/\*\*([^*]+)\*\*/g, "*$1*").replace(/\[([^\]]+)\]\s*\(([^)]+)\)/g, "[$1]($2)").replace(/^(\s*)-\s+(.+)$/gm, "$1\u2022 $2").replace(/^>\s*(.+)$/gm, "\u258E _$1_").replace(/\\([*_`\[\]()#+-=|{}.!])/g, "$1");
+}
+function stripFormatting(text) {
+  return text.replace(/^(#{1,6})\s+(.+)$/gm, (_, hashes, content) => {
+    const level = hashes.length;
+    const indent = " ".repeat(level - 1);
+    return `${indent}\u25C6 ${content.trim()}`;
+  }).replace(/\*\*\*(.*?)\*\*\*/g, "$1").replace(/\*\*(.*?)\*\*/g, "$1").replace(/\*(.*?)\*/g, "$1").replace(/`(.*?)`/g, "$1").replace(/```[\s\S]*?```/g, "").replace(/\[([^\]]+)\]\(([^\)]+)\)/g, "$1 ($2)").replace(/^(\s*)-\s+(.+)$/gm, "$1\u2022 $2").replace(/^>\s*(.+)$/gm, "\u258E $1");
+}
 function splitMessage(text, maxLength = 4096) {
   const messages = [];
+  const parts = text.split(/(```[\s\S]*?```)/);
   let currentMessage = "";
-  const lines = text.split("\n");
-  for (const line of lines) {
-    if (currentMessage.length + line.length + 1 > maxLength) {
-      messages.push(currentMessage.trim());
-      currentMessage = "";
+  for (const part of parts) {
+    if (part.startsWith("```")) {
+      if (currentMessage.length + part.length > maxLength) {
+        if (currentMessage) {
+          messages.push(currentMessage.trim());
+          currentMessage = "";
+        }
+        messages.push(part);
+      } else {
+        currentMessage += part;
+      }
+    } else {
+      const lines = part.split("\n");
+      for (const line of lines) {
+        if (currentMessage.length + line.length + 1 > maxLength) {
+          if (currentMessage) {
+            messages.push(currentMessage.trim());
+            currentMessage = "";
+          }
+          currentMessage = line;
+        } else {
+          currentMessage += (currentMessage ? "\n" : "") + line;
+        }
+      }
     }
-    currentMessage += line + "\n";
   }
-  if (currentMessage.trim()) {
+  if (currentMessage) {
     messages.push(currentMessage.trim());
   }
   return messages;
@@ -1585,7 +1618,8 @@ ${errorText}`);
               }
               const response = await this.modelAPI.generateResponse(messages, currentModel);
               const formattedResponse = this.formatResponse(response);
-              await this.sendMessageWithFallback(chatId, formattedResponse);
+              await this.sendMessageWithFallback(chatId, `\u{1F916} ${currentModel}
+${formattedResponse}`);
               await this.storeContext(userId, `User: ${update.message.text}
 Assistant: ${response}`);
             } catch (error) {
@@ -1830,38 +1864,34 @@ ${summary}`;
     }
   }
   async sendMessageWithFallback(chatId, text) {
-    const currentModel = await this.getCurrentModel(chatId.toString());
-    const messages = this.splitMessage(text, 4e3);
+    const standardizedText = this.standardizeMarkdown(text);
+    const messages = splitMessage(standardizedText, 4e3);
     const results = [];
     for (const message of messages) {
       try {
-        let result;
-        if (currentModel.startsWith("gemini-")) {
-          const htmlMessage = this.convertToHtml(message);
-          result = await this.sendMessage(chatId, htmlMessage, { parse_mode: "HTML" });
+        const markdownMessage = formatMarkdown(message);
+        if ((markdownMessage.match(/```/g) || []).length % 2 !== 0 || (markdownMessage.match(/\*/g) || []).length % 2 !== 0 || (markdownMessage.match(/`(?!``)/g) || []).length % 2 !== 0) {
+          const result = await this.sendMessage(chatId, stripFormatting(message));
+          results.push(...result);
+          console.log(`Sent plain text message due to unclosed tags (length: ${message.length})`);
         } else {
-          result = await this.sendMessage(chatId, message, { parse_mode: "Markdown" });
+          const result = await this.sendMessage(chatId, markdownMessage, { parse_mode: "Markdown" });
+          results.push(...result);
+          console.log(`Successfully sent markdown message (length: ${message.length})`);
         }
-        results.push(...result);
-        console.log(`Successfully sent message part (length: ${message.length})`);
       } catch (error) {
         console.error("Error sending formatted message:", error);
         try {
-          const plainTextResult = await this.sendMessage(chatId, this.stripFormatting(message));
-          results.push(...plainTextResult);
-          console.log(`Sent plain text message part (length: ${message.length})`);
+          const plainText = stripFormatting(message);
+          const result = await this.sendMessage(chatId, plainText);
+          results.push(...result);
+          console.log(`Sent plain text message as fallback (length: ${message.length})`);
         } catch (fallbackError) {
           console.error("Error sending plain text message:", fallbackError);
         }
       }
     }
     return results;
-  }
-  convertToHtml(text) {
-    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\*\*(.*?)\*\*/g, "<b>$1</b>").replace(/\*(.*?)\*/g, "<i>$1</i>").replace(/`(.*?)`/g, "<code>$1</code>").replace(/```([\s\S]*?)```/g, "<pre>$1</pre>").replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2">$1</a>');
-  }
-  stripFormatting(text) {
-    return text.replace(/\*\*(.*?)\*\*/g, "$1").replace(/\*(.*?)\*/g, "$1").replace(/`(.*?)`/g, "$1").replace(/```[\s\S]*?```/g, "").replace(/\[([^\]]+)\]\(([^\)]+)\)/g, "$1 ($2)").replace(/<[^>]+>/g, "");
   }
   splitMessage(text, maxLength = 4e3) {
     const messages = [];
@@ -1939,6 +1969,9 @@ ${summary}`;
     } catch (error) {
       console.error("Error setting default menu button:", error);
     }
+  }
+  standardizeMarkdown(text) {
+    return text.replace(/([^\n])```/g, "$1\n```").replace(/```([^\n])/g, "```\n$1").replace(/\*\*\*/g, "*").replace(/\*\*\*/g, "*").replace(/\[([^\]]+)\]\s*\(([^)]+)\)/g, "[$1]($2)").replace(/([^\s`])`([^`]+)`([^\s`])/g, "$1 `$2` $3").replace(/\\([*_`\[\]()#+-=|{}.!])/g, "$1");
   }
 };
 var telegram_default = TelegramBot;
