@@ -149,7 +149,7 @@ https://api.telegram.org/bot123456789:abcdefghijklmn/setWebhook?url=https://gpt-
 1. Клонируйте проект:
 
    ```bash
-   git clone https://github.com/your-username/telegram-bot.git
+   git clone https://github.com/snakeying/telegram-bot.git
    ```
 
 2. Установите зависимости:
