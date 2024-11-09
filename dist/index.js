@@ -96,23 +96,38 @@ var openai_api_default = OpenAIAPI;
 
 // src/utils/helpers.ts
 function formatCodeBlock(code, language) {
-  return `\`\`\`${language}
-${code}
-\`\`\``;
+  const trimmedCode = code.trim().replace(/^\n+|\n+$/g, "").replace(/\n{3,}/g, "\n\n");
+  return `
+\`\`\`${language}
+${trimmedCode}
+\`\`\`
+`;
 }
 function formatMarkdown(text) {
-  text = text.replace(/```(\w*)\n([\s\S]+?)```/g, (_, lang, code) => {
-    const escapedCode = code.replace(/\*/g, "\\*").replace(/_/g, "\\_");
-    return formatCodeBlock(escapedCode.trim(), lang || "");
+  const codeBlocks = [];
+  let processedText = text.replace(/```[\s\S]+?```/g, (match) => {
+    codeBlocks.push(match);
+    return `__CODE_BLOCK_${codeBlocks.length - 1}__`;
   });
-  return text.replace(/([^\n])```/g, "$1\n```").replace(/```([^\n])/g, "```\n$1").replace(/([^\s`])`([^`]+)`([^\s`])/g, "$1 `$2` $3").replace(/\*\*\*([^*]+)\*\*\*/g, "*$1*").replace(/\*\*([^*]+)\*\*/g, "*$1*").replace(/\[([^\]]+)\]\s*\(([^)]+)\)/g, "[$1]($2)").replace(/^(\s*)-\s+(.+)$/gm, "$1\u2022 $2").replace(/^>\s*(.+)$/gm, "\u258E _$1_").replace(/\\([*_`\[\]()#+-=|{}.!])/g, "$1");
+  processedText = processedText.replace(/\*\*\*([^*]+)\*\*\*/g, "*$1*").replace(/\*\*([^*]+)\*\*/g, "*$1*").replace(/\[([^\]]+)\]\s*\(([^)]+)\)/g, "[$1]($2)").replace(/^(\s*)-\s+(.+)$/gm, "$1\u2022 $2").replace(/^>\s*(.+)$/gm, "\u258E _$1_").replace(/([^\s`])`([^`]+)`([^\s`])/g, "$1 `$2` $3");
+  processedText = processedText.replace(/__CODE_BLOCK_(\d+)__/g, (_, index) => {
+    const block = codeBlocks[parseInt(index)];
+    return block.replace(/```(\w*)\n?([\s\S]+?)```/g, (_2, lang, code) => {
+      return formatCodeBlock(code, lang || "");
+    });
+  });
+  return processedText;
 }
 function stripFormatting(text) {
-  return text.replace(/^(#{1,6})\s+(.+)$/gm, (_, hashes, content) => {
-    const level = hashes.length;
-    const indent = " ".repeat(level - 1);
-    return `${indent}\u25C6 ${content.trim()}`;
-  }).replace(/\*\*\*(.*?)\*\*\*/g, "$1").replace(/\*\*(.*?)\*\*/g, "$1").replace(/\*(.*?)\*/g, "$1").replace(/`(.*?)`/g, "$1").replace(/```[\s\S]*?```/g, "").replace(/\[([^\]]+)\]\(([^\)]+)\)/g, "$1 ($2)").replace(/^(\s*)-\s+(.+)$/gm, "$1\u2022 $2").replace(/^>\s*(.+)$/gm, "\u258E $1");
+  const codeBlocks = [];
+  let processedText = text.replace(/```[\s\S]+?```/g, (match) => {
+    codeBlocks.push(match);
+    return `__CODE_BLOCK_${codeBlocks.length - 1}__`;
+  });
+  processedText = processedText.replace(/\*\*\*(.*?)\*\*\*/g, "$1").replace(/\*\*(.*?)\*\*/g, "$1").replace(/\*(.*?)\*/g, "$1").replace(/`(.*?)`/g, "$1").replace(/\[([^\]]+)\]\(([^\)]+)\)/g, "$1 ($2)").replace(/^(\s*)-\s+(.+)$/gm, "$1\u2022 $2").replace(/^>\s*(.+)$/gm, "\u258E $1");
+  return processedText.replace(/__CODE_BLOCK_(\d+)__/g, (_, index) => {
+    return codeBlocks[parseInt(index)];
+  });
 }
 function splitMessage(text, maxLength = 4096) {
   const messages = [];
@@ -1154,26 +1169,18 @@ var GeminiAPI = class {
   }
   async generateResponse(messages, model) {
     const useModel = model || this.defaultModel;
-    const url = `${this.baseUrl}/models/${useModel}:generateContent?key=${this.apiKey}`;
-    const geminiMessages = messages.filter((msg) => msg.role !== "system").map((msg) => ({
-      role: msg.role === "assistant" ? "model" : "user",
-      parts: [{ text: msg.content }]
-    }));
-    const requestBody = {
-      contents: geminiMessages,
-      generationConfig: {
-        temperature: 0.7,
-        topP: 1,
-        topK: 1,
-        maxOutputTokens: 2048
-      }
-    };
+    const url = `${this.baseUrl}/chat/completions`;
     const response = await fetch(url, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${this.apiKey}`
       },
-      body: JSON.stringify(requestBody)
+      body: JSON.stringify({
+        model: useModel,
+        messages,
+        n: 1
+      })
     });
     if (!response.ok) {
       const errorText = await response.text();
@@ -1182,10 +1189,19 @@ var GeminiAPI = class {
 ${errorText}`);
     }
     const data = await response.json();
-    if (!data.candidates || data.candidates.length === 0) {
-      throw new Error("No response generated from Gemini API");
+    if (!data.choices || data.choices.length === 0) {
+      throw new Error("Gemini API did not return any choices");
     }
-    return data.candidates[0].content.parts[0].text.trim();
+    let content = data.choices[0].message.content;
+    content = content.replace(/```\s*(\w*)\s*\n([\s\S]+?)```/g, (_, lang, code) => {
+      const trimmedCode = code.trim().replace(/^\n+|\n+$/g, "").replace(/\n{3,}/g, "\n\n");
+      return `
+\`\`\`${lang || ""}
+${trimmedCode}
+\`\`\`
+`;
+    });
+    return content;
   }
   isValidModel(model) {
     return this.models.includes(model);
@@ -1197,7 +1213,6 @@ ${errorText}`);
     return this.models;
   }
 };
-var gemini_default = GeminiAPI;
 
 // src/api/groq.ts
 var GroqAPI = class {
@@ -1493,6 +1508,16 @@ var TelegramBot = class {
   commands;
   redis;
   modelAPI;
+  languageNames = {
+    "en": "English",
+    "zh": "Chinese",
+    "es": "Spanish",
+    "zh-TW": "Traditional Chinese",
+    "ja": "Japanese",
+    "de": "German",
+    "fr": "French",
+    "ru": "Russian"
+  };
   constructor(env) {
     const config = getConfig(env);
     this.token = config.telegramBotToken;
@@ -1514,7 +1539,7 @@ var TelegramBot = class {
       return new openai_api_default(this.env);
     } else if (config.googleModelKey && config.googleModels.includes(currentModel)) {
       console.log("Using GeminiAPI");
-      return new gemini_default(this.env);
+      return new GeminiAPI(this.env);
     } else if (config.groqApiKey && config.groqModels.includes(currentModel)) {
       console.log("Using GroqAPI");
       return new groq_default(this.env);
@@ -1603,25 +1628,18 @@ ${errorText}`);
               this.modelAPI = await this.initializeModelAPI(userId);
               const context = await this.getContext(userId);
               const currentModel = await this.getCurrentModel(userId);
-              let messages = [];
-              if (currentModel.startsWith("gemini-")) {
-                messages = [
-                  ...context ? [{ role: "user", content: context }] : [],
-                  { role: "user", content: update.message.text }
-                ];
-              } else {
-                messages = [
-                  { role: "system", content: this.systemMessage },
-                  ...context ? [{ role: "user", content: context }] : [],
-                  { role: "user", content: update.message.text }
-                ];
-              }
+              const processedContext = context ? this.processContext(context) : null;
+              let messages = [
+                { role: "system", content: this.systemMessage },
+                ...processedContext ? [{ role: "user", content: processedContext }] : [],
+                { role: "user", content: update.message.text }
+              ];
               const response = await this.modelAPI.generateResponse(messages, currentModel);
               const formattedResponse = this.formatResponse(response);
               await this.sendMessageWithFallback(chatId, `\u{1F916} ${currentModel}
 ${formattedResponse}`);
-              await this.storeContext(userId, `User: ${update.message.text}
-Assistant: ${response}`);
+              await this.storeContext(userId, `Q: ${update.message.text}
+A: ${response}`);
             } catch (error) {
               console.error("Error in handleUpdate:", error);
             }
@@ -1748,6 +1766,7 @@ Assistant: ${response}`);
     await this.redis.set(`model:${userId}`, model);
     console.log(`Switching to model: ${model}`);
     this.modelAPI = await this.initializeModelAPI(userId);
+    await this.clearContext(userId);
   }
   getAvailableModels() {
     return this.modelAPI.getAvailableModels();
@@ -1756,7 +1775,8 @@ Assistant: ${response}`);
     return this.modelAPI.isValidModel(model);
   }
   async storeContext(userId, context) {
-    await this.redis.appendContext(userId, context);
+    const cleanContext = this.processContext(context);
+    await this.redis.appendContext(userId, cleanContext);
   }
   async getContext(userId) {
     return await this.redis.get(`context:${userId}`);
@@ -1773,41 +1793,46 @@ Assistant: ${response}`);
     if (!context) {
       return translate("no_history", language);
     }
-    const languageNames = {
-      "en": "English",
-      "zh": "Chinese",
-      "es": "Spanish",
-      "zh-TW": "Traditional Chinese",
-      "ja": "Japanese",
-      "de": "German",
-      "fr": "French",
-      "ru": "Russian"
-    };
     const currentModel = await this.getCurrentModel(userId);
     console.log(`Summarizing history with model: ${currentModel}`);
-    let messages;
-    if (currentModel.startsWith("gemini-")) {
-      messages = [
-        { role: "user", content: `Please summarize the following conversation in ${languageNames[language]}:
-
-${context}` }
-      ];
-    } else {
-      messages = [
-        { role: "system", content: `Summarize the following conversation in ${languageNames[language]}:` },
-        { role: "user", content: context }
-      ];
-    }
+    const cleanContext = context.replace(/^(Q|A): /gm, "").replace(/```[\s\S]*?```/g, (match) => {
+      return match.replace(/^```\w*\n/, "").replace(/\n```$/, "").trim();
+    });
+    let messages = [
+      { role: "system", content: `Summarize the following conversation in ${this.languageNames[language]}:` },
+      { role: "user", content: cleanContext }
+    ];
     const summary = await this.modelAPI.generateResponse(messages, currentModel);
     return `${translate("history_summary", language)}
 
 ${summary}`;
   }
   formatResponse(response) {
-    const codeBlockRegex = /```(\w+)?\n([\s\S]+?)```/g;
-    return response.replace(codeBlockRegex, (match, language, code) => {
-      return formatCodeBlock(code.trim(), language || "");
-    });
+    try {
+      let processedResponse = response.replace(/```(\w*)\n?([\s\S]+?)```/g, (_, lang, code) => {
+        const trimmedCode = code.trim().replace(/^\n+|\n+$/g, "").replace(/\n{3,}/g, "\n\n");
+        return `
+\`\`\`${lang || ""}
+${trimmedCode}
+\`\`\`
+`;
+      });
+      const formattedResponse = formatMarkdown(processedResponse);
+      const codeBlockCount = (formattedResponse.match(/```/g) || []).length;
+      const asteriskCount = (formattedResponse.match(/\*/g) || []).length;
+      const inlineCodeCount = (formattedResponse.match(/`(?!``)/g) || []).length;
+      const hasUnclosedTags = codeBlockCount > 0 && codeBlockCount % 2 !== 0 || // 代码块必须成对
+      asteriskCount > 0 && asteriskCount % 2 !== 0 && asteriskCount > 3 || // 允许一些星号的存在
+      inlineCodeCount > 0 && inlineCodeCount % 2 !== 0 && inlineCodeCount > 2;
+      if (hasUnclosedTags) {
+        console.log("Detected seriously unclosed tags, using plain text format");
+        return stripFormatting(response);
+      }
+      return formattedResponse;
+    } catch (error) {
+      console.error("Error formatting response:", error);
+      return stripFormatting(response);
+    }
   }
   isUserWhitelisted(userId) {
     return this.whitelistedUsers.includes(userId);
@@ -1972,6 +1997,12 @@ ${summary}`;
   }
   standardizeMarkdown(text) {
     return text.replace(/([^\n])```/g, "$1\n```").replace(/```([^\n])/g, "```\n$1").replace(/\*\*\*/g, "*").replace(/\*\*\*/g, "*").replace(/\[([^\]]+)\]\s*\(([^)]+)\)/g, "[$1]($2)").replace(/([^\s`])`([^`]+)`([^\s`])/g, "$1 `$2` $3").replace(/\\([*_`\[\]()#+-=|{}.!])/g, "$1");
+  }
+  // 新增方法：处理上下文
+  processContext(context) {
+    return context.replace(/^(Q|A|User|Assistant): /gm, "").replace(/```[\s\S]*?```/g, (match) => {
+      return match.replace(/^```\w*\n/, "").replace(/\n```$/, "").trim();
+    }).replace(/\*\*\*(.*?)\*\*\*/g, "$1").replace(/\*\*(.*?)\*\*/g, "$1").replace(/\*(.*?)\*/g, "$1").replace(/`([^`]+)`/g, "$1").replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1").trim();
   }
 };
 var telegram_default = TelegramBot;

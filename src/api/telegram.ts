@@ -29,6 +29,16 @@ export class TelegramBot {
   private commands: Command[];
   private redis: RedisClient;
   private modelAPI: ModelAPIInterface;
+  private readonly languageNames = {
+    'en': 'English',
+    'zh': 'Chinese',
+    'es': 'Spanish',
+    'zh-TW': 'Traditional Chinese',
+    'ja': 'Japanese',
+    'de': 'German',
+    'fr': 'French',
+    'ru': 'Russian'
+  };
 
   constructor(env: Env) {
     const config = getConfig(env);
@@ -157,30 +167,24 @@ export class TelegramBot {
               const context = await this.getContext(userId);
               const currentModel = await this.getCurrentModel(userId);
 
-              let messages: Message[] = [];
-              if (currentModel.startsWith('gemini-')) {
-                messages = [
-                  ...(context ? [{ role: 'user' as const, content: context }] : []),
-                  { role: 'user' as const, content: update.message.text }
-                ];
-              } else {
-                messages = [
-                  { role: 'system' as const, content: this.systemMessage },
-                  ...(context ? [{ role: 'user' as const, content: context }] : []),
-                  { role: 'user' as const, content: update.message.text }
-                ];
-              }
+              // 预处理上下文，确保格式正确
+              const processedContext = context ? this.processContext(context) : null;
+
+              let messages: Message[] = [
+                { role: 'system' as const, content: this.systemMessage },
+                ...(processedContext ? [{ role: 'user' as const, content: processedContext }] : []),
+                { role: 'user' as const, content: update.message.text }
+              ];
 
               const response = await this.modelAPI.generateResponse(messages, currentModel);
               const formattedResponse = this.formatResponse(response);
 
-              // 修改这里：在发送消息时添加模型信息
               await this.sendMessageWithFallback(chatId, `🤖 ${currentModel}\n${formattedResponse}`);
 
-              await this.storeContext(userId, `User: ${update.message.text}\nAssistant: ${response}`);
+              // 存储时使用更简单的格式
+              await this.storeContext(userId, `Q: ${update.message.text}\nA: ${response}`);
             } catch (error) {
               console.error('Error in handleUpdate:', error);
-              // 不向用户发送错误消息，只记录日志
             }
           }
         }
@@ -328,6 +332,8 @@ export class TelegramBot {
     await this.redis.set(`model:${userId}`, model);
     console.log(`Switching to model: ${model}`);
     this.modelAPI = await this.initializeModelAPI(userId);
+    // 切换模型时清理上下文，避免格式问题
+    await this.clearContext(userId);
   }
 
   getAvailableModels(): string[] {
@@ -339,7 +345,9 @@ export class TelegramBot {
   }
 
   async storeContext(userId: string, context: string): Promise<void> {
-    await this.redis.appendContext(userId, context);
+    // 存储时只保留纯文本内容
+    const cleanContext = this.processContext(context);
+    await this.redis.appendContext(userId, cleanContext);
   }
 
   async getContext(userId: string): Promise<string | null> {
@@ -360,40 +368,62 @@ export class TelegramBot {
     if (!context) {
       return translate('no_history', language);
     }
-    const languageNames = {
-      'en': 'English',
-      'zh': 'Chinese',
-      'es': 'Spanish',
-      'zh-TW': 'Traditional Chinese',
-      'ja': 'Japanese',
-      'de': 'German',
-      'fr': 'French',
-      'ru': 'Russian'
-    };
+
     const currentModel = await this.getCurrentModel(userId);
     console.log(`Summarizing history with model: ${currentModel}`);
 
-    let messages: Message[];
-    if (currentModel.startsWith('gemini-')) {
-      messages = [
-        { role: 'user', content: `Please summarize the following conversation in ${languageNames[language]}:\n\n${context}` }
-      ];
-    } else {
-      messages = [
-        { role: 'system', content: `Summarize the following conversation in ${languageNames[language]}:` },
-        { role: 'user', content: context }
-      ];
-    }
+    // 清理上下文格式
+    const cleanContext = context.replace(/^(Q|A): /gm, '')
+                               .replace(/```[\s\S]*?```/g, (match) => {
+                                 return match.replace(/^```\w*\n/, '')
+                                           .replace(/\n```$/, '')
+                                           .trim();
+                               });
+
+    let messages: Message[] = [
+      { role: 'system' as const, content: `Summarize the following conversation in ${this.languageNames[language]}:` },
+      { role: 'user' as const, content: cleanContext }
+    ];
 
     const summary = await this.modelAPI.generateResponse(messages, currentModel);
     return `${translate('history_summary', language)}\n\n${summary}`;
   }
 
   formatResponse(response: string): string {
-    const codeBlockRegex = /```(\w+)?\n([\s\S]+?)```/g;
-    return response.replace(codeBlockRegex, (match, language, code) => {
-      return formatCodeBlock(code.trim(), language || '');
-    });
+    try {
+      // 先尝试标准化代码块格式
+      let processedResponse = response.replace(/```(\w*)\n?([\s\S]+?)```/g, (_, lang, code) => {
+        const trimmedCode = code.trim()
+          .replace(/^\n+|\n+$/g, '')
+          .replace(/\n{3,}/g, '\n\n');
+        return `\n\`\`\`${lang || ''}\n${trimmedCode}\n\`\`\`\n`;
+      });
+
+      // 应用 Markdown 格式化
+      const formattedResponse = formatMarkdown(processedResponse);
+
+      // 更宽松的未闭合标记检查
+      const codeBlockCount = (formattedResponse.match(/```/g) || []).length;
+      const asteriskCount = (formattedResponse.match(/\*/g) || []).length;
+      const inlineCodeCount = (formattedResponse.match(/`(?!``)/g) || []).length;
+
+      // 只有当存在明显的未闭合标记时才使用纯文本
+      const hasUnclosedTags = (
+        (codeBlockCount > 0 && codeBlockCount % 2 !== 0) || // 代码块必须成对
+        (asteriskCount > 0 && asteriskCount % 2 !== 0 && asteriskCount > 3) || // 允许一些星号的存在
+        (inlineCodeCount > 0 && inlineCodeCount % 2 !== 0 && inlineCodeCount > 2) // 允许一些反引号的存在
+      );
+
+      if (hasUnclosedTags) {
+        console.log('Detected seriously unclosed tags, using plain text format');
+        return stripFormatting(response);
+      }
+
+      return formattedResponse;
+    } catch (error) {
+      console.error('Error formatting response:', error);
+      return stripFormatting(response);
+    }
   }
 
   isUserWhitelisted(userId: string): boolean {
@@ -608,6 +638,25 @@ export class TelegramBot {
       .replace(/([^\s`])`([^`]+)`([^\s`])/g, '$1 `$2` $3')
       // 移除多余的转义字符
       .replace(/\\([*_`\[\]()#+-=|{}.!])/g, '$1');
+  }
+
+  // 新增方法：处理上下文
+  private processContext(context: string): string {
+    // 移除所有的 Markdown 格式标记
+    return context
+      .replace(/^(Q|A|User|Assistant): /gm, '') // 移除对话标记
+      .replace(/```[\s\S]*?```/g, (match) => {   // 处理代码块
+        return match
+          .replace(/^```\w*\n/, '')
+          .replace(/\n```$/, '')
+          .trim();
+      })
+      .replace(/\*\*\*(.*?)\*\*\*/g, '$1')      // 移除加粗斜体
+      .replace(/\*\*(.*?)\*\*/g, '$1')          // 移除加粗
+      .replace(/\*(.*?)\*/g, '$1')              // 移除斜体
+      .replace(/`([^`]+)`/g, '$1')              // 移除行内代码
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1')// 移除链接
+      .trim();
   }
 }
 

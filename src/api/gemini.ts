@@ -3,21 +3,14 @@ import { ModelAPIInterface } from './model_api_interface';
 import { Message } from './openai_api';
 
 interface GeminiResponse {
-  candidates: Array<{
-    content: {
-      parts: Array<{
-        text: string;
-      }>;
+  choices: Array<{
+    message: {
+      content: string;
     };
   }>;
 }
 
-interface GeminiMessage {
-  role: 'user' | 'model';
-  parts: Array<{ text: string }>;
-}
-
-export class GeminiAPI implements ModelAPIInterface {
+export default class GeminiAPI implements ModelAPIInterface {
   private apiKey: string;
   private baseUrl: string;
   private models: string[];
@@ -33,31 +26,19 @@ export class GeminiAPI implements ModelAPIInterface {
 
   async generateResponse(messages: Message[], model?: string): Promise<string> {
     const useModel = model || this.defaultModel;
-    const url = `${this.baseUrl}/models/${useModel}:generateContent?key=${this.apiKey}`;
-
-    const geminiMessages: GeminiMessage[] = messages
-      .filter(msg => msg.role !== 'system')
-      .map(msg => ({
-        role: msg.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: msg.content }]
-      }));
-
-    const requestBody = {
-      contents: geminiMessages,
-      generationConfig: {
-        temperature: 0.7,
-        topP: 1,
-        topK: 1,
-        maxOutputTokens: 2048,
-      },
-    };
+    const url = `${this.baseUrl}/chat/completions`;
 
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.apiKey}`,
       },
-      body: JSON.stringify(requestBody),
+      body: JSON.stringify({
+        model: useModel,
+        messages: messages,
+        n: 1,
+      }),
     });
 
     if (!response.ok) {
@@ -66,11 +47,21 @@ export class GeminiAPI implements ModelAPIInterface {
       throw new Error(`Gemini API error: ${response.statusText}\n${errorText}`);
     }
 
-    const data: GeminiResponse = await response.json();
-    if (!data.candidates || data.candidates.length === 0) {
-      throw new Error('No response generated from Gemini API');
+    const data = await response.json() as GeminiResponse;
+    if (!data.choices || data.choices.length === 0) {
+      throw new Error('Gemini API did not return any choices');
     }
-    return data.candidates[0].content.parts[0].text.trim();
+
+    let content = data.choices[0].message.content;
+    
+    content = content.replace(/```\s*(\w*)\s*\n([\s\S]+?)```/g, (_, lang, code) => {
+      const trimmedCode = code.trim()
+        .replace(/^\n+|\n+$/g, '')
+        .replace(/\n{3,}/g, '\n\n');
+      return `\n\`\`\`${lang || ''}\n${trimmedCode}\n\`\`\`\n`;
+    });
+
+    return content;
   }
 
   isValidModel(model: string): boolean {
@@ -85,4 +76,3 @@ export class GeminiAPI implements ModelAPIInterface {
     return this.models;
   }
 }
-export default GeminiAPI;

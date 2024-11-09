@@ -1,37 +1,41 @@
 import { Env } from '../env';
 
 export function formatCodeBlock(code: string, language: string): string {
-  return `\`\`\`${language}\n${code}\n\`\`\``;
+  // 移除多余的空行和空格，但保留代码缩进
+  const trimmedCode = code.trim()
+    .replace(/^\n+|\n+$/g, '')  // 移除开头和结尾的空行
+    .replace(/\n{3,}/g, '\n\n'); // 将多个空行压缩为最多两个
+
+  // 确保代码块格式正确，并添加额外的换行以隔离代码块
+  return `\n\`\`\`${language}\n${trimmedCode}\n\`\`\`\n`;
 }
 
 export function formatMarkdown(text: string): string {
-  // 处理代码块前先进行转义
-  text = text.replace(/```(\w*)\n([\s\S]+?)```/g, (_, lang, code) => {
-    // 在代码块内容中转义 * 和 _ 等字符
-    const escapedCode = code
-      .replace(/\*/g, '\\*')
-      .replace(/_/g, '\\_');
-    return formatCodeBlock(escapedCode.trim(), lang || '');
+  // 先处理代码块，将其临时替换为占位符
+  const codeBlocks: string[] = [];
+  let processedText = text.replace(/```[\s\S]+?```/g, (match) => {
+    codeBlocks.push(match);
+    return `__CODE_BLOCK_${codeBlocks.length - 1}__`;
   });
 
   // 处理其他 Markdown 元素
-  return text
-    // 确保代码块前后有换行
-    .replace(/([^\n])```/g, '$1\n```')
-    .replace(/```([^\n])/g, '```\n$1')
-    // 处理行内代码
-    .replace(/([^\s`])`([^`]+)`([^\s`])/g, '$1 `$2` $3')
-    // 处理加粗和斜体
+  processedText = processedText
     .replace(/\*\*\*([^*]+)\*\*\*/g, '*$1*')
     .replace(/\*\*([^*]+)\*\*/g, '*$1*')
-    // 处理链接
     .replace(/\[([^\]]+)\]\s*\(([^)]+)\)/g, '[$1]($2)')
-    // 处理列表
     .replace(/^(\s*)-\s+(.+)$/gm, '$1• $2')
-    // 处理引用
     .replace(/^>\s*(.+)$/gm, '▎ _$1_')
-    // 移除多余的转义字符
-    .replace(/\\([*_`\[\]()#+-=|{}.!])/g, '$1');
+    .replace(/([^\s`])`([^`]+)`([^\s`])/g, '$1 `$2` $3');
+
+  // 还原代码块，并确保它们的格式正确
+  processedText = processedText.replace(/__CODE_BLOCK_(\d+)__/g, (_, index) => {
+    const block = codeBlocks[parseInt(index)];
+    return block.replace(/```(\w*)\n?([\s\S]+?)```/g, (_, lang, code) => {
+      return formatCodeBlock(code, lang || '');
+    });
+  });
+
+  return processedText;
 }
 
 export function formatHtml(text: string): string {
@@ -49,22 +53,27 @@ export function formatHtml(text: string): string {
 }
 
 export function stripFormatting(text: string): string {
-  return text
-    // 处理标题
-    .replace(/^(#{1,6})\s+(.+)$/gm, (_, hashes, content) => {
-      const level = hashes.length;
-      const indent = ' '.repeat(level - 1);
-      return `${indent}◆ ${content.trim()}`;
-    })
-    // 处理其他格式
+  // 保存代码块
+  const codeBlocks: string[] = [];
+  let processedText = text.replace(/```[\s\S]+?```/g, (match) => {
+    codeBlocks.push(match);
+    return `__CODE_BLOCK_${codeBlocks.length - 1}__`;
+  });
+
+  // 处理其他格式
+  processedText = processedText
     .replace(/\*\*\*(.*?)\*\*\*/g, '$1')
     .replace(/\*\*(.*?)\*\*/g, '$1')
     .replace(/\*(.*?)\*/g, '$1')
     .replace(/`(.*?)`/g, '$1')
-    .replace(/```[\s\S]*?```/g, '')
     .replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '$1 ($2)')
     .replace(/^(\s*)-\s+(.+)$/gm, '$1• $2')
     .replace(/^>\s*(.+)$/gm, '▎ $1');
+
+  // 还原代码块，但保持原始格式
+  return processedText.replace(/__CODE_BLOCK_(\d+)__/g, (_, index) => {
+    return codeBlocks[parseInt(index)];
+  });
 }
 
 export function splitMessage(text: string, maxLength: number = 4096): string[] {
