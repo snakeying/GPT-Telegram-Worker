@@ -214,9 +214,9 @@ export class TelegramBot {
       const newModel = query.data.split('_')[1];
       console.log('Switching to model:', newModel);
       try {
+        await this.clearContext(userId);
         await this.setCurrentModel(userId, newModel);
         await this.sendMessageWithFallback(chatId, translate('model_changed', language) + newModel);
-        await this.clearContext(userId);
       } catch (error) {
         console.error('Error switching model:', error);
         await this.sendMessageWithFallback(chatId, translate('error', language) + ': ' + (error instanceof Error ? error.message : 'Unknown error'));
@@ -332,8 +332,6 @@ export class TelegramBot {
     await this.redis.set(`model:${userId}`, model);
     console.log(`Switching to model: ${model}`);
     this.modelAPI = await this.initializeModelAPI(userId);
-    // 切换模型时清理上下文，避免格式问题
-    await this.clearContext(userId);
   }
 
   getAvailableModels(): string[] {
@@ -634,7 +632,7 @@ export class TelegramBot {
       .replace(/\*\*\*/g, '*')
       // 确保链接格式正确
       .replace(/\[([^\]]+)\]\s*\(([^)]+)\)/g, '[$1]($2)')
-      // 确保行内代码前后有空格
+      // 保行内代码前后有空格
       .replace(/([^\s`])`([^`]+)`([^\s`])/g, '$1 `$2` $3')
       // 移除多余的转义字符
       .replace(/\\([*_`\[\]()#+-=|{}.!])/g, '$1');

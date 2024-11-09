@@ -1667,9 +1667,9 @@ A: ${response}`);
       const newModel = query.data.split("_")[1];
       console.log("Switching to model:", newModel);
       try {
+        await this.clearContext(userId);
         await this.setCurrentModel(userId, newModel);
         await this.sendMessageWithFallback(chatId, translate("model_changed", language) + newModel);
-        await this.clearContext(userId);
       } catch (error) {
         console.error("Error switching model:", error);
         await this.sendMessageWithFallback(chatId, translate("error", language) + ": " + (error instanceof Error ? error.message : "Unknown error"));
@@ -1766,7 +1766,6 @@ A: ${response}`);
     await this.redis.set(`model:${userId}`, model);
     console.log(`Switching to model: ${model}`);
     this.modelAPI = await this.initializeModelAPI(userId);
-    await this.clearContext(userId);
   }
   getAvailableModels() {
     return this.modelAPI.getAvailableModels();
