@@ -244,6 +244,8 @@ This feature can help generate more precise images that better align with Flux m
 
 ## 📄 License
 
+[![Powered by DartNode](https://dartnode.com/branding/DN-Open-Source-sm.png)](https://dartnode.com "Powered by DartNode - Free VPS for Open Source")
+
 This project is licensed under the [MIT License](LICENSE).
 
 Copyright (c) 2024 [snakeying]
